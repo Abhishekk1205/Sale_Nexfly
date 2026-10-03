@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NaviDron — Premium Drones, 3D Prints & Gaming Collectibles | Nexfly Robotics</title>
+  <meta name="description" content="NaviDron by Nexfly Robotics — Premium FPV racing drones, agricultural UAVs, RC planes, custom 3D prints, lithophanes, gaming action figures (GTA 6, Valorant, Anime). Official partner of P_Brothers YouTube." />
+  <meta property="og:title" content="NaviDron — Premium Drones & 3D Prints" />
+  <meta property="og:description" content="Custom drones, 3D prints, action figures from GTA 6, Valorant, Anime & more. Powered by Nexfly Robotics." />
+  <meta property="og:image" content="images/hero_banner_navidron_1791058843751.jpg" />
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <link rel="stylesheet" href="css/main.css" />
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    (function(){ try { emailjs.init("YOUR_PUBLIC_KEY"); } catch(e){} })();
+  </script>
+</head>
+<body>
+
+<!-- ════════ LOADING SCREEN ════════ -->
+<div id="loading-screen">
+  <div class="loader-logo">NAVI<span>DRON</span></div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+  <div class="loader-subtitle">BY NEXFLY ROBOTICS</div>
+</div>
+
+<!-- ════════ NAVBAR ════════ -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <img src="images/nexfly_robotics_logo_1791059250216.jpg" alt="NaviDron Logo" />
+      <span class="nav-logo-text">NAVI<span>DRON</span></span>
+    </a>
+
+    <ul class="nav-links">
+      <li class="nav-item"><a href="#hero" class="nav-link active">Home</a></li>
+      <li class="nav-item">
+        <a href="#uav" class="nav-link">
+          UAV
+          <svg class="chevron" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L2 5h12z"/></svg>
+        </a>
+        <div class="dropdown">
+          <a href="pages/uav.html#fpv">⚡ FPV Racing Drones</a>
+          <a href="pages/uav.html#agri">🌾 Agricultural Drones</a>
+          <a href="pages/uav.html#toy">🎯 Toy Drones</a>
+          <a href="pages/uav.html#college">🎓 College Project Drones</a>
+          <a href="pages/uav.html#rcplane">✈️ RC Planes</a>
+          <a href="pages/uav.html#customize">🛠️ Custom Order</a>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a href="pages/products.html" class="nav-link">
+          Products
+          <svg class="chevron" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L2 5h12z"/></svg>
+        </a>
+        <div class="dropdown">
+          <a href="pages/products.html#parts">🔧 Drone Parts</a>
+          <a href="pages/products.html#electronics">⚡ Electronics</a>
+          <a href="pages/products.html#3d-parts">🖨️ 3D Drone Parts</a>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a href="pages/prints.html" class="nav-link">
+          3D Prints
+          <svg class="chevron" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11L2 5h12z"/></svg>
+        </a>
+        <div class="dropdown">
+          <a href="pages/prints.html#figures">🎮 Action Figures</a>
+          <a href="pages/prints.html#lithophane">🖼️ Lithophanes</a>
+          <a href="pages/prints.html#anime">🌸 Anime Figures</a>
+          <a href="pages/prints.html#gifts">🎁 Gift Packs</a>
+        </div>
+      </li>
+      <li class="nav-item"><a href="pages/gallery.html" class="nav-link">Gallery</a></li>
+      <li class="nav-item"><a href="pages/services.html" class="nav-link">Services</a></li>
+      <li class="nav-item"><a href="#contact" class="nav-link">Contact</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <span id="nav-user-info" style="font-size:.82rem;color:var(--neon);font-weight:600;"></span>
+      <button class="btn-nav-outline" id="nav-login-btn" data-open-auth>Login</button>
+      <button class="btn-nav" id="nav-logout-btn" style="display:none;">Sign Out</button>
+      <a href="#contact" class="btn-nav">Get a Quote</a>
+    </div>
+
+    <button class="nav-toggle" id="nav-toggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#hero" class="mob-link">Home</a>
+  <a href="#uav" class="mob-link">UAV / Drones</a>
+  <a href="#action-figures" class="mob-link">Action Figures</a>
+  <a href="#print-services" class="mob-link">3D Prints</a>
+  <a href="pages/gallery.html" class="mob-link">Gallery</a>
+  <a href="#services" class="mob-link">Services</a>
+  <a href="#about" class="mob-link">About</a>
+  <a href="#contact" class="mob-link">Contact</a>
+  <button class="btn btn-primary" data-open-auth style="margin-top:1.5rem;">Login / Sign Up</button>
+</div>
+
+<!-- ════════ HERO ════════ -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="particles-bg" id="particles"></div>
+
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="hero-eyebrow">Nexfly Robotics Presents</div>
+      <h1 class="hero-title">
+        Fly Beyond<br/>
+        <span class="hl">Limits</span> with<br/>
+        <span class="hl2">NaviDron</span>
+      </h1>
+      <p class="hero-desc">
+        Premium custom drones, FPV racing machines, agricultural UAVs, RC planes, and cutting-edge 3D printed collectibles. From the sky to your shelf — we build it all.
+      </p>
+      <div class="hero-cta">
+        <a href="#uav" class="btn btn-primary">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          Explore Drones
+        </a>
+        <a href="#gta-collab" class="btn btn-glow">🎮 GTA 6 Merch</a>
+        <a href="#contact" class="btn btn-outline">Get Custom Quote</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-num counter" data-target="500" data-suffix="+">500+</span>
+          <span class="stat-label">Drones Built</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num counter" data-target="1200" data-suffix="+">1200+</span>
+          <span class="stat-label">3D Prints Delivered</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num counter" data-target="98" data-suffix="%">98%</span>
+          <span class="stat-label">Satisfaction Rate</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num counter" data-target="5" data-suffix="★">5★</span>
+          <span class="stat-label">Customer Rating</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-drone-wrap">
+        <div class="hero-ring"></div>
+        <img src="images/fpv_racing_drone.jpg" alt="Premium FPV Racing Drone by NaviDron" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="neon-line" />
+
+<!-- ════════ GTA 6 COLLAB ════════ -->
+<section id="gta-collab">
+  <div class="gta-inner">
+    <div style="text-align:center;margin-bottom:2rem;" data-aos="fade-up">
+      <div class="section-tag" style="background:rgba(123,47,255,.2);color:#bf7aff;border-color:rgba(123,47,255,.3);">🎮 Exclusive Collaboration</div>
+      <h2 class="section-title" style="color:white;">GTA 6 × NaviDron <span style="color:#ff00aa;">Merch</span></h2>
+      <p class="section-subtitle" style="color:rgba(255,255,255,.7);">In partnership with P_Brothers — bringing Vice City to life with premium 3D printed collectibles, game assets, and exclusive merchandise.</p>
+    </div>
+
+    <div class="gta-banner" data-aos="zoom-in">
+      <img src="images/gta6_merchandise_banner_1791059157486.jpg" alt="GTA 6 Vice City Merchandise Collection" class="gta-banner-img" />
+      <div class="gta-overlay">
+        <div>
+          <div class="gta-badge">🔥 LIMITED EDITION — NOW AVAILABLE</div>
+          <h3 class="gta-title">GTA 6 Vice City — 3D Action Figure Collection</h3>
+          <p class="gta-subtitle">Hand-crafted 3D printed collectibles of your favorite GTA 6 characters. Highly detailed, premium quality, up to 220mm size.</p>
+          <div class="gta-actions">
+            <a href="pages/prints.html#gta6" class="btn btn-glow">🛒 Shop GTA 6 Figures</a>
+            <a href="#action-figures" class="btn btn-white">View All Characters</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="collab-grid">
+      <div class="collab-card" data-aos="fade-right" data-aos-delay="100">
+        <img src="images/nexfly_robotics_logo_1791059250216.jpg" alt="Nexfly Robotics" class="collab-avatar" />
+        <div class="collab-name">Nexfly Robotics</div>
+        <div class="collab-handle">@navidron.com</div>
+        <p class="collab-desc">Premium drone manufacturer and 3D printing service. Specializing in custom FPV drones, agricultural UAVs, gaming collectibles, and anime figures. Quality you can feel.</p>
+        <a href="#about" class="yt-btn" style="background:linear-gradient(135deg,var(--neon),var(--accent));">
+          Learn More →
+        </a>
+      </div>
+      <div class="collab-card" data-aos="fade-left" data-aos-delay="200">
+        <img src="images/gta6_merchandise_banner_1791059157486.jpg" alt="P_Brothers Priyanshu" class="collab-avatar" style="object-position:top;" />
+        <div class="collab-name">P_Brothers</div>
+        <div class="collab-handle">@PBrothers — YouTube Creator</div>
+        <p class="collab-desc">Priyanshu from P_Brothers is your go-to YouTuber for GTA 6 content, gaming, and exclusive merchandise drops. In collaboration with NaviDron for premium 3D gaming collectibles.</p>
+        <a href="https://youtube.com/@pbrothers?si=zJZF7FwtwQ5c9fiL" target="_blank" class="yt-btn">
+          <svg viewBox="0 0 24 24" fill="white" width="18" height="18"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
+          Watch on YouTube
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="neon-line" />
+
+<!-- ════════ ACTION FIGURES ON SALE ════════ -->
+<section id="action-figures">
+  <div class="section-inner">
+    <div style="text-align:center;" data-aos="fade-up">
+      <div class="section-tag">🎮 Gaming & Anime Collectibles</div>
+      <h2 class="section-title">Epic 3D <span>Action Figures</span><br/>Now on <span class="grad">Sale!</span></h2>
+      <p class="section-subtitle" style="margin:0 auto 2rem;">Valorant, GTA Characters, Sports Icons, Anime Heroes — all available as premium 3D printed action figures. Up to 220mm, highly detailed, painted or unpainted.</p>
+    </div>
+
+    <div class="sale-banner" data-aos="zoom-in">
+      <div class="sale-title">🔥 MEGA SALE — UP TO 30% OFF ON ALL ACTION FIGURES!</div>
+      <div class="sale-subtitle">GTA 6 • Valorant Agents • Anime Characters • Sports Icons • Game Assets</div>
+    </div>
+
+    <!-- Marquee Row 1 -->
+    <div class="figure-marquee-wrap">
+      <div class="figure-marquee" id="marquee1">
+        <div class="figure-card">
+          <img src="images/valorant_action_figures_1791059182363.jpg" alt="Valorant Agents" />
+          <div class="figure-card-body">
+            <div class="figure-card-name">Valorant Agents Pack</div>
+            <div class="figure-card-price">₹799 <small style="text-decoration:line-through;color:#aaa;">₹1199</small></div>
+          </div>
+        </div>
+        <div class="figure-card">
+          <img src="images/gta6_merchandise_banner_1791059157486.jpg" alt="GTA 6 Jason" />
+          <div class="figure-card-body">
+            <div class="figure-card-name">GTA 6 — Jason</div>
+            <div class="figure-card-price">₹999 <small style="text-decoration:line-through;color:#aaa;">₹1499</small></div>
+          </div>
+        </div>
+        <div class="figure-card">
+          <img src="images/anime_figure_3d.jpg" alt="Anime Figure" />
+          <div class="figure-card-body">
+            <div class="figure-card-name">Anime Hero Figure</div>
+            <div class="figure-card-price">₹649 <small style="text-decoration:line-through;color:#aaa;">₹899</small></div>
+          </div>
+        </div>
+        <div class="figure-card">
+          <img src="images/3d_printed_gift_pack.jpg" alt="Gift Pack" />
+          <div class="figure-card-body">
+            <div class="figure-card-name">3D Gift Pack</div>
+            <div class="figure-card-price">₹1299 <small style="text-decoration:line-through;color:#aaa;">₹1799</small></div>
+          </div>
+        </div>
+        <div class="figure-card">
+          <img src="images/valorant_action_figures_1791059182363.jpg" alt="Jett Figure" />
+          <div class="figure-card-body">
+            <div class="figure-card-name">Jett — Agent Figure</div>
+            <div class="figure-card-price">₹749</div>
+          </div>
+        </div>
+        <div class="figure-card">
+          <img src="images/gta6_merchandise_banner_1791059157486.jpg" alt="GTA 6 Lucia" />
+          <div class="figure-card-body">
+            <div class="figure-card-name">GTA 6 — Lucia</div>
+            <div class="figure-card-price">₹999</div>
+          </div>
+        </div>
+        <div class="figure-card">
+          <img src="images/anime_figure_3d.jpg" alt="Dragon Ball Z" />
+          <div class="figure-card-body">
+            <div class="figure-card-name">DBZ Goku — Super Saiyan</div>
+            <div class="figure-card-price">₹849</div>
+          </div>
+        </div>
+        <div class="figure-card">
+          <img src="images/3d_printed_gift_pack.jpg" alt="Custom Figure" />
+          <div class="figure-card-body">
+            <div class="figure-card-name">Custom Character</div>
+            <div class="figure-card-price">From ₹599</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid of Featured Figures -->
+    <div class="grid-4" style="margin-top:3rem;">
+      <div class="card" data-aos="zoom-in" data-aos-delay="100">
+        <div style="position:relative;">
+          <img src="images/valorant_action_figures_1791059182363.jpg" alt="Valorant Collection" class="card-img" />
+          <div style="position:absolute;top:1rem;left:1rem;display:flex;gap:.5rem;">
+            <span class="badge badge-sale">SALE</span>
+            <span class="badge badge-hot">HOT</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Valorant</div>
+          <h3 class="card-title">Valorant Agents Full Collection</h3>
+          <p class="card-text">All your favorite Valorant agents in ultra-detailed 3D print. Choose any agent!</p>
+          <div class="card-price">₹799 <small>/ figure</small></div>
+          <a href="#contact" class="btn btn-primary" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.8rem;">Order Now</a>
+        </div>
+      </div>
+
+      <div class="card" data-aos="zoom-in" data-aos-delay="200">
+        <div style="position:relative;">
+          <img src="images/gta6_merchandise_banner_1791059157486.jpg" alt="GTA 6 Vice City" class="card-img" />
+          <div style="position:absolute;top:1rem;left:1rem;display:flex;gap:.5rem;">
+            <span class="badge badge-new">NEW</span>
+            <span class="badge badge-hot">🔥 HOT</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">GTA 6 × P_Brothers</div>
+          <h3 class="card-title">GTA 6 Vice City Characters</h3>
+          <p class="card-text">Premium GTA 6 character figures — Jason, Lucia, and all Vice City legends.</p>
+          <div class="card-price">₹999 <small>/ figure</small></div>
+          <a href="#contact" class="btn btn-glow" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.8rem;animation:none;box-shadow:none;">Get Yours</a>
+        </div>
+      </div>
+
+      <div class="card" data-aos="zoom-in" data-aos-delay="300">
+        <img src="images/anime_figure_3d.jpg" alt="Anime Figures" class="card-img" />
+        <div class="card-body">
+          <div class="card-tag">Anime</div>
+          <h3 class="card-title">Anime & Manga Characters</h3>
+          <p class="card-text">Naruto, One Piece, Dragon Ball Z, Demon Slayer, Attack on Titan and more!</p>
+          <div class="card-price">₹649 <small>/ figure</small></div>
+          <a href="#contact" class="btn btn-outline" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.8rem;">Order Now</a>
+        </div>
+      </div>
+
+      <div class="card" data-aos="zoom-in" data-aos-delay="400">
+        <img src="images/3d_printed_gift_pack.jpg" alt="Gift Pack" class="card-img" />
+        <div class="card-body">
+          <div class="card-tag">Gift Sets</div>
+          <h3 class="card-title">3D Gift Packs & Combos</h3>
+          <p class="card-text">Curated gift packs of multiple characters. Perfect for birthdays, festive seasons!</p>
+          <div class="card-price">₹1,299 <small>/ pack</small></div>
+          <a href="#contact" class="btn btn-secondary" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.8rem;">Get Pack</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:3rem;" data-aos="fade-up">
+      <a href="pages/prints.html" class="btn btn-secondary">
+        View All Figures & Collectibles →
+      </a>
+    </div>
+  </div>
+</section>
+
+<hr class="neon-line" />
+
+<!-- ════════ UAV / DRONES ════════ -->
+<section id="uav">
+  <div class="section-inner">
+    <div data-aos="fade-up">
+      <div class="section-tag">🚁 UAV Systems</div>
+      <h2 class="section-title">Custom <span>Drones</span> &<br/>RC Aircraft</h2>
+      <p class="section-subtitle">From blazing-fast FPV racers to precision agricultural sprayers — we build drones tailored exactly to your needs. Every drone is crafted by our expert team at Nexfly Robotics.</p>
+    </div>
+
+    <div class="uav-tabs">
+      <button class="uav-tab active" data-target="fpv-panel">⚡ FPV Racing</button>
+      <button class="uav-tab" data-target="agri-panel">🌾 Agricultural</button>
+      <button class="uav-tab" data-target="toy-panel">🎯 Toy Drones</button>
+      <button class="uav-tab" data-target="college-panel">🎓 College Project</button>
+      <button class="uav-tab" data-target="rcplane-panel">✈️ RC Planes</button>
+    </div>
+
+    <!-- FPV Panel -->
+    <div class="drone-panel active" id="fpv-panel">
+      <div class="drone-showcase-img" data-aos="fade-right">
+        <img src="images/fpv_racing_drone.jpg" alt="FPV Racing Drone" />
+      </div>
+      <div data-aos="fade-left">
+        <div class="section-tag">Speed & Precision</div>
+        <h3 class="section-title" style="font-size:1.8rem;">FPV Racing Drones</h3>
+        <p style="color:#4a5270;margin-bottom:1.5rem;line-height:1.8;">Built for adrenaline. Our FPV racing drones are engineered for maximum speed, agility, and first-person immersion. Perfect for competitive racing and freestyle flying.</p>
+        <div class="drone-spec-list">
+          <div class="drone-spec"><span class="drone-spec-key">Max Speed</span><span class="drone-spec-val">140+ km/h</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Frame Size</span><span class="drone-spec-val">3" / 5" / 7"</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Flight Time</span><span class="drone-spec-val">4–8 minutes</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">FPV System</span><span class="drone-spec-val">Analog / DJI O3</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Motor KV</span><span class="drone-spec-val">2400–2600 KV</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Starting Price</span><span class="drone-spec-val">₹8,999</span></div>
+        </div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.5rem;">
+          <a href="#customize-form" class="btn btn-primary">Customize This</a>
+          <a href="pages/uav.html#fpv" class="btn btn-outline">Learn More</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agricultural Panel -->
+    <div class="drone-panel" id="agri-panel">
+      <div class="drone-showcase-img" data-aos="fade-right">
+        <img src="images/agricultural_drone_field_1791059225277.jpg" alt="Agricultural Drone" />
+      </div>
+      <div data-aos="fade-left">
+        <div class="section-tag">Smart Farming</div>
+        <h3 class="section-title" style="font-size:1.8rem;">Agricultural Drones</h3>
+        <p style="color:#4a5270;margin-bottom:1.5rem;line-height:1.8;">Revolutionize your farming with precision spraying drones. Cover large areas efficiently, reduce chemical usage, and increase crop yield.</p>
+        <div class="drone-spec-list">
+          <div class="drone-spec"><span class="drone-spec-key">Tank Capacity</span><span class="drone-spec-val">10L / 16L / 25L</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Coverage</span><span class="drone-spec-val">10–15 acres/hour</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">GPS</span><span class="drone-spec-val">RTK GPS Precision</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Motors</span><span class="drone-spec-val">6-Motor Hexacopter</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Spray Width</span><span class="drone-spec-val">4–6 meters</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Starting Price</span><span class="drone-spec-val">₹1,20,000</span></div>
+        </div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.5rem;">
+          <a href="#customize-form" class="btn btn-primary">Get Quotation</a>
+          <a href="pages/uav.html#agri" class="btn btn-outline">Learn More</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toy Panel -->
+    <div class="drone-panel" id="toy-panel">
+      <div class="drone-showcase-img" data-aos="fade-right">
+        <img src="images/toy_drone_basic.jpg" alt="Toy Drone" />
+      </div>
+      <div data-aos="fade-left">
+        <div class="section-tag">For Beginners</div>
+        <h3 class="section-title" style="font-size:1.8rem;">Basic Toy Drones</h3>
+        <p style="color:#4a5270;margin-bottom:1.5rem;line-height:1.8;">Perfect for kids and beginners! Easy-to-fly toy drones with altitude hold, one-touch takeoff, and durable design for indoor/outdoor fun.</p>
+        <div class="drone-spec-list">
+          <div class="drone-spec"><span class="drone-spec-key">Control Range</span><span class="drone-spec-val">50–100 meters</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Flight Time</span><span class="drone-spec-val">10–15 minutes</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Camera</span><span class="drone-spec-val">720p / 1080p</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Age</span><span class="drone-spec-val">8 years+</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Starting Price</span><span class="drone-spec-val">₹999</span></div>
+        </div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.5rem;">
+          <a href="pages/products.html" class="btn btn-primary">Shop Toy Drones</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- College Panel -->
+    <div class="drone-panel" id="college-panel">
+      <div class="drone-showcase-img" data-aos="fade-right">
+        <img src="images/college_project_drone.jpg" alt="College Project Drone" />
+      </div>
+      <div data-aos="fade-left">
+        <div class="section-tag">For Students</div>
+        <h3 class="section-title" style="font-size:1.8rem;">College Project Drones</h3>
+        <p style="color:#4a5270;margin-bottom:1.5rem;line-height:1.8;">Custom drone kits and fully assembled drones for engineering college projects. Comes with full documentation, flight controller code, and technical support.</p>
+        <div class="drone-spec-list">
+          <div class="drone-spec"><span class="drone-spec-key">Frame Type</span><span class="drone-spec-val">F450 / F550 / Custom</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">FC</span><span class="drone-spec-val">Pixhawk / APM / Naze32</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Documentation</span><span class="drone-spec-val">Full PDF + Code</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Support</span><span class="drone-spec-val">30-Day Tech Support</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Starting Price</span><span class="drone-spec-val">₹4,999</span></div>
+        </div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.5rem;">
+          <a href="#contact" class="btn btn-primary">Get Student Quote</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- RC Plane Panel -->
+    <div class="drone-panel" id="rcplane-panel">
+      <div class="drone-showcase-img" data-aos="fade-right">
+        <img src="images/rc_plane_hobby.jpg" alt="RC Plane" />
+      </div>
+      <div data-aos="fade-left">
+        <div class="section-tag">Scale & Hobby</div>
+        <h3 class="section-title" style="font-size:1.8rem;">RC Planes</h3>
+        <p style="color:#4a5270;margin-bottom:1.5rem;line-height:1.8;">Scale model RC aircraft and hobby planes. From trainer aircraft for beginners to advanced scale warbirds and aerobatic planes — we build them all.</p>
+        <div class="drone-spec-list">
+          <div class="drone-spec"><span class="drone-spec-key">Wingspan</span><span class="drone-spec-val">800mm – 2400mm</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Motor</span><span class="drone-spec-val">Brushless / Brushed</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Scale</span><span class="drone-spec-val">1:8 / 1:12 / Custom</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Material</span><span class="drone-spec-val">EPO / Balsa / 3D Print</span></div>
+          <div class="drone-spec"><span class="drone-spec-key">Starting Price</span><span class="drone-spec-val">₹3,499</span></div>
+        </div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.5rem;">
+          <a href="#customize-form" class="btn btn-primary">Customize RC Plane</a>
+          <a href="pages/uav.html#rcplane" class="btn btn-outline">Learn More</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customize Form -->
+    <div class="customize-wrap" id="customize-form">
+      <div style="position:relative;z-index:2;">
+        <h3 class="form-title">🛠️ Build Your Custom Drone</h3>
+        <p class="form-subtitle">Tell us your requirements and we'll design the perfect UAV for you.</p>
+        <form class="form-grid" id="customize-form-el">
+          <div class="form-field">
+            <label class="form-label" for="purpose">Purpose *</label>
+            <select class="form-select" id="purpose" required>
+              <option value="">Select Purpose</option>
+              <option>FPV Racing</option>
+              <option>Agriculture / Spraying</option>
+              <option>Photography / Videography</option>
+              <option>Delivery / Payload</option>
+              <option>College / Research Project</option>
+              <option>Hobby / Recreation</option>
+              <option>Search & Rescue</option>
+              <option>Mapping / Survey</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="budget">Budget Range *</label>
+            <select class="form-select" id="budget" required>
+              <option value="">Select Budget</option>
+              <option>Under ₹5,000</option>
+              <option>₹5,000 – ₹15,000</option>
+              <option>₹15,000 – ₹50,000</option>
+              <option>₹50,000 – ₹1,00,000</option>
+              <option>Above ₹1,00,000</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="cust-name">Your Name *</label>
+            <input class="form-input" type="text" id="cust-name" placeholder="Your full name" required />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="cust-email">Email *</label>
+            <input class="form-input" type="email" id="cust-email" placeholder="your@email.com" required />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="cust-phone">Phone *</label>
+            <input class="form-input" type="tel" id="cust-phone" placeholder="+91 9876543210" required />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="features">Special Features</label>
+            <input class="form-input" type="text" id="features" placeholder="GPS, Camera, FPV, Payload..." />
+          </div>
+          <div class="form-field full">
+            <label class="form-label" for="cust-notes">Additional Notes</label>
+            <textarea class="form-textarea" id="cust-notes" placeholder="Describe your specific requirements, use case, environment, etc."></textarea>
+          </div>
+          <div class="form-field full">
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+              🚁 Submit Custom Order Request
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="neon-line" />
+
+<!-- ════════ 3D PRINT SERVICES ════════ -->
+<section id="print-services">
+  <div class="section-inner">
+    <div style="text-align:center;" data-aos="fade-up">
+      <div class="section-tag">🖨️ 3D Print Services</div>
+      <h2 class="section-title">Professional <span>3D Printing</span> Services</h2>
+      <p class="section-subtitle" style="margin:0 auto 3rem;">From intricate lithophanes to large-scale action figures — up to 220mm. Custom designs, Anime, Characters, Gifts, Drone Parts and more.</p>
+    </div>
+
+    <div class="print-grid">
+      <div class="print-card" data-aos="fade-up" data-aos-delay="100">
+        <img src="images/3d_print_lithophane.jpg" alt="Lithophane" class="print-card-img" />
+        <div class="print-card-body">
+          <div class="print-icon">🖼️</div>
+          <h3 class="print-card-title">Lithophanes</h3>
+          <p class="print-card-text">Turn your favorite photos into beautiful backlit lithophane art. Custom sizes up to 220mm. Perfect gifts — portraits, landscapes, couples, babies!</p>
+          <div class="print-card-price">From ₹399</div>
+          <a href="#contact" class="btn btn-primary" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.8rem;">Order Now</a>
+        </div>
+      </div>
+
+      <div class="print-card" data-aos="fade-up" data-aos-delay="200">
+        <img src="images/valorant_action_figures_1791059182363.jpg" alt="Gaming Figures" class="print-card-img" />
+        <div class="print-card-body">
+          <div class="print-icon">🎮</div>
+          <h3 class="print-card-title">Gaming Characters</h3>
+          <p class="print-card-text">GTA 6, Valorant, COD, Fortnite, Minecraft, and all your favorite game characters in premium 3D print. Highly detailed, up to 220mm.</p>
+          <div class="print-card-price">From ₹599</div>
+          <a href="#contact" class="btn btn-primary" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.8rem;">Order Now</a>
+        </div>
+      </div>
+
+      <div class="print-card" data-aos="fade-up" data-aos-delay="300">
+        <img src="images/anime_figure_3d.jpg" alt="Anime Figures" class="print-card-img" />
+        <div class="print-card-body">
+          <div class="print-icon">🌸</div>
+          <h3 class="print-card-title">Anime Figures</h3>
+          <p class="print-card-text">Naruto, Dragon Ball Z, One Piece, Jujutsu Kaisen, Demon Slayer — any anime character in stunning 3D detail.</p>
+          <div class="print-card-price">From ₹649</div>
+          <a href="#contact" class="btn btn-primary" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.8rem;">Order Now</a>
+        </div>
+      </div>
+
+      <div class="print-card" data-aos="fade-up" data-aos-delay="100">
+        <img src="images/3d_printed_gift_pack.jpg" alt="Gift Pack" class="print-card-img" />
+        <div class="print-card-body">
+          <div class="print-icon">🎁</div>
+          <h3 class="print-card-title">Gift Packs</h3>
+          <p class="print-card-text">Curated gift sets of multiple 3D printed items — ideal for birthdays, anniversaries, festivals, or as gaming merchandise.</p>
+          <div class="print-card-price">From ₹999</div>
+          <a href="#contact" class="btn btn-primary" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.8rem;">Order Now</a>
+        </div>
+      </div>
+
+      <div class="print-card" data-aos="fade-up" data-aos-delay="200">
+        <img src="images/fpv_racing_drone.jpg" alt="Drone Parts" class="print-card-img" />
+        <div class="print-card-body">
+          <div class="print-icon">🔧</div>
+          <h3 class="print-card-title">Drone & RC Parts</h3>
+          <p class="print-card-text">Custom 3D printed drone frames, mounts, camera holders, prop guards, RC plane parts — designed for durability and performance.</p>
+          <div class="print-card-price">From ₹199</div>
+          <a href="pages/products.html#3d-parts" class="btn btn-outline" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.8rem;">View Parts</a>
+        </div>
+      </div>
+
+      <div class="print-card" data-aos="fade-up" data-aos-delay="300">
+        <img src="images/3d_print_lithophane.jpg" alt="Custom Design" class="print-card-img" />
+        <div class="print-card-body">
+          <div class="print-icon">✏️</div>
+          <h3 class="print-card-title">Custom Design Service</h3>
+          <p class="print-card-text">Got an idea? Share it with us! We provide full 3D design + print service. Sports trophies, logos, keychains, display pieces.</p>
+          <div class="print-card-price">Get Quote</div>
+          <a href="#contact" class="btn btn-secondary" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.8rem;">Request Design</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,var(--navy),var(--navy-light));border-radius:24px;padding:3rem;text-align:center;margin-top:2rem;" data-aos="zoom-in">
+      <h3 style="font-family:var(--font-head);font-size:1.8rem;color:white;margin-bottom:.75rem;">Print Specs & Capabilities</h3>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;margin-top:2rem;" class="grid-4">
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-head);font-size:2rem;color:var(--neon);font-weight:900;">220mm</div>
+          <div style="font-size:.82rem;color:rgba(255,255,255,.6);margin-top:.25rem;">Max Print Size</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-head);font-size:2rem;color:var(--neon);font-weight:900;">0.1mm</div>
+          <div style="font-size:.82rem;color:rgba(255,255,255,.6);margin-top:.25rem;">Layer Resolution</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-head);font-size:2rem;color:var(--neon);font-weight:900;">10+</div>
+          <div style="font-size:.82rem;color:rgba(255,255,255,.6);margin-top:.25rem;">Colors Available</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-head);font-size:2rem;color:var(--neon);font-weight:900;">24hr</div>
+          <div style="font-size:.82rem;color:rgba(255,255,255,.6);margin-top:.25rem;">Express Delivery</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="neon-line" />
+
+<!-- ════════ GALLERY PREVIEW ════════ -->
+<section id="gallery-preview" style="background:#fff;padding:5rem 2rem;">
+  <div class="section-inner">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:3rem;flex-wrap:wrap;gap:1rem;" data-aos="fade-up">
+      <div>
+        <div class="section-tag">📸 Gallery</div>
+        <h2 class="section-title">Our Work in <span>Action</span></h2>
+      </div>
+      <a href="pages/gallery.html" class="btn btn-outline">View Full Gallery →</a>
+    </div>
+    <div class="gallery-grid">
+      <div class="gallery-item large" data-aos="zoom-in">
+        <img src="images/hero_banner_navidron_1791058843751.jpg" alt="NaviDron FPV" />
+        <div class="gallery-item-overlay">🔍</div>
+      </div>
+      <div class="gallery-item" data-aos="zoom-in" data-aos-delay="100">
+        <img src="images/agricultural_drone_field_1791059225277.jpg" alt="Agricultural UAV" />
+        <div class="gallery-item-overlay">🔍</div>
+      </div>
+      <div class="gallery-item" data-aos="zoom-in" data-aos-delay="200">
+        <img src="images/valorant_action_figures_1791059182363.jpg" alt="Valorant Figures" />
+        <div class="gallery-item-overlay">🔍</div>
+      </div>
+      <div class="gallery-item" data-aos="zoom-in" data-aos-delay="100">
+        <img src="images/gta6_merchandise_banner_1791059157486.jpg" alt="GTA 6 Figures" />
+        <div class="gallery-item-overlay">🔍</div>
+      </div>
+      <div class="gallery-item" data-aos="zoom-in" data-aos-delay="200">
+        <img src="images/lithophane_3d_print_1791059239454.jpg" alt="Lithophane" />
+        <div class="gallery-item-overlay">🔍</div>
+      </div>
+      <div class="gallery-item" data-aos="zoom-in" data-aos-delay="300">
+        <img src="images/anime_figure_3d.jpg" alt="Anime Figures" />
+        <div class="gallery-item-overlay">🔍</div>
+      </div>
+      <div class="gallery-item" data-aos="zoom-in" data-aos-delay="300">
+        <img src="images/fpv_racing_drone.jpg" alt="FPV Drone" />
+        <div class="gallery-item-overlay">🔍</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ SERVICES ════════ -->
+<section id="services">
+  <div class="section-inner">
+    <div style="text-align:center;" data-aos="fade-up">
+      <div class="section-tag">⚙️ What We Offer</div>
+      <h2 class="section-title">Our <span>Services</span></h2>
+      <p class="section-subtitle" style="margin:0 auto 3rem;">End-to-end solutions — from design consultation to final delivery. Expert craftsmanship at every step.</p>
+    </div>
+    <div class="service-cards">
+      <div class="service-card" data-aos="fade-up" data-aos-delay="100">
+        <div class="service-icon">🚁</div>
+        <h3 class="service-title">Drone Design & Build</h3>
+        <p class="service-text">Custom drone design from scratch based on your specifications. We build FPV racers, agri drones, payload drones and more.</p>
+      </div>
+      <div class="service-card" data-aos="fade-up" data-aos-delay="200">
+        <div class="service-icon">🖨️</div>
+        <h3 class="service-title">3D Print on Demand</h3>
+        <p class="service-text">Professional 3D printing service — figures, parts, gifts, lithophanes. Any design, any size up to 220mm.</p>
+      </div>
+      <div class="service-card" data-aos="fade-up" data-aos-delay="300">
+        <div class="service-icon">🛠️</div>
+        <h3 class="service-title">Repair & Maintenance</h3>
+        <p class="service-text">Expert drone and RC aircraft repair service. Crash repair, motor/ESC replacement, firmware updates, calibration.</p>
+      </div>
+      <div class="service-card" data-aos="fade-up" data-aos-delay="100">
+        <div class="service-icon">🎓</div>
+        <h3 class="service-title">College Project Support</h3>
+        <p class="service-text">Complete support for drone-based college projects. Includes kit, documentation, flight controller code, and mentorship.</p>
+      </div>
+      <div class="service-card" data-aos="fade-up" data-aos-delay="200">
+        <div class="service-icon">📦</div>
+        <h3 class="service-title">Parts & Electronics</h3>
+        <p class="service-text">Wide range of drone parts — motors, ESCs, flight controllers, cameras, frames, batteries. All quality tested.</p>
+      </div>
+      <div class="service-card" data-aos="fade-up" data-aos-delay="300">
+        <div class="service-icon">✏️</div>
+        <h3 class="service-title">CAD & 3D Design</h3>
+        <p class="service-text">Professional 3D modeling for custom figures, mechanical parts, drone frames. Design service available separately.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="neon-line" />
+
+<!-- ════════ ABOUT ════════ -->
+<section id="about">
+  <div class="section-inner">
+    <div class="about-grid">
+      <div class="about-img-wrap" data-aos="fade-right">
+        <img src="images/nexfly_robotics_logo_1791059250216.jpg" alt="Nexfly Robotics" class="about-img" style="background:var(--navy);padding:3rem;" />
+        <div class="about-img-card">
+          <div class="about-img-card-num counter" data-target="5" data-suffix="+">5+</div>
+          <div class="about-img-card-label">Years of Innovation</div>
+        </div>
+      </div>
+      <div data-aos="fade-left">
+        <div class="section-tag">🏢 About Us</div>
+        <h2 class="section-title">Nexfly <span>Robotics</span> — Behind NaviDron</h2>
+        <p style="color:#4a5270;line-height:1.8;margin-bottom:1.5rem;">Nexfly Robotics is a cutting-edge drone technology and 3D printing company. We believe in making advanced technology accessible to everyone — from farmers to gamers, from students to professionals.</p>
+        <p style="color:#4a5270;line-height:1.8;margin-bottom:1.5rem;">Our team of passionate engineers and designers work tirelessly to deliver premium quality products. We've built hundreds of custom drones and thousands of 3D printed items for customers across India.</p>
+        <ul class="about-list">
+          <li class="about-list-item">Expert team of drone engineers with 5+ years experience</li>
+          <li class="about-list-item">Premium quality materials — carbon fiber, PLA, PETG, ABS</li>
+          <li class="about-list-item">End-to-end service from design consultation to delivery</li>
+          <li class="about-list-item">Official collaboration with P_Brothers for gaming merchandise</li>
+          <li class="about-list-item">Serving pan-India with fast shipping & express options</li>
+        </ul>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:2rem;">
+          <a href="#contact" class="btn btn-primary">Work With Us</a>
+          <a href="pages/services.html" class="btn btn-outline">Our Services</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="neon-line" />
+
+<!-- ════════ TESTIMONIALS ════════ -->
+<section style="background:var(--off-white);">
+  <div class="section-inner">
+    <div style="text-align:center;" data-aos="fade-up">
+      <div class="section-tag">⭐ Customer Reviews</div>
+      <h2 class="section-title">What Our <span>Customers</span> Say</h2>
+    </div>
+    <div class="testimonial-grid" style="margin-top:3rem;">
+      <div class="testimonial-card" data-aos="fade-up" data-aos-delay="100">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Got my custom FPV racing drone from NaviDron — absolute beast! The build quality is incredible and it flies perfectly. Couldn't be happier!"</p>
+        <div class="testimonial-author">
+          <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--neon),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-weight:800;">R</div>
+          <div>
+            <div class="testimonial-name">Rahul S.</div>
+            <div class="testimonial-role">FPV Racer, Delhi</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card" data-aos="fade-up" data-aos-delay="200">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"The Valorant action figures are absolutely stunning! The detail is unreal. Already ordered GTA 6 characters. NaviDron delivers premium quality."</p>
+        <div class="testimonial-author">
+          <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--neon2),#ff00aa);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;">P</div>
+          <div>
+            <div class="testimonial-name">Priya M.</div>
+            <div class="testimonial-role">Gaming Enthusiast, Mumbai</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card" data-aos="fade-up" data-aos-delay="300">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Used NaviDron for our agricultural drone project. Exceptional quality and the tech support team is top-notch. Saved 3 acres per day in operations!"</p>
+        <div class="testimonial-author">
+          <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#00c896,var(--neon));display:flex;align-items:center;justify-content:center;color:white;font-weight:800;">A</div>
+          <div>
+            <div class="testimonial-name">Amit K.</div>
+            <div class="testimonial-role">Farmer, Punjab</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ CONTACT ════════ -->
+<section id="contact">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:4rem;" data-aos="fade-up">
+      <div class="section-tag">📬 Get in Touch</div>
+      <h2 class="section-title">Contact <span>NaviDron</span></h2>
+      <p class="section-subtitle" style="margin:0 auto;">Have a question, custom order, or just want to say hello? We'd love to hear from you!</p>
+    </div>
+    <div class="contact-wrap">
+      <div data-aos="fade-right">
+        <div class="contact-item">
+          <div class="contact-icon">📧</div>
+          <div>
+            <div class="contact-item-title">Email Us</div>
+            <div class="contact-item-val">contact@navidron.com</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">📱</div>
+          <div>
+            <div class="contact-item-title">WhatsApp / Call</div>
+            <div class="contact-item-val">+91 XXXXX XXXXX</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">📍</div>
+          <div>
+            <div class="contact-item-title">Location</div>
+            <div class="contact-item-val">India (Shipping Pan-India)</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">🕐</div>
+          <div>
+            <div class="contact-item-title">Business Hours</div>
+            <div class="contact-item-val">Mon–Sat: 10AM–7PM IST</div>
+          </div>
+        </div>
+        <div style="margin-top:2rem;">
+          <p style="font-size:.85rem;color:#666;margin-bottom:1rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;">Follow Us</p>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+            <a href="https://youtube.com/@pbrothers?si=zJZF7FwtwQ5c9fiL" target="_blank" style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;background:#ff0000;color:white;border-radius:50px;font-size:.82rem;font-weight:700;transition:var(--transition);">
+              ▶ YouTube (P_Brothers)
+            </a>
+            <a href="#" style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;background:linear-gradient(135deg,#f9a825,#e91e63,#9c27b0);color:white;border-radius:50px;font-size:.82rem;font-weight:700;">
+              📸 Instagram
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-form-card" data-aos="fade-left">
+        <h3 style="font-family:var(--font-head);font-size:1.3rem;font-weight:700;color:var(--navy);margin-bottom:1.5rem;">Send a Message</h3>
+        <form id="contact-form">
+          <div class="contact-form-grid">
+            <div>
+              <label style="display:block;font-size:.78rem;font-weight:600;color:var(--navy);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.05em;">Full Name *</label>
+              <input class="contact-input" type="text" id="c-name" placeholder="Your name" required />
+            </div>
+            <div>
+              <label style="display:block;font-size:.78rem;font-weight:600;color:var(--navy);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.05em;">Email *</label>
+              <input class="contact-input" type="email" id="c-email" placeholder="your@email.com" required />
+            </div>
+            <div class="full-col">
+              <label style="display:block;font-size:.78rem;font-weight:600;color:var(--navy);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.05em;">Subject *</label>
+              <select class="contact-select full-col" id="c-subject" required>
+                <option value="">Select a topic</option>
+                <option>Custom Drone Order</option>
+                <option>3D Print Order</option>
+                <option>Action Figures / Collectibles</option>
+                <option>Drone Parts Inquiry</option>
+                <option>Technical Support</option>
+                <option>Collaboration / Business</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="full-col">
+              <label style="display:block;font-size:.78rem;font-weight:600;color:var(--navy);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.05em;">Message *</label>
+              <textarea class="contact-textarea" id="c-message" placeholder="Tell us about your requirements..." required></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:1.25rem;">
+            📨 Send Message
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ FOOTER ════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="nav-logo" style="margin-bottom:1rem;">
+          <img src="images/nexfly_robotics_logo_1791059250216.jpg" alt="NaviDron" style="height:40px;width:40px;border-radius:8px;" />
+          <span class="nav-logo-text">NAVI<span>DRON</span></span>
+        </div>
+        <p class="footer-brand-desc">NaviDron by Nexfly Robotics — your premium destination for custom drones, 3D printed collectibles, gaming action figures, and RC aircraft. Built with passion in India. 🇮🇳</p>
+        <div class="footer-socials">
+          <a href="https://youtube.com/@pbrothers?si=zJZF7FwtwQ5c9fiL" target="_blank" class="footer-social" title="YouTube">▶</a>
+          <a href="#" class="footer-social" title="Instagram">📸</a>
+          <a href="#" class="footer-social" title="WhatsApp">💬</a>
+          <a href="#" class="footer-social" title="Twitter">𝕏</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="footer-col-title">UAV Products</div>
+        <a href="pages/uav.html#fpv" class="footer-link">FPV Racing Drones</a>
+        <a href="pages/uav.html#agri" class="footer-link">Agricultural Drones</a>
+        <a href="pages/uav.html#toy" class="footer-link">Toy Drones</a>
+        <a href="pages/uav.html#college" class="footer-link">College Projects</a>
+        <a href="pages/uav.html#rcplane" class="footer-link">RC Planes</a>
+        <a href="pages/uav.html#customize" class="footer-link">Custom Order</a>
+      </div>
+
+      <div>
+        <div class="footer-col-title">3D Prints</div>
+        <a href="pages/prints.html#gta6" class="footer-link">GTA 6 Figures</a>
+        <a href="pages/prints.html#valorant" class="footer-link">Valorant Figures</a>
+        <a href="pages/prints.html#anime" class="footer-link">Anime Characters</a>
+        <a href="pages/prints.html#lithophane" class="footer-link">Lithophanes</a>
+        <a href="pages/prints.html#gifts" class="footer-link">Gift Packs</a>
+        <a href="pages/products.html#3d-parts" class="footer-link">Drone Parts</a>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Company</div>
+        <a href="#about" class="footer-link">About Nexfly</a>
+        <a href="pages/services.html" class="footer-link">Services</a>
+        <a href="pages/gallery.html" class="footer-link">Gallery</a>
+        <a href="#contact" class="footer-link">Contact Us</a>
+        <a href="https://youtube.com/@pbrothers?si=zJZF7FwtwQ5c9fiL" target="_blank" class="footer-link">P_Brothers Collab</a>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Newsletter</div>
+        <p style="font-size:.82rem;color:rgba(255,255,255,.5);margin-bottom:.5rem;">Get drone deals, new figure drops & exclusive offers!</p>
+        <div class="footer-nl-input">
+          <input type="email" placeholder="your@email.com" id="nl-email" />
+          <button onclick="subscribeNewsletter()">→</button>
+        </div>
+        <div style="margin-top:1.5rem;">
+          <p style="font-size:.72rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;">Accepted Payments</p>
+          <p style="font-size:.82rem;color:rgba(255,255,255,.5);">UPI • RazorPay • Paytm • Cards</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p class="footer-copy">© 2024 NaviDron — Nexfly Robotics. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Shipping Policy</a>
+        <a href="#">Refund Policy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ════════ AUTH MODAL ════════ -->
+<div id="auth-modal">
+  <div class="auth-card">
+    <button class="auth-close">✕</button>
+    <h2 class="auth-title">NaviDron Account</h2>
+    <p class="auth-subtitle">Sign in to track orders, save wishlists & get exclusive deals.</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab-btn active" data-tab="login">Login</button>
+      <button class="auth-tab-btn" data-tab="register">Sign Up</button>
+    </div>
+
+    <!-- Login Form -->
+    <div class="auth-form" id="login-form">
+      <div class="auth-field">
+        <label class="auth-label" for="login-email">Email</label>
+        <input class="auth-input" type="email" id="login-email" placeholder="your@email.com" required />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label" for="login-pass">Password</label>
+        <input class="auth-input" type="password" id="login-pass" placeholder="••••••••" required />
+      </div>
+      <button class="auth-btn" type="submit" form="login-form">Sign In</button>
+      <div class="auth-divider"><span>or</span></div>
+      <div class="auth-social">
+        <button class="auth-social-btn auth-google">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Google
+        </button>
+        <button class="auth-social-btn" onclick="alert('Phone login coming soon!')">
+          📱 Phone
+        </button>
+      </div>
+    </div>
+
+    <!-- Register Form -->
+    <div class="auth-form" id="register-form" style="display:none;">
+      <div class="auth-field">
+        <label class="auth-label" for="reg-name">Full Name</label>
+        <input class="auth-input" type="text" id="reg-name" placeholder="Your name" required />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label" for="reg-email">Email</label>
+        <input class="auth-input" type="email" id="reg-email" placeholder="your@email.com" required />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label" for="reg-pass">Password</label>
+        <input class="auth-input" type="password" id="reg-pass" placeholder="Min 6 characters" required />
+      </div>
+      <button class="auth-btn" type="submit" form="register-form">Create Account</button>
+      <div class="auth-divider"><span>or</span></div>
+      <div class="auth-social">
+        <button class="auth-social-btn auth-google">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Google
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script type="module" src="js/main.js"></script>
+<script>
+  // Inline script for features that don't need modules
+  document.getElementById("nav-toggle").addEventListener("click", function() {
+    this.classList.toggle("active");
+    document.getElementById("mobile-menu").classList.toggle("open");
+    document.body.style.overflow = document.getElementById("mobile-menu").classList.contains("open") ? "hidden" : "";
+  });
+
+  function subscribeNewsletter() {
+    const email = document.getElementById("nl-email").value;
+    if (!email) return;
+    alert("Thanks for subscribing! You'll get exclusive NaviDron deals 🚁");
+    document.getElementById("nl-email").value = "";
+  }
+
+  // Auth modal open buttons
+  document.querySelectorAll("[data-open-auth]").forEach(btn => {
+    btn.addEventListener("click", () => document.getElementById("auth-modal").classList.add("open"));
+  });
+  document.querySelector(".auth-close").addEventListener("click", () => {
+    document.getElementById("auth-modal").classList.remove("open");
+  });
+  document.getElementById("auth-modal").addEventListener("click", function(e) {
+    if (e.target === this) this.classList.remove("open");
+  });
+  document.querySelectorAll(".auth-tab-btn").forEach(btn => {
+    btn.addEventListener("click", function() {
+      document.querySelectorAll(".auth-tab-btn").forEach(b => b.classList.remove("active"));
+      this.classList.add("active");
+      document.querySelectorAll(".auth-form").forEach(f => f.style.display = "none");
+      document.getElementById(this.dataset.tab + "-form").style.display = "block";
+    });
+  });
+
+  // UAV Tabs
+  document.querySelectorAll(".uav-tab").forEach(tab => {
+    tab.addEventListener("click", function() {
+      document.querySelectorAll(".uav-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".drone-panel").forEach(p => p.classList.remove("active"));
+      this.classList.add("active");
+      document.getElementById(this.dataset.target).classList.add("active");
+    });
+  });
+
+  // Navbar scroll
+  window.addEventListener("scroll", function() {
+    document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 50);
+  }, { passive: true });
+
+  // Particles
+  (function initParticles() {
+    const c = document.getElementById("particles");
+    if (!c) return;
+    const count = window.innerWidth < 768 ? 12 : 25;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement("div");
+      p.className = "particle";
+      const size = Math.random() * 4 + 2;
+      Object.assign(p.style, {
+        left: Math.random() * 100 + "%",
+        width: size + "px",
+        height: size + "px",
+        animationDuration: (Math.random() * 8 + 6) + "s",
+        animationDelay: (Math.random() * 8) + "s",
+        opacity: "0"
+      });
+      c.appendChild(p);
+    }
+  })();
+
+  // AOS
+  (function initAOS() {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const delay = parseInt(e.target.dataset.aosDelay || 0);
+          setTimeout(() => e.target.classList.add("aos-animate"), delay);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+    document.querySelectorAll("[data-aos]").forEach(el => obs.observe(el));
+  })();
+
+  // Counters
+  (function initCounters() {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting || e.target._done) return;
+        e.target._done = true;
+        const target = parseInt(e.target.dataset.target || 0);
+        const suffix = e.target.dataset.suffix || "";
+        const start = Date.now();
+        const dur = 1800;
+        const tick = () => {
+          const p = Math.min((Date.now() - start) / dur, 1);
+          const ease = 1 - Math.pow(1 - p, 3);
+          e.target.textContent = Math.floor(target * ease) + suffix;
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll(".counter").forEach(el => obs.observe(el));
+  })();
+
+  // Marquee duplicate
+  document.querySelectorAll(".figure-marquee").forEach(m => {
+    m.innerHTML += m.innerHTML;
+  });
+
+  // Lightbox
+  document.querySelectorAll(".gallery-item").forEach(item => {
+    item.addEventListener("click", () => {
+      const img = item.querySelector("img");
+      if (!img) return;
+      const ov = document.createElement("div");
+      Object.assign(ov.style, {
+        position: "fixed", inset: "0", zIndex: "5000",
+        background: "rgba(0,0,0,.92)", display: "flex",
+        alignItems: "center", justifyContent: "center", cursor: "pointer"
+      });
+      const el = document.createElement("img");
+      el.src = img.src;
+      Object.assign(el.style, { maxWidth: "90vw", maxHeight: "90vh", borderRadius: "12px" });
+      ov.appendChild(el);
+      ov.onclick = () => ov.remove();
+      document.body.appendChild(ov);
+    });
+  });
+</script>
+</body>
+</html>

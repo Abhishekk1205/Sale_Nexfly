@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UAV Drones — FPV, Agricultural, RC Planes | NaviDron</title>
+  <meta name="description" content="NaviDron UAV collection — FPV Racing Drones, Agricultural Sprayer Drones, Toy Drones, College Project Drones, RC Planes. Custom builds by Nexfly Robotics." />
+  <link rel="icon" href="../favicon.png" />
+  <link rel="stylesheet" href="../css/main.css" />
+  <style>
+    .uav-hero { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); min-height: 50vh; display: flex; align-items: center; padding: 8rem 2rem 5rem; position: relative; overflow: hidden; }
+    .uav-hero::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 70% 50%, rgba(0,200,255,.15) 0%, transparent 60%); }
+    .uav-hero-content { max-width: 1400px; margin: 0 auto; position: relative; z-index: 2; }
+    .uav-hero h1 { font-family: var(--font-head); font-size: clamp(2rem,5vw,4rem); font-weight: 900; color: white; margin-bottom: 1rem; }
+    .uav-hero p { font-size: 1.1rem; color: rgba(255,255,255,.75); max-width: 600px; line-height: 1.8; }
+    .spec-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+    .spec-table th { text-align: left; padding: .6rem 1rem; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--neon); border-bottom: 1px solid rgba(0,200,255,.2); }
+    .spec-table td { padding: .65rem 1rem; font-size: .88rem; border-bottom: 1px solid rgba(0,200,255,.08); color: var(--navy); }
+    .spec-table tr:hover td { background: rgba(0,200,255,.04); }
+    .drone-card { background: white; border-radius: var(--radius); border: 1px solid rgba(0,200,255,.15); overflow: hidden; box-shadow: var(--shadow-card); transition: var(--transition); }
+    .drone-card:hover { transform: translateY(-6px); border-color: var(--neon); box-shadow: 0 20px 60px rgba(10,15,46,.12), var(--shadow-neon); }
+    .drone-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+    .drone-card-body { padding: 1.5rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar" class="scrolled">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-logo">
+      <img src="../images/nexfly_robotics_logo_1791059250216.jpg" alt="NaviDron" />
+      <span class="nav-logo-text">NAVI<span>DRON</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../index.html" class="nav-link">Home</a></li>
+      <li><a href="uav.html" class="nav-link active">UAV</a></li>
+      <li><a href="products.html" class="nav-link">Products</a></li>
+      <li><a href="prints.html" class="nav-link">3D Prints</a></li>
+      <li><a href="gallery.html" class="nav-link">Gallery</a></li>
+      <li><a href="services.html" class="nav-link">Services</a></li>
+      <li><a href="../index.html#contact" class="nav-link">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="../index.html#contact" class="btn-nav">Get a Quote</a>
+    </div>
+    <button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a href="../index.html" class="mob-link">Home</a>
+  <a href="uav.html" class="mob-link">UAV</a>
+  <a href="products.html" class="mob-link">Products</a>
+  <a href="prints.html" class="mob-link">3D Prints</a>
+  <a href="gallery.html" class="mob-link">Gallery</a>
+  <a href="services.html" class="mob-link">Services</a>
+  <a href="../index.html#contact" class="mob-link">Contact</a>
+</div>
+
+<!-- HERO -->
+<div class="uav-hero">
+  <div class="uav-hero-content">
+    <div class="section-tag" style="background:rgba(0,200,255,.15);">🚁 UAV Systems</div>
+    <h1>Unmanned Aerial <span style="color:var(--neon);">Vehicles</span></h1>
+    <p>From blazing-fast FPV racers to precision agricultural sprayers — every drone is hand-built by our expert team at Nexfly Robotics. Customized for your exact needs.</p>
+    <div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;">
+      <a href="#fpv" class="btn btn-primary">FPV Racing</a>
+      <a href="#agri" class="btn btn-outline" style="color:white;border-color:white;">Agricultural</a>
+      <a href="#customize" class="btn btn-glow">Custom Order</a>
+    </div>
+  </div>
+</div>
+
+<!-- FPV SECTION -->
+<section id="fpv" style="background:var(--white);">
+  <div class="section-inner">
+    <div data-aos="fade-up">
+      <div class="section-tag">⚡ Speed & Precision</div>
+      <h2 class="section-title">FPV <span>Racing Drones</span></h2>
+      <p class="section-subtitle">Built for adrenaline and competition. Our FPV drones deliver raw speed, crisp FPV video feed, and precise control for racers and freestyle pilots.</p>
+    </div>
+    <div class="grid-3">
+      <div class="drone-card" data-aos="fade-up" data-aos-delay="100">
+        <img src="../images/fpv_racing_drone.jpg" alt="3 inch FPV Toothpick" />
+        <div class="drone-card-body">
+          <div class="card-tag">3" Toothpick</div>
+          <h3 class="card-title">Micro FPV Racer</h3>
+          <p class="card-text">Ultra lightweight 3" FPV drone for indoor racing and freestyle. Perfect for beginners and micro class racing.</p>
+          <table class="spec-table">
+            <tr><th>Spec</th><th>Value</th></tr>
+            <tr><td>Frame Size</td><td>3 inch</td></tr>
+            <tr><td>Weight</td><td>~80g</td></tr>
+            <tr><td>Speed</td><td>80+ km/h</td></tr>
+            <tr><td>Price</td><td>₹8,999</td></tr>
+          </table>
+          <a href="../index.html#customize-form" class="btn btn-primary" style="padding:.6rem 1.4rem;font-size:.82rem;">Customize Order</a>
+        </div>
+      </div>
+      <div class="drone-card" data-aos="fade-up" data-aos-delay="200">
+        <img src="../images/fpv_racing_drone.jpg" alt="5 inch FPV Quad" />
+        <div class="drone-card-body">
+          <div class="card-tag">5" Standard</div>
+          <h3 class="card-title">Pro Racing Quad</h3>
+          <p class="card-text">The gold standard of FPV racing. 5" prop drone with F7 flight controller, 50A ESC, 2400KV motor.</p>
+          <table class="spec-table">
+            <tr><th>Spec</th><th>Value</th></tr>
+            <tr><td>Frame Size</td><td>5 inch</td></tr>
+            <tr><td>Weight</td><td>~350g</td></tr>
+            <tr><td>Speed</td><td>140+ km/h</td></tr>
+            <tr><td>Price</td><td>₹16,999</td></tr>
+          </table>
+          <a href="../index.html#customize-form" class="btn btn-primary" style="padding:.6rem 1.4rem;font-size:.82rem;">Customize Order</a>
+        </div>
+      </div>
+      <div class="drone-card" data-aos="fade-up" data-aos-delay="300">
+        <img src="../images/fpv_racing_drone.jpg" alt="7 inch Long Range" />
+        <div class="drone-card-body">
+          <div class="card-tag">7" Long Range</div>
+          <h3 class="card-title">LR7 Explorer</h3>
+          <p class="card-text">Long-range FPV for scenic flights and exploration. GPS return-to-home, 30+ min flight time.</p>
+          <table class="spec-table">
+            <tr><th>Spec</th><th>Value</th></tr>
+            <tr><td>Frame Size</td><td>7 inch</td></tr>
+            <tr><td>Range</td><td>10+ km</td></tr>
+            <tr><td>Flight Time</td><td>30 min</td></tr>
+            <tr><td>Price</td><td>₹22,999</td></tr>
+          </table>
+          <a href="../index.html#customize-form" class="btn btn-primary" style="padding:.6rem 1.4rem;font-size:.82rem;">Customize Order</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="neon-line" />
+
+<!-- AGRICULTURAL -->
+<section id="agri" style="background:var(--off-white);">
+  <div class="section-inner">
+    <div data-aos="fade-up">
+      <div class="section-tag">🌾 Smart Farming</div>
+      <h2 class="section-title">Agricultural <span>Spray Drones</span></h2>
+      <p class="section-subtitle">Revolutionize your agriculture with precision spray drones. Cover more area, use fewer chemicals, and boost crop yields.</p>
+    </div>
+    <div class="drone-panel active" style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
+      <div data-aos="fade-right">
+        <img src="../images/agricultural_drone_field_1791059225277.jpg" alt="Agricultural Drone" style="border-radius:var(--radius);width:100%;box-shadow:var(--shadow-card);" />
+      </div>
+      <div data-aos="fade-left">
+        <h3 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;color:var(--navy);margin-bottom:1rem;">AgriDron Hex — 16L</h3>
+        <p style="color:#4a5270;line-height:1.8;margin-bottom:1.5rem;">Our flagship agricultural drone covers 10–15 acres per hour with precision RTK GPS, automatic path planning, and intelligent obstacle avoidance.</p>
+        <table class="spec-table">
+          <tr><th>Feature</th><th>Specification</th></tr>
+          <tr><td>Configuration</td><td>Hexacopter (6 motors)</td></tr>
+          <tr><td>Tank Capacity</td><td>10L / 16L / 25L options</td></tr>
+          <tr><td>Coverage Rate</td><td>10–15 acres/hour</td></tr>
+          <tr><td>Spray Width</td><td>4–6 meters</td></tr>
+          <tr><td>GPS Accuracy</td><td>RTK ±2cm</td></tr>
+          <tr><td>Battery</td><td>14000–22000 mAh</td></tr>
+          <tr><td>Obstacle Avoidance</td><td>6-direction radar</td></tr>
+          <tr><td>Price</td><td>₹1,20,000+</td></tr>
+        </table>
+        <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;">
+          <a href="../index.html#contact" class="btn btn-primary">Get Quotation</a>
+          <a href="../index.html#customize-form" class="btn btn-outline">Custom Config</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="neon-line" />
+
+<!-- TOY & COLLEGE -->
+<section id="toy" style="background:var(--white);">
+  <div class="section-inner">
+    <div data-aos="fade-up">
+      <div class="section-tag">🎯 Entry Level</div>
+      <h2 class="section-title">Toy & <span>Beginner</span> Drones</h2>
+    </div>
+    <div class="grid-3">
+      <div class="card" data-aos="fade-up" data-aos-delay="100">
+        <img src="../images/toy_drone_basic.jpg" alt="Mini Toy Drone" class="card-img" />
+        <div class="card-body">
+          <div class="card-tag">For Kids</div>
+          <h3 class="card-title">Mini Toy Drone</h3>
+          <p class="card-text">Perfect for children aged 8+. Altitude hold, headless mode, LED lights. Indoor/outdoor flying.</p>
+          <div class="card-price">₹999</div>
+          <a href="../index.html#contact" class="btn btn-outline" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.82rem;">Order</a>
+        </div>
+      </div>
+      <div class="card" data-aos="fade-up" data-aos-delay="200" id="college">
+        <img src="../images/college_project_drone.jpg" alt="College Project" class="card-img" />
+        <div class="card-body">
+          <div class="card-tag">Students</div>
+          <h3 class="card-title">College Project Kit</h3>
+          <p class="card-text">Full kit with documentation, FC code, and 30-day technical support. Ideal for final year projects.</p>
+          <div class="card-price">₹4,999</div>
+          <a href="../index.html#contact" class="btn btn-primary" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.82rem;">Order</a>
+        </div>
+      </div>
+      <div class="card" data-aos="fade-up" data-aos-delay="300" id="rcplane">
+        <img src="../images/rc_plane_hobby.jpg" alt="RC Plane" class="card-img" />
+        <div class="card-body">
+          <div class="card-tag">RC Planes</div>
+          <h3 class="card-title">Trainer RC Plane</h3>
+          <p class="card-text">Easy-to-fly trainer aircraft. 1.2m wingspan, brushless motor, 3-channel control. Great for learning!</p>
+          <div class="card-price">₹3,499</div>
+          <a href="../index.html#customize-form" class="btn btn-outline" style="margin-top:1rem;padding:.6rem 1.4rem;font-size:.82rem;">Customize</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="neon-line" />
+
+<!-- CUSTOMIZE -->
+<section id="customize" style="background:var(--off-white);">
+  <div class="section-inner">
+    <div style="text-align:center;" data-aos="fade-up">
+      <div class="section-tag">🛠️ Custom Orders</div>
+      <h2 class="section-title">Build Your <span>Dream Drone</span></h2>
+      <p class="section-subtitle" style="margin:0 auto 3rem;">Fill in your requirements and our team will design the perfect UAV for you.</p>
+    </div>
+    <div class="customize-wrap">
+      <div style="position:relative;z-index:2;">
+        <h3 class="form-title">🚁 Custom Drone Request</h3>
+        <p class="form-subtitle">All fields marked * are required. We respond within 24 hours.</p>
+        <form class="form-grid" id="uav-customize-form" onsubmit="submitUAVForm(event)">
+          <div class="form-field">
+            <label class="form-label" for="u-purpose">Purpose *</label>
+            <select class="form-select" id="u-purpose" required>
+              <option value="">Select Purpose</option>
+              <option>FPV Racing</option>
+              <option>Freestyle Flying</option>
+              <option>Agriculture / Spraying</option>
+              <option>Photography / Cinema</option>
+              <option>Delivery / Payload</option>
+              <option>Mapping / Survey</option>
+              <option>College Project</option>
+              <option>Search & Rescue</option>
+              <option>RC Plane</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="u-budget">Budget *</label>
+            <select class="form-select" id="u-budget" required>
+              <option value="">Select Budget</option>
+              <option>Under ₹5,000</option>
+              <option>₹5,000 – ₹15,000</option>
+              <option>₹15,000 – ₹50,000</option>
+              <option>₹50,000 – ₹1,50,000</option>
+              <option>Above ₹1,50,000</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="u-name">Name *</label>
+            <input class="form-input" type="text" id="u-name" placeholder="Your full name" required />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="u-email">Email *</label>
+            <input class="form-input" type="email" id="u-email" placeholder="your@email.com" required />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="u-phone">Phone *</label>
+            <input class="form-input" type="tel" id="u-phone" placeholder="+91 9876543210" required />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="u-timeline">Expected Timeline</label>
+            <select class="form-select" id="u-timeline">
+              <option value="">Select Timeline</option>
+              <option>ASAP (Rush Order)</option>
+              <option>Within 1 week</option>
+              <option>Within 2 weeks</option>
+              <option>Within a month</option>
+              <option>No rush</option>
+            </select>
+          </div>
+          <div class="form-field full">
+            <label class="form-label" for="u-notes">Special Requirements</label>
+            <textarea class="form-textarea" id="u-notes" placeholder="Describe payload, camera setup, range requirements, environment, etc."></textarea>
+          </div>
+          <div class="form-field full">
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Submit Custom Drone Request 🚁</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER SIMPLE -->
+<footer style="padding:2rem;">
+  <div style="max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;border-top:1px solid rgba(255,255,255,.1);padding-top:2rem;">
+    <a href="../index.html" class="nav-logo">
+      <span class="nav-logo-text" style="color:white;">NAVI<span>DRON</span></span>
+    </a>
+    <p style="color:rgba(255,255,255,.4);font-size:.82rem;">© 2024 NaviDron — Nexfly Robotics</p>
+    <a href="../index.html#contact" class="btn btn-primary" style="padding:.5rem 1.2rem;font-size:.82rem;">Get Quote</a>
+  </div>
+</footer>
+
+<script>
+  document.getElementById("nav-toggle").addEventListener("click", function() {
+    this.classList.toggle("active");
+    document.getElementById("mobile-menu").classList.toggle("open");
+  });
+  window.addEventListener("scroll", () => {
+    document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 50);
+  }, { passive: true });
+  (function() {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) setTimeout(() => e.target.classList.add("aos-animate"), parseInt(e.target.dataset.aosDelay||0)); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll("[data-aos]").forEach(el => obs.observe(el));
+  })();
+  function submitUAVForm(e) {
+    e.preventDefault();
+    alert("✅ Your custom drone request has been submitted! We will contact you within 24 hours. Thank you!");
+    e.target.reset();
+  }
+</script>
+</body>
+</html>
