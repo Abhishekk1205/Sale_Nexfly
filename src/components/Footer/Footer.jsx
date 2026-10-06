@@ -32,9 +32,9 @@ export default function Footer() {
           <div>
             <div className="nav-logo" style={{ marginBottom: '1rem' }}>
               <img
-                src="/images/nexfly_robotics_logo_1791059250216.jpg"
+                src="/favicon.png"
                 alt="NaviDron"
-                style={{ height: '42px', width: '42px', borderRadius: '8px' }}
+                style={{ height: '42px', width: '42px', borderRadius: '50%', objectFit: 'contain' }}
               />
               <span className="nav-logo-text" style={{ color: 'white' }}>
                 NAVI<span style={{ color: 'var(--neon)' }}>DRON</span>

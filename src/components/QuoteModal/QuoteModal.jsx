@@ -103,7 +103,7 @@ export default function QuoteModal({ isOpen, onClose }) {
             </p>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="modal-form-row">
                 <div>
                   <label className="form-label" style={{ fontSize: '.75rem' }}>Project Type *</label>
                   <select
@@ -140,7 +140,7 @@ export default function QuoteModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="modal-form-row">
                 <div>
                   <label className="form-label" style={{ fontSize: '.75rem' }}>Your Name *</label>
                   <input

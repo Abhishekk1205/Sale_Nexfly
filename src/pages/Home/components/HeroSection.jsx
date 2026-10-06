@@ -52,7 +52,9 @@ export default function HeroSection({ onOpenQuote }) {
       <div className="hero-content">
         <div className="hero-text">
           <div className="hero-eyebrow">
-            Nexfly Robotics Presents
+            <span className="hero-eyebrow-dot"></span>
+            <span className="brand-highlight">Nexfly Robotics</span>
+            <span className="presents-text">Presents</span>
           </div>
 
           <h1 className="hero-title">

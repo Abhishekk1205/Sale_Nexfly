@@ -112,7 +112,7 @@ export default function PBrothersPage({ onOpenQuote }) {
           </div>
 
           {/* Video Selector Thumbnails */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', maxWidth: '1000px', margin: '2rem auto 0' }} className="grid-3">
+          <div className="grid-3 video-thumbnails-grid" style={{ maxWidth: '1000px', margin: '2rem auto 0' }}>
             {pBrothersData.featuredVideos.map((vid, idx) => (
               <div
                 key={idx}

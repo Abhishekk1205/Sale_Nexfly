@@ -15,6 +15,18 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen]);
+
   // Close mobile menu on page change
   useEffect(() => {
     setMobileOpen(false);
@@ -31,10 +43,10 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
     <>
       <nav id="navbar" className={scrolled ? 'scrolled' : ''}>
         <div className="nav-inner">
-          <Link to="/" className="nav-logo">
+          <Link to="/" className="nav-logo" onClick={() => setMobileOpen(false)}>
             <img
-              src="/images/nexfly_robotics_logo_1791059250216.jpg"
-              alt="NaviDron Nexfly Robotics Logo"
+              src="/favicon.png"
+              alt="NaviDron Logo"
             />
             <span className="nav-logo-text">
               NAVI<span>DRON</span>
@@ -127,7 +139,7 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
           <div className="nav-actions">
             {user ? (
               <>
-                <span style={{ fontSize: '.84rem', color: 'var(--neon)', fontWeight: 700 }}>
+                <span style={{ fontSize: '.84rem', color: 'var(--neon)', fontWeight: 700 }} className="nav-user-greeting">
                   Hi, {user.name}
                 </span>
                 <button className="btn-nav-outline" onClick={onLogout}>
@@ -141,8 +153,8 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
             )}
 
             <button className="btn-nav" onClick={onOpenQuote}>
-              <Send size={15} />
-              Get a Quote
+              <Send size={14} />
+              <span>Quote</span>
             </button>
           </div>
 
@@ -158,53 +170,86 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
         </div>
       </nav>
 
+      {/* Backdrop overlay for mobile menu */}
+      {mobileOpen && (
+        <div
+          className="mobile-backdrop"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       {/* Mobile Navigation Drawer */}
       <div className={`mobile-menu ${mobileOpen ? 'open' : ''}`}>
-        <Link to="/" className="mob-link" onClick={() => setMobileOpen(false)}>
-          Home
-        </Link>
-        <Link to="/uav" className="mob-link" onClick={() => setMobileOpen(false)}>
-          UAV / Drones
-        </Link>
-        <Link to="/products" className="mob-link" onClick={() => setMobileOpen(false)}>
-          Drone Parts & Electronics
-        </Link>
-        <Link to="/prints" className="mob-link" onClick={() => setMobileOpen(false)}>
-          3D Prints & Action Figures
-        </Link>
-        <Link
-          to="/p-brothers"
-          className="mob-link"
-          style={{ color: '#ff00aa', fontWeight: 800 }}
-          onClick={() => setMobileOpen(false)}
-        >
-          🎮 P_Brothers × GTA 6 Merch
-        </Link>
-        <Link to="/gallery" className="mob-link" onClick={() => setMobileOpen(false)}>
-          Gallery
-        </Link>
-        <Link to="/services" className="mob-link" onClick={() => setMobileOpen(false)}>
-          Services
-        </Link>
-        <Link to="/contact" className="mob-link" onClick={() => setMobileOpen(false)}>
-          Contact
-        </Link>
+        <div className="mobile-menu-header">
+          <Link to="/" className="nav-logo" onClick={() => setMobileOpen(false)}>
+            <img src="/favicon.png" alt="NaviDron Logo" />
+            <span className="nav-logo-text">
+              NAVI<span>DRON</span>
+            </span>
+          </Link>
+          <button
+            className="mobile-close-btn"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
+          >
+            <X size={24} />
+          </button>
+        </div>
 
-        <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', width: '80%' }}>
+        <div className="mobile-links-container">
+          <Link to="/" className={`mob-link ${isActive('/') ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+            <span>🏠 Home</span>
+            <span className="mob-arrow">›</span>
+          </Link>
+          <Link to="/uav" className={`mob-link ${isActive('/uav') ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+            <span>⚡ UAV & Drones</span>
+            <span className="mob-arrow">›</span>
+          </Link>
+          <Link to="/products" className={`mob-link ${isActive('/products') ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+            <span>🔧 Drone Parts & Electronics</span>
+            <span className="mob-arrow">›</span>
+          </Link>
+          <Link to="/prints" className={`mob-link ${isActive('/prints') ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+            <span>🖨️ 3D Prints & Action Figures</span>
+            <span className="mob-arrow">›</span>
+          </Link>
+          <Link
+            to="/p-brothers"
+            className={`mob-link mob-link-highlight ${isActive('/p-brothers') ? 'active' : ''}`}
+            onClick={() => setMobileOpen(false)}
+          >
+            <span>🎮 P_Brothers × GTA 6 Drops</span>
+            <span className="mob-badge">HOT</span>
+          </Link>
+          <Link to="/gallery" className={`mob-link ${isActive('/gallery') ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+            <span>📸 Visual Gallery</span>
+            <span className="mob-arrow">›</span>
+          </Link>
+          <Link to="/services" className={`mob-link ${isActive('/services') ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+            <span>⚙️ Robotics Services</span>
+            <span className="mob-arrow">›</span>
+          </Link>
+          <Link to="/contact" className={`mob-link ${isActive('/contact') ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+            <span>📬 Contact & Support</span>
+            <span className="mob-arrow">›</span>
+          </Link>
+        </div>
+
+        <div className="mobile-menu-actions">
           <button
             className="btn btn-primary"
-            style={{ width: '100%' }}
+            style={{ width: '100%', padding: '.85rem 1.5rem' }}
             onClick={() => {
               setMobileOpen(false);
               onOpenQuote();
             }}
           >
-            Get a Custom Quote
+            <Send size={16} /> Get a Custom Quote
           </button>
           {!user ? (
             <button
               className="btn btn-secondary"
-              style={{ width: '100%' }}
+              style={{ width: '100%', padding: '.85rem 1.5rem' }}
               onClick={() => {
                 setMobileOpen(false);
                 onOpenAuth();
@@ -215,7 +260,7 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
           ) : (
             <button
               className="btn btn-outline"
-              style={{ width: '100%' }}
+              style={{ width: '100%', padding: '.85rem 1.5rem' }}
               onClick={() => {
                 setMobileOpen(false);
                 onLogout();

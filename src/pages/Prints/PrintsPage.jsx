@@ -261,7 +261,7 @@ export default function PrintsPage({ onOpenQuote }) {
 
               <div className="grid-2">
                 {printsData.lithophanes.map((l) => (
-                  <div key={l.id} className="card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+                  <div key={l.id} className="card card-horizontal">
                     <img src={l.image} alt={l.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <div className="card-body">
                       <div className="card-tag">Lithophane</div>

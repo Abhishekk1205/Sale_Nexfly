@@ -122,15 +122,7 @@ export default function PrintServicesOverview({ onOpenQuote }) {
             Operating professional SLA resin and enclosed multi-material FDM printers.
           </p>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '2rem',
-              marginTop: '2.5rem'
-            }}
-            className="grid-4"
-          >
+          <div className="grid-4 capabilities-grid" style={{ marginTop: '2.5rem' }}>
             <div>
               <div style={{ fontFamily: 'var(--font-head)', fontSize: '2.2rem', color: 'var(--neon)', fontWeight: 900 }}>
                 220mm
