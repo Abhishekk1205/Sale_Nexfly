@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useUser, useClerk } from '@clerk/clerk-react';
+import { useUser, useClerk, AuthenticateWithRedirectCallback } from '@clerk/clerk-react';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
 import AuthModal from './components/AuthModal/AuthModal';
@@ -131,6 +131,10 @@ export default function App() {
                 onOpenAuth={() => setAuthModalOpen(true)}
               />
             }
+          />
+          <Route
+            path="/sso-callback"
+            element={<AuthenticateWithRedirectCallback signInForceRedirectUrl="/profile" signUpForceRedirectUrl="/profile" />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

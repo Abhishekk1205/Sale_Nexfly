@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User as UserIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { signInWithGoogle, getUserProfile, syncUserFullDataToFirebase } from '../../services/firebase';
+import { useSignIn, useClerk } from '@clerk/clerk-react';
+import { getUserProfile, syncUserFullDataToFirebase } from '../../services/firebase';
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [tab, setTab] = useState('login'); // 'login' | 'register'
@@ -11,30 +12,57 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [isAuthorizing, setIsAuthorizing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const { isLoaded: isSignInLoaded, signIn } = useSignIn();
+  const clerk = useClerk();
+
   if (!isOpen) return null;
 
-  // Option 1: Continue with Google (Single window Google sign-in, no secondary Clerk popup)
+  // Option 1: Continue with Google (powered seamlessly by Clerk)
   const handleGoogleAuth = async () => {
     setErrorMsg('');
     setIsAuthorizing(true);
     try {
-      const res = await signInWithGoogle();
-      if (res && res.user) {
-        try {
-          confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
-        } catch (err) {}
-        onLoginSuccess(res.user);
+      if (signIn && signIn.authenticateWithRedirect) {
         onClose();
-      } else if (res && res.error) {
-        if (!res.error.includes('popup-closed-by-user')) {
-          setErrorMsg(res.error);
-        }
+        await signIn.authenticateWithRedirect({
+          strategy: 'oauth_google',
+          redirectUrl: '/sso-callback',
+          redirectUrlComplete: '/profile'
+        });
+        return;
+      }
+
+      if (clerk && clerk.openSignIn) {
+        onClose();
+        clerk.openSignIn({
+          appearance: {
+            variables: { colorPrimary: '#00c8ff' }
+          },
+          afterSignInUrl: '/profile',
+          afterSignUpUrl: '/profile',
+          fallbackRedirectUrl: '/profile'
+        });
+        return;
       }
     } catch (err) {
-      console.error('Google Sign-in failed:', err);
-      if (!err.message?.includes('popup-closed-by-user')) {
-        setErrorMsg(err.message || 'Google Sign-in failed. Please try again.');
+      console.warn('Direct Google redirect attempt, trying openSignIn fallback:', err);
+      try {
+        if (clerk && clerk.openSignIn) {
+          onClose();
+          clerk.openSignIn({
+            appearance: {
+              variables: { colorPrimary: '#00c8ff' }
+            },
+            afterSignInUrl: '/profile',
+            afterSignUpUrl: '/profile',
+            fallbackRedirectUrl: '/profile'
+          });
+          return;
+        }
+      } catch (fallbackErr) {
+        console.error('Clerk login failed:', fallbackErr);
       }
+      setErrorMsg(err.message || 'Google sign-in failed. Please try again or use email/password.');
     } finally {
       setIsAuthorizing(false);
     }
