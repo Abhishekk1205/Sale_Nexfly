@@ -23,9 +23,22 @@ import {
   ArrowRight,
   Filter,
   Layers,
-  Cpu
+  Cpu,
+  Lock,
+  Unlock,
+  KeyRound,
+  Eye,
+  EyeOff,
+  LogOut,
+  AlertTriangle,
+  User
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+
+const VALID_ADMIN_ACCOUNTS = [
+  { id: 'admin@nexfly.com', pass: 'Abhi@2076', display: 'Admin@nexfly.com' },
+  { id: 'admin1@nexfly.com', pass: 'Abhi@2076', display: 'Admin1@nexfly.com' }
+];
 import {
   getAllOrders,
   updateOrderStatus,
@@ -48,6 +61,17 @@ import {
 } from '../../services/firebase';
 
 export default function AdminPortal() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return sessionStorage.getItem('navidron_admin_authenticated') === 'true';
+  });
+  const [currentAdminUser, setCurrentAdminUser] = useState(() => {
+    return sessionStorage.getItem('navidron_admin_user') || 'Admin@nexfly.com';
+  });
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState('');
+
   const [activeTab, setActiveTab] = useState('orders'); // 'profile' | 'orders' | 'items' | '3dstudio' | 'uav' | 'users'
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -117,10 +141,47 @@ export default function AdminPortal() {
     }
   };
 
+  const handleAdminLogin = (e) => {
+    if (e) e.preventDefault();
+    setLoginError('');
+    const cleanId = (loginEmail || '').trim().toLowerCase();
+    const cleanPass = (loginPassword || '').trim();
+
+    const matched = VALID_ADMIN_ACCOUNTS.find(
+      (acc) => acc.id === cleanId && acc.pass === cleanPass
+    );
+
+    if (matched) {
+      sessionStorage.setItem('navidron_admin_authenticated', 'true');
+      sessionStorage.setItem('navidron_admin_user', matched.display);
+      setIsAuthenticated(true);
+      setCurrentAdminUser(matched.display);
+      setLoginError('');
+      showToast(`Access granted. Welcome, ${matched.display}`);
+      try {
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+      } catch (_) {}
+    } else {
+      setLoginError('Access Denied: Invalid Admin ID or Password. Verify your credentials.');
+    }
+  };
+
+  const handleAdminLogout = () => {
+    sessionStorage.removeItem('navidron_admin_authenticated');
+    sessionStorage.removeItem('navidron_admin_user');
+    setIsAuthenticated(false);
+    setLoginEmail('');
+    setLoginPassword('');
+    setLoginError('');
+    showToast('Admin session locked successfully.');
+  };
+
   useEffect(() => {
     document.title = "Admin Portal — NaviDron Operations & Catalog";
-    loadAllData();
-  }, []);
+    if (isAuthenticated) {
+      loadAllData();
+    }
+  }, [isAuthenticated]);
 
   // ── ORDER MANAGEMENT ──────────────────────────────────────────
   const handleStatusChange = async (orderId, newStatus) => {
@@ -322,6 +383,106 @@ export default function AdminPortal() {
     return true;
   });
 
+  if (!isAuthenticated) {
+    return (
+      <div className="admin-lock-screen">
+        {toastMessage && (
+          <div className="profile-toast-floating">
+            <Sparkles size={18} className="neon-text" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
+
+        <div className="admin-lock-card fade-in">
+          <div style={{ textAlign: 'center' }}>
+            <div className="admin-lock-badge">
+              <Lock size={13} />
+              <span>NexFly Security Gate</span>
+            </div>
+            <h1 className="admin-lock-title">
+              Admin <span>Portal Access</span>
+            </h1>
+            <p className="admin-lock-subtitle">
+              Restricted control deck. Enter your administrative credentials to manage store catalog, orders, and user operations.
+            </p>
+          </div>
+
+          {loginError && (
+            <div className="admin-lock-error" style={{ marginBottom: '1.25rem' }}>
+              <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleAdminLogin} className="admin-lock-form">
+            <div className="admin-lock-input-group">
+              <label>
+                <User size={14} />
+                <span>Admin ID / Email</span>
+              </label>
+              <div className="admin-lock-input-wrap">
+                <Mail size={16} className="input-icon-left" />
+                <input
+                  type="text"
+                  autoComplete="username"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="Admin@nexfly.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="admin-lock-input-group">
+              <label>
+                <KeyRound size={14} />
+                <span>Access Password</span>
+              </label>
+              <div className="admin-lock-input-wrap">
+                <Lock size={16} className="input-icon-left" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  className="input-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="admin-lock-btn"
+            >
+              <Unlock size={17} />
+              <span>Authenticate & Enter Deck</span>
+            </button>
+          </form>
+
+          <div style={{ marginTop: '1.5rem', textAlign: 'center', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <Link
+              to="/"
+              style={{ fontSize: '0.82rem', color: '#64748b', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+              onMouseOver={(e) => (e.currentTarget.style.color = 'var(--neon)')}
+              onMouseOut={(e) => (e.currentTarget.style.color = '#64748b')}
+            >
+              ← Return to Public Website
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-page-container">
       {/* Toast */}
@@ -430,6 +591,22 @@ export default function AdminPortal() {
             <span>Users</span>
             <span className="admin-count-pill">{usersList.length}</span>
           </button>
+
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '1rem' }}>
+            <div style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(255,255,255,0.04)', padding: '0.35rem 0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', whiteSpace: 'nowrap' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00ffcc', display: 'inline-block' }}></span>
+              <span>{currentAdminUser}</span>
+            </div>
+            <button
+              type="button"
+              className="admin-logout-btn"
+              onClick={handleAdminLogout}
+              title="Lock Portal & Sign Out"
+            >
+              <LogOut size={14} />
+              <span>Lock Portal</span>
+            </button>
+          </div>
         </div>
       </nav>
 

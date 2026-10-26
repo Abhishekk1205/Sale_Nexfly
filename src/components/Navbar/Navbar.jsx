@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Menu, X, Flame, Sparkles, Send, User, ShoppingCart, ShieldCheck } from 'lucide-react';
+import { ChevronDown, Menu, X, Flame, Sparkles, Send, User, ShoppingCart } from 'lucide-react';
 
 const getFirstName = (u) => {
   if (!u) return 'Pilot';
@@ -148,12 +148,6 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout, cartCo
             <li className="nav-item">
               <Link to="/contact" className={`nav-link ${isActive('/contact') ? 'active' : ''}`}>
                 Contact
-              </Link>
-            </li>
-
-            <li className="nav-item">
-              <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`} style={{ color: 'var(--neon)', fontWeight: 700 }}>
-                <ShieldCheck size={14} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'text-top' }} /> Admin
               </Link>
             </li>
           </ul>
@@ -305,10 +299,6 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout, cartCo
           </Link>
           <Link to="/contact" className={`mob-link ${isActive('/contact') ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
             <span>📬 Contact & Support</span>
-            <span className="mob-arrow">›</span>
-          </Link>
-          <Link to="/admin" className={`mob-link ${isActive('/admin') ? 'active' : ''}`} onClick={() => setMobileOpen(false)} style={{ color: 'var(--neon)', fontWeight: 700 }}>
-            <span>🛡️ Admin Portal</span>
             <span className="mob-arrow">›</span>
           </Link>
         </div>
