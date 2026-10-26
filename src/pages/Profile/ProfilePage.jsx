@@ -168,13 +168,9 @@ export default function ProfilePage({
         confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
       } catch (err) {}
       if (res && res.error) {
-        if (res.error.toLowerCase().includes('permission') || res.error.toLowerCase().includes('denied') || res.error.includes('403')) {
-          showToast('⚠️ Saved locally! In Firestore > Rules tab, set allow read, write: if true;');
-        } else {
-          showToast('⚠️ Firestore: ' + res.error);
-        }
+        showToast('⚠️ Note: ' + res.error);
       } else {
-        showToast('✅ Profile saved & synced to Cloud Firestore!');
+        showToast('✅ Profile saved & updated successfully!');
       }
     } catch (err) {
       showToast('❌ Error: ' + err.message);
@@ -238,7 +234,7 @@ export default function ProfilePage({
     await saveUserAddresses(uid, updated);
     setShowAddressModal(false);
     setSyncing(false);
-    showToast('✅ Delivery address saved to Firebase!');
+    showToast('✅ Delivery address saved successfully!');
   };
 
   const handleDeleteAddress = async (id) => {
@@ -440,11 +436,11 @@ export default function ProfilePage({
                 <div>
                   <h2 className="section-main-title">Personal & Contact Details</h2>
                   <p className="section-main-desc">
-                    Your details are synced with Firebase and link your custom drone orders, 3Dstudio drops, and dispatch notifications.
+                    Your details are saved securely and link your custom drone orders, 3Dstudio drops, and dispatch notifications.
                   </p>
                 </div>
                 <div className="firebase-badge-pill">
-                  <ShieldCheck size={14} /> Linked to Firebase User
+                  <ShieldCheck size={14} /> Verified Member Account
                 </div>
               </div>
 
@@ -476,7 +472,7 @@ export default function ProfilePage({
                     onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                     required
                   />
-                  <span className="field-hint">Used for order receipts and Firebase authentication.</span>
+                  <span className="field-hint">Used for order receipts and pilot dashboard access.</span>
                 </div>
 
                 <div className="form-group-field">
@@ -512,10 +508,10 @@ export default function ProfilePage({
                     disabled={syncing}
                   >
                     <Check size={18} />
-                    {syncing ? 'Saving to Firebase...' : 'Save & Update Profile'}
+                    {syncing ? 'Saving changes...' : 'Save & Update Profile'}
                   </button>
                   <span className="auto-save-note">
-                    🔒 Protected with Firebase Cloud Security Rules
+                    🔒 Protected with Cloud Security Protocol
                   </span>
                 </div>
               </form>
@@ -1115,7 +1111,7 @@ export default function ProfilePage({
                   Cancel
                 </button>
                 <button type="submit" className="modal-btn-save" disabled={syncing}>
-                  {syncing ? 'Saving to Firebase...' : 'Save Address'}
+                  {syncing ? 'Saving...' : 'Save Address'}
                 </button>
               </div>
             </form>

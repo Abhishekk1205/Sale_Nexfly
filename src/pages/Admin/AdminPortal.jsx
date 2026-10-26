@@ -101,14 +101,32 @@ export default function AdminPortal() {
     category: 'Anime',
     kitType: 'Chassis & Base',
     type: 'FPV Drone',
-    price: 999,
-    quantity: 10,
+    price: '',
+    quantity: '',
     size: '8 inch',
-    image: '/images/anime_figure_3d.jpg',
+    image: '',
     desc: '',
-    flightTime: '15 mins',
-    range: '2.5 km'
+    flightTime: '',
+    range: ''
   });
+
+  const handleOpenAddModal = (type) => {
+    setModalType(type);
+    setNewItemForm({
+      name: '',
+      category: type === '3dstudio' ? 'Anime' : 'Motors',
+      kitType: 'Chassis & Base',
+      type: 'FPV Drone',
+      price: '',
+      quantity: '',
+      size: '8 inch',
+      image: '',
+      desc: '',
+      flightTime: '',
+      range: ''
+    });
+    setShowAddModal(true);
+  };
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -191,7 +209,7 @@ export default function AdminPortal() {
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
       );
-      showToast(`✅ Order #${orderId} status set to "${newStatus}" in Firebase.`);
+      showToast(`✅ Order #${orderId} status updated to "${newStatus}".`);
     } catch (err) {
       showToast(`❌ Error updating order: ${err.message}`);
     } finally {
@@ -308,35 +326,43 @@ export default function AdminPortal() {
   const handleAddNewSubmit = async (e) => {
     e.preventDefault();
     setActionLoading(true);
+    const priceVal = typeof newItemForm.price === 'number' ? newItemForm.price : parseInt(newItemForm.price, 10) || 0;
+    const qtyVal = typeof newItemForm.quantity === 'number' ? newItemForm.quantity : parseInt(newItemForm.quantity, 10) || 0;
+    const cleanedPayload = {
+      ...newItemForm,
+      price: priceVal,
+      quantity: qtyVal
+    };
+
     try {
       if (modalType === '3dstudio') {
         const created = await save3DStudioItem({
-          ...newItemForm,
+          ...cleanedPayload,
           id: `3d-${Date.now()}`
         });
         setThreeDItems((prev) => [created, ...prev]);
-        showToast(`🎉 Added "${created.name}" to 3DStudio collection!`);
+        showToast(`🎉 Added "${created.name}" to 3DStudio catalog!`);
       } else if (modalType === 'drone') {
         const created = await saveDroneAccessory({
-          ...newItemForm,
+          ...cleanedPayload,
           id: `part-${Date.now()}`
         });
         setDroneParts((prev) => [created, ...prev]);
-        showToast(`🎉 Added "${created.name}" to DroneAccessories collection!`);
+        showToast(`🎉 Added "${created.name}" to Drone Accessories catalog!`);
       } else if (modalType === 'robotics') {
         const created = await saveRoboticsKit({
-          ...newItemForm,
+          ...cleanedPayload,
           id: `kit-${Date.now()}`
         });
         setRoboticsKits((prev) => [created, ...prev]);
-        showToast(`🎉 Added "${created.name}" to Robotics_Kits collection!`);
+        showToast(`🎉 Added "${created.name}" to Robotics Kits catalog!`);
       } else if (modalType === 'uav') {
         const created = await saveUAVPreBuilt({
-          ...newItemForm,
+          ...cleanedPayload,
           id: `uav-${Date.now()}`
         });
         setUavPreBuilt((prev) => [created, ...prev]);
-        showToast(`🎉 Added "${created.name}" to UAV_PreBuilt collection!`);
+        showToast(`🎉 Added "${created.name}" to Pre-Built UAV catalog!`);
       }
 
       try {
@@ -349,13 +375,13 @@ export default function AdminPortal() {
         category: 'Anime',
         kitType: 'Chassis & Base',
         type: 'FPV Drone',
-        price: 999,
-        quantity: 10,
+        price: '',
+        quantity: '',
         size: '8 inch',
-        image: '/images/anime_figure_3d.jpg',
+        image: '',
         desc: '',
-        flightTime: '15 mins',
-        range: '2.5 km'
+        flightTime: '',
+        range: ''
       });
     } catch (err) {
       showToast(`❌ Error: ${err.message}`);
@@ -427,7 +453,7 @@ export default function AdminPortal() {
                   autoComplete="username"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
-                  placeholder="Admin@nexfly.com"
+                  placeholder=""
                   required
                 />
               </div>
@@ -445,7 +471,7 @@ export default function AdminPortal() {
                   autoComplete="current-password"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder=""
                   required
                 />
                 <button
@@ -615,7 +641,7 @@ export default function AdminPortal() {
         {loading ? (
           <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
             <RefreshCw size={36} className="spin-icon" color="var(--neon)" style={{ margin: '0 auto 1rem' }} />
-            <p style={{ color: '#94a3b8' }}>Syncing live Firebase collections...</p>
+            <p style={{ color: '#94a3b8' }}>Loading live database...</p>
           </div>
         ) : (
           <>
@@ -628,7 +654,7 @@ export default function AdminPortal() {
                       Administrator Identity & System Status
                     </h2>
                     <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
-                      Master credentials, operations hub address, and live Cloud Firestore database health.
+                      Master credentials, operations hub address, and live system status.
                     </p>
                   </div>
                   <button
@@ -669,7 +695,7 @@ export default function AdminPortal() {
 
                   <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
                     <div style={{ fontSize: '0.72rem', color: 'var(--neon)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                      Cloud Firestore Collections
+                      Live System Collections
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
                       {['users', 'Order', '3DStudio', 'DroneAccessories', 'Robotics_Kits', 'UAV_PreBuilt', 'UAV_Custom'].map((col) => (
@@ -709,7 +735,7 @@ export default function AdminPortal() {
                       Live User Orders & Delivery Addresses
                     </h2>
                     <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
-                      Stored globally in Firestore root collection <code>Order</code> with complete recipient details and particular delivery addresses.
+                      Stored globally in root collection <code>Order</code> with complete recipient details and particular delivery addresses.
                     </p>
                   </div>
 
@@ -917,10 +943,7 @@ export default function AdminPortal() {
                     <button
                       type="button"
                       className="admin-btn-action-primary"
-                      onClick={() => {
-                        setModalType(itemsSubTab === 'drone' ? 'drone' : 'robotics');
-                        setShowAddModal(true);
-                      }}
+                      onClick={() => handleOpenAddModal(itemsSubTab === 'drone' ? 'drone' : 'robotics')}
                     >
                       <Plus size={16} /> Add {itemsSubTab === 'drone' ? 'Drone Part' : 'Robotics Kit'}
                     </button>
@@ -1106,10 +1129,7 @@ export default function AdminPortal() {
                     <button
                       type="button"
                       className="admin-btn-action-primary"
-                      onClick={() => {
-                        setModalType('3dstudio');
-                        setShowAddModal(true);
-                      }}
+                      onClick={() => handleOpenAddModal('3dstudio')}
                     >
                       <Plus size={16} /> Add 3D Figure
                     </button>
@@ -1259,10 +1279,7 @@ export default function AdminPortal() {
                       <button
                         type="button"
                         className="admin-btn-action-primary"
-                        onClick={() => {
-                          setModalType('uav');
-                          setShowAddModal(true);
-                        }}
+                        onClick={() => handleOpenAddModal('uav')}
                       >
                         <Plus size={16} /> Add Pre-Built UAV
                       </button>
@@ -1531,7 +1548,7 @@ export default function AdminPortal() {
                   className="profile-input"
                   value={newItemForm.name}
                   onChange={(e) => setNewItemForm({ ...newItemForm, name: e.target.value })}
-                  placeholder="e.g. Zoro King of Hell 3D Resin Figure"
+                  placeholder=""
                   required
                 />
               </div>
@@ -1627,7 +1644,8 @@ export default function AdminPortal() {
                   type="number"
                   className="profile-input"
                   value={newItemForm.price}
-                  onChange={(e) => setNewItemForm({ ...newItemForm, price: parseInt(e.target.value, 10) || 0 })}
+                  onChange={(e) => setNewItemForm({ ...newItemForm, price: e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0 })}
+                  placeholder=""
                   required
                 />
               </div>
@@ -1638,7 +1656,8 @@ export default function AdminPortal() {
                   type="number"
                   className="profile-input"
                   value={newItemForm.quantity}
-                  onChange={(e) => setNewItemForm({ ...newItemForm, quantity: parseInt(e.target.value, 10) || 0 })}
+                  onChange={(e) => setNewItemForm({ ...newItemForm, quantity: e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0 })}
+                  placeholder=""
                   required
                 />
               </div>
@@ -1650,7 +1669,7 @@ export default function AdminPortal() {
                   className="profile-input"
                   value={newItemForm.image}
                   onChange={(e) => setNewItemForm({ ...newItemForm, image: e.target.value })}
-                  placeholder="/images/anime_figure_3d.jpg"
+                  placeholder=""
                   required
                 />
               </div>
@@ -1662,7 +1681,7 @@ export default function AdminPortal() {
                   className="profile-textarea"
                   value={newItemForm.desc}
                   onChange={(e) => setNewItemForm({ ...newItemForm, desc: e.target.value })}
-                  placeholder="Detail specifications, material, and features..."
+                  placeholder=""
                 />
               </div>
 
@@ -1679,7 +1698,7 @@ export default function AdminPortal() {
                   className="modal-btn-save"
                   disabled={actionLoading}
                 >
-                  {actionLoading ? 'Saving...' : 'Add to Collection'}
+                  {actionLoading ? 'Saving...' : 'Add Item'}
                 </button>
               </div>
             </form>

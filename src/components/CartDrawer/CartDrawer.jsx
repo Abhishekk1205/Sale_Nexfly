@@ -65,7 +65,7 @@ export default function CartDrawer({
       paymentStatus: 'Paid Online (UPI / Card)',
       status: 'Succeeded',
       statusLabel: 'Payment Confirmed & In Assembly',
-      statusDesc: 'Order confirmed and registered in Firebase Order collection.',
+      statusDesc: 'Order confirmed and registered successfully.',
       trackingNumber: `EXP-${randId}`
     };
 
@@ -118,7 +118,7 @@ export default function CartDrawer({
               Order Placed Successfully!
             </h4>
             <p style={{ color: '#475569', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-              Order <strong>#{orderSuccess.id}</strong> has been stored in the Firebase <code>Order</code> collection and linked to your profile!
+              Order <strong>#{orderSuccess.id}</strong> has been registered and linked to your profile!
             </p>
             <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '10px', textAlign: 'left', marginBottom: '1.5rem', fontSize: '0.84rem' }}>
               <div><strong>Recipient Address:</strong> {orderSuccess.deliveryAddress}</div>
@@ -283,7 +283,7 @@ export default function CartDrawer({
                 onClick={handleCheckout}
                 disabled={isPlacingOrder}
               >
-                {isPlacingOrder ? 'Confirming Order...' : 'Confirm Order & Sync to Firebase'}
+                {isPlacingOrder ? 'Confirming Order...' : 'Confirm Order & Checkout'}
                 <ArrowRight size={16} />
               </button>
 
