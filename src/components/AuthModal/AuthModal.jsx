@@ -187,7 +187,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               <input
                 className="auth-input"
                 type="text"
-                placeholder="Enter your full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -200,7 +199,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
             <input
               className="auth-input"
               type="email"
-              placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -212,7 +210,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
             <input
               className="auth-input"
               type="password"
-              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

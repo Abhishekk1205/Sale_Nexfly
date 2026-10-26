@@ -556,11 +556,10 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     className="profile-input"
                     value={profile.name}
                     onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                    placeholder="Enter your full name"
                     required
                   />
                   <span className="field-hint">
-                    This updates your greeting across the navbar (e.g. <strong>Hii, {profile.name || 'Pilot'}</strong>).
+                    This updates your greeting across the navbar.
                   </span>
                 </div>
 
@@ -573,7 +572,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     className="profile-input"
                     value={profile.email}
                     onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                    placeholder="name@example.com"
                     required
                   />
                   <span className="field-hint">Used for order receipts and Firebase authentication.</span>
@@ -588,7 +586,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     className="profile-input"
                     value={profile.phone}
                     onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                    placeholder="+91 XXXXX XXXXX"
                     required
                   />
                   <span className="field-hint">For instant dispatch tracking & delivery updates.</span>
@@ -601,7 +598,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     className="profile-input"
                     value={profile.altPhone}
                     onChange={(e) => setProfile({ ...profile, altPhone: e.target.value })}
-                    placeholder="+91 XXXXX XXXXX"
                   />
                   <span className="field-hint">Backup contact if primary is unreachable during delivery.</span>
                 </div>
@@ -613,7 +609,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     className="profile-input"
                     value={profile.callsign}
                     onChange={(e) => setProfile({ ...profile, callsign: e.target.value })}
-                    placeholder="e.g. Maverick"
                   />
                   <span className="field-hint">Display handle for NaviDron Leaderboard & 3Dstudio.</span>
                 </div>
@@ -639,7 +634,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     className="profile-textarea"
                     value={profile.bio}
                     onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                    placeholder="Tell us about your drone builds or 3D collection..."
                   />
                 </div>
 
@@ -1034,7 +1028,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     onChange={(e) =>
                       setAddressForm({ ...addressForm, recipient: e.target.value })
                     }
-                    placeholder="Full Name"
                     required
                   />
                 </div>
@@ -1047,7 +1040,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     onChange={(e) =>
                       setAddressForm({ ...addressForm, phone: e.target.value })
                     }
-                    placeholder="+91 Mobile number"
                     required
                   />
                 </div>
@@ -1062,7 +1054,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                   onChange={(e) =>
                     setAddressForm({ ...addressForm, street: e.target.value })
                   }
-                  placeholder="e.g. Flat 402, Skyline Towers, 5th Cross"
                   required
                 />
               </div>
@@ -1076,7 +1067,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                   onChange={(e) =>
                     setAddressForm({ ...addressForm, landmark: e.target.value })
                   }
-                  placeholder="e.g. Near Metro Station / Tech Park"
                 />
               </div>
 
@@ -1090,7 +1080,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     onChange={(e) =>
                       setAddressForm({ ...addressForm, city: e.target.value })
                     }
-                    placeholder="Bengaluru"
                     required
                   />
                 </div>
@@ -1103,7 +1092,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     onChange={(e) =>
                       setAddressForm({ ...addressForm, state: e.target.value })
                     }
-                    placeholder="Karnataka"
                     required
                   />
                 </div>
@@ -1116,7 +1104,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     onChange={(e) =>
                       setAddressForm({ ...addressForm, pincode: e.target.value })
                     }
-                    placeholder="560038"
                     required
                   />
                 </div>
