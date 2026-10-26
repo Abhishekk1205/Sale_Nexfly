@@ -157,7 +157,6 @@ export default function QuoteModal({ isOpen, onClose }) {
                   <input
                     className="form-input"
                     type="tel"
-                    placeholder="+91 9876543210"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required

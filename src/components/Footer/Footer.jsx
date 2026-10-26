@@ -55,20 +55,20 @@ export default function Footer() {
                 <YoutubeIcon size={18} color="white" />
               </a>
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/navi3dstudio"
                 target="_blank"
                 rel="noreferrer"
                 className="footer-social"
-                title="Instagram"
+                title="Instagram (@navi3dstudio)"
               >
                 <InstagramIcon size={18} color="white" />
               </a>
               <a
-                href="https://wa.me/919876543210"
+                href="https://wa.me/919508106177"
                 target="_blank"
                 rel="noreferrer"
                 className="footer-social"
-                title="WhatsApp Support"
+                title="WhatsApp Support (+91 9508106177)"
               >
                 <WhatsAppIcon size={18} color="white" />
               </a>

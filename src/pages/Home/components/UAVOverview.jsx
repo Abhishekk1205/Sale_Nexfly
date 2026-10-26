@@ -184,7 +184,6 @@ export default function UAVOverview({ onOpenQuote }) {
                   <input
                     className="form-input"
                     type="tel"
-                    placeholder="+91 9876543210"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     required

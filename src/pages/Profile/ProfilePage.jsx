@@ -102,8 +102,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
 
   const [orderFilter, setOrderFilter] = useState('all'); // 'all' | 'Delivered' | 'Succeeded' | 'Cancelled'
   const [orderSearch, setOrderSearch] = useState('');
-  const [showNewOrderModal, setShowNewOrderModal] = useState(false);
-  const [newOrderStatus, setNewOrderStatus] = useState('Succeeded');
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -258,69 +256,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
     showToast('⭐ Default delivery address updated.');
   };
 
-  // Add Simulated Order to test Firebase storage
-  const handleCreateTestOrder = async () => {
-    setSyncing(true);
-    const uid = getEffectiveUserId(user);
-    const randId = Math.floor(10000 + Math.random() * 90000);
-
-    const testOrdersConfig = {
-      Delivered: {
-        status: 'Delivered',
-        statusLabel: 'Delivered',
-        statusDesc: 'Successfully delivered to your default address.',
-        paymentStatus: 'Paid Online (UPI)',
-        refundInfo: null
-      },
-      Succeeded: {
-        status: 'Succeeded',
-        statusLabel: 'Payment Succeeded & Processing',
-        statusDesc: 'Payment confirmed. Assembling components at Nexfly Robotics Hangar.',
-        paymentStatus: 'Paid Online (Google Pay)',
-        refundInfo: null
-      },
-      Cancelled: {
-        status: 'Cancelled',
-        statusLabel: 'Cancelled after payment',
-        statusDesc: 'Order was cancelled after online payment was received. 100% full refund initiated to source account.',
-        paymentStatus: 'Refunded to Source',
-        refundInfo: `Refund ID: REF-${Math.floor(100000 + Math.random() * 900000)} - ₹5,499 Credited`
-      }
-    };
-
-    const cfg = testOrdersConfig[newOrderStatus];
-    const newOrder = {
-      id: `NVD-${randId}`,
-      date: new Date().toISOString().split('T')[0],
-      status: cfg.status,
-      statusLabel: cfg.statusLabel,
-      statusDesc: cfg.statusDesc,
-      paymentStatus: cfg.paymentStatus,
-      refundInfo: cfg.refundInfo,
-      totalAmount: 5499,
-      trackingNumber: `EXP-${randId}`,
-      deliveryAddress: addresses[0]
-        ? `${addresses[0].street}, ${addresses[0].city} - ${addresses[0].pincode}`
-        : 'Indiranagar, Bengaluru - 560038',
-      items: [
-        {
-          id: `item-${Date.now()}`,
-          name: 'GTA 6 Vice City Tommy Vercetti Legacy 3D Print',
-          category: '3Dstudio Series',
-          price: 5499,
-          quantity: 1,
-          image: '/images/gta6-banner.jpg'
-        }
-      ]
-    };
-
-    const updated = [newOrder, ...orders];
-    setOrders(updated);
-    await saveUserOrders(uid, updated);
-    setShowNewOrderModal(false);
-    setSyncing(false);
-    showToast(`📦 New order #${newOrder.id} (${newOrderStatus}) stored in Firebase!`);
-  };
 
   // Filtered orders
   const filteredOrders = orders.filter((ord) => {
@@ -383,57 +318,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
               </div>
             </div>
 
-            {/* Firebase Live Cloud Status Card */}
-            <div className="profile-firebase-status-box">
-              <div className="profile-cloud-indicator">
-                <span className="cloud-dot-active"></span>
-                <strong>Cloud Firestore</strong>
-              </div>
-              <p className="cloud-status-sub" style={{ wordBreak: 'break-all' }}>
-                Project: <code>navidron-e2983</code> | Collection: <code>users</code>
-              </p>
-              <div style={{ fontSize: '0.74rem', color: '#10b981', fontWeight: 700, marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <CheckCircle size={12} /> Account & Firestore Linked
-              </div>
-              <div className="cloud-sync-btn-wrap">
-                <button
-                  type="button"
-                  className="profile-btn-sync"
-                  onClick={async () => {
-                    setSyncing(true);
-                    try {
-                      const res = await syncUserFullDataToFirebase({
-                        id: getEffectiveUserId(user),
-                        name: profile.name,
-                        email: profile.email
-                      });
-                      if (res && res.success) {
-                        try {
-                          confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
-                        } catch (e) {}
-                        showToast('🔥 Live synced to Cloud Firestore: navidron-e2983!');
-                      } else if (res && res.error) {
-                        if (res.error.toLowerCase().includes('permission') || res.error.toLowerCase().includes('denied') || res.error.includes('403')) {
-                          showToast('⚠️ Firestore rules locked (PERMISSION_DENIED)! In Rules tab, set allow read, write: if true;');
-                        } else {
-                          showToast('⚠️ Firestore: ' + res.error);
-                        }
-                      } else {
-                        showToast('✅ Saved locally. Publish Firestore rules to sync cloud.');
-                      }
-                    } catch (e) {
-                      showToast('❌ Sync warning: ' + e.message);
-                    } finally {
-                      setSyncing(false);
-                    }
-                  }}
-                  disabled={syncing}
-                >
-                  <RefreshCw size={13} className={syncing ? 'spin-icon' : ''} />
-                  {syncing ? 'Syncing...' : 'Push to Cloud Firestore'}
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Quick Metrics */}
@@ -602,40 +486,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                   <span className="field-hint">Backup contact if primary is unreachable during delivery.</span>
                 </div>
 
-                <div className="form-group-field">
-                  <label className="form-field-label">Pilot Callsign / Alias</label>
-                  <input
-                    type="text"
-                    className="profile-input"
-                    value={profile.callsign}
-                    onChange={(e) => setProfile({ ...profile, callsign: e.target.value })}
-                  />
-                  <span className="field-hint">Display handle for NaviDron Leaderboard & 3Dstudio.</span>
-                </div>
-
-                <div className="form-group-field">
-                  <label className="form-field-label">Preferred Contact Channel</label>
-                  <select
-                    className="profile-input"
-                    value={profile.preferredContact}
-                    onChange={(e) => setProfile({ ...profile, preferredContact: e.target.value })}
-                  >
-                    <option value="WhatsApp">WhatsApp (Fastest Updates)</option>
-                    <option value="SMS">SMS Text Messages</option>
-                    <option value="Email">Email Notifications Only</option>
-                    <option value="Call">Phone Call Before Delivery</option>
-                  </select>
-                </div>
-
-                <div className="form-group-field full-width">
-                  <label className="form-field-label">Pilot Bio / Notes</label>
-                  <textarea
-                    rows={3}
-                    className="profile-textarea"
-                    value={profile.bio}
-                    onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                  />
-                </div>
 
                 <div className="form-submit-row full-width">
                   <button
@@ -763,13 +613,7 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     View real-time status of your orders: Delivered, Succeeded (Active), and Cancelled after payment (Refunded).
                   </p>
                 </div>
-                <button
-                  type="button"
-                  className="profile-test-order-btn"
-                  onClick={() => setShowNewOrderModal(true)}
-                >
-                  <Plus size={16} /> Simulate Test Order
-                </button>
+
               </div>
 
               {/* Order Filter & Search Controls */}
@@ -1139,73 +983,6 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
         </div>
       )}
 
-      {/* ── MODAL: SIMULATE TEST ORDER ──────────────────────── */}
-      {showNewOrderModal && (
-        <div className="profile-modal-overlay" onClick={() => setShowNewOrderModal(false)}>
-          <div className="profile-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="profile-modal-header">
-              <h3>Simulate Order in Firebase</h3>
-              <button
-                type="button"
-                className="profile-modal-close"
-                onClick={() => setShowNewOrderModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="profile-modal-body">
-              <p style={{ marginBottom: '1rem', fontSize: '.9rem', color: '#556' }}>
-                Select an order status to add a sample order and sync it directly to your Firebase profile:
-              </p>
-
-              <div className="order-status-picker">
-                <label
-                  className={`status-option ${newOrderStatus === 'Succeeded' ? 'selected' : ''}`}
-                  onClick={() => setNewOrderStatus('Succeeded')}
-                >
-                  <div className="opt-title">🔵 Succeeded / Confirmed</div>
-                  <div className="opt-desc">Payment successful, in assembly/dispatch stage</div>
-                </label>
-
-                <label
-                  className={`status-option ${newOrderStatus === 'Delivered' ? 'selected' : ''}`}
-                  onClick={() => setNewOrderStatus('Delivered')}
-                >
-                  <div className="opt-title">🟢 Delivered</div>
-                  <div className="opt-desc">Package handed over to recipient</div>
-                </label>
-
-                <label
-                  className={`status-option ${newOrderStatus === 'Cancelled' ? 'selected' : ''}`}
-                  onClick={() => setNewOrderStatus('Cancelled')}
-                >
-                  <div className="opt-title">🔴 Cancelled after payment</div>
-                  <div className="opt-desc">Full 100% refund credited back to original source</div>
-                </label>
-              </div>
-
-              <div className="modal-actions-row" style={{ marginTop: '1.5rem' }}>
-                <button
-                  type="button"
-                  className="modal-btn-cancel"
-                  onClick={() => setShowNewOrderModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="modal-btn-save"
-                  onClick={handleCreateTestOrder}
-                  disabled={syncing}
-                >
-                  {syncing ? 'Writing to Firebase...' : 'Save Order to Firebase'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

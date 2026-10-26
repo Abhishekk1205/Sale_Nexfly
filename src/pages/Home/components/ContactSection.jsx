@@ -45,7 +45,11 @@ export default function ContactSection() {
               </div>
               <div>
                 <div className="contact-item-title">Official Email</div>
-                <div className="contact-item-val">contact@navidron.com</div>
+                <div className="contact-item-val">
+                  <a href="mailto:navidron.a@gmail.com" style={{ color: 'inherit', textDecoration: 'none' }}>
+                    navidron.a@gmail.com
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -55,7 +59,11 @@ export default function ContactSection() {
               </div>
               <div>
                 <div className="contact-item-title">WhatsApp & Phone Support</div>
-                <div className="contact-item-val">+91 98765 43210 (India)</div>
+                <div className="contact-item-val">
+                  <a href="https://wa.me/919508106177" target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+                    +91 95081 06177
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -65,7 +73,9 @@ export default function ContactSection() {
               </div>
               <div>
                 <div className="contact-item-title">Headquarters & Workshop</div>
-                <div className="contact-item-val">Nexfly Robotics Labs, India (Pan-India Express Shipping)</div>
+                <div className="contact-item-val">
+                  A. M. Das Lane, Brahmpura, Muzaffarpur, Bihar, Pincode: 842003
+                </div>
               </div>
             </div>
 
@@ -106,7 +116,7 @@ export default function ContactSection() {
                 </a>
 
                 <a
-                  href="https://instagram.com"
+                  href="https://www.instagram.com/navi3dstudio"
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -123,7 +133,7 @@ export default function ContactSection() {
                   }}
                 >
                   <InstagramIcon size={16} color="white" />
-                  Instagram
+                  Instagram (@navi3dstudio)
                 </a>
               </div>
             </div>
