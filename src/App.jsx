@@ -36,36 +36,63 @@ export default function App() {
         if (parsed.name === 'Google User') {
           parsed.name = 'Abhishek Kumar Gupta';
         }
+        // If user edited profile details, ensure name & email reflect the saved profile
+        const uid = parsed.id || parsed.uid || 'user_abhishek_gupta';
+        const profileCached = localStorage.getItem(`navidron_profile_${String(uid).replace(/[.#$[\]/]/g, '_')}`);
+        if (profileCached) {
+          const prof = JSON.parse(profileCached);
+          if (prof.name) parsed.name = prof.name;
+          if (prof.email) parsed.email = prof.email;
+        }
         return parsed;
       }
     } catch (e) {}
-    // Default active session matching Clerk & Google account
+
+    // Check if custom profile was saved for user_abhishek_gupta
+    let fallbackName = 'Abhishek Kumar Gupta';
+    let fallbackEmail = 'abhish1205@gmail.com';
+    try {
+      const profileCached = localStorage.getItem('navidron_profile_user_abhishek_gupta');
+      if (profileCached) {
+        const prof = JSON.parse(profileCached);
+        if (prof.name) fallbackName = prof.name;
+        if (prof.email) fallbackEmail = prof.email;
+      }
+    } catch (e) {}
+
     return {
       uid: 'user_abhishek_gupta',
       id: 'user_abhishek_gupta',
-      name: 'Abhishek Kumar Gupta',
-      email: 'abhish1205@gmail.com'
+      name: fallbackName,
+      email: fallbackEmail
     };
   });
 
-  // Automatically sync Clerk authenticated user to state & Firebase Realtime Database
+  // Keep state in sync with Clerk authenticated user without overwriting profile changes
   useEffect(() => {
     if (isSignedIn && clerkUser) {
+      const cleanUid = String(clerkUser.id).replace(/[.#$[\]/]/g, '_');
+      let customName = null;
+      let customEmail = null;
+      try {
+        const cached = localStorage.getItem(`navidron_profile_${cleanUid}`);
+        if (cached) {
+          const prof = JSON.parse(cached);
+          if (prof.name && prof.name !== 'Google User') customName = prof.name;
+          if (prof.email) customEmail = prof.email;
+        }
+      } catch (e) {}
+
       const activeUser = {
         uid: clerkUser.id,
         id: clerkUser.id,
-        name: clerkUser.fullName || clerkUser.firstName || 'Abhishek Kumar Gupta',
-        email: clerkUser.primaryEmailAddress?.emailAddress || 'abhish1205@gmail.com',
+        name: customName || clerkUser.fullName || clerkUser.firstName || 'Abhishek Kumar Gupta',
+        email: customEmail || clerkUser.primaryEmailAddress?.emailAddress || 'abhish1205@gmail.com',
         photoURL: clerkUser.imageUrl || null,
         isClerk: true
       };
       setUser(activeUser);
       localStorage.setItem('navidron_current_user', JSON.stringify(activeUser));
-      // Sync immediately into Firebase Realtime Database
-      syncUserFullDataToFirebase(activeUser);
-    } else if (user) {
-      // Ensure initial session is also synced to Firebase Realtime Database
-      syncUserFullDataToFirebase(user);
     }
   }, [isSignedIn, clerkUser]);
 

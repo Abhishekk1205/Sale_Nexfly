@@ -30,30 +30,49 @@ import {
   saveUserOrders,
   isFirebaseOnline,
   syncUserFullDataToFirebase,
+  getEffectiveUserId,
+  getStorageKey,
+  DEFAULT_USER_PROFILE,
+  DEFAULT_ADDRESSES,
+  DEFAULT_ORDERS,
   RTDB_URL
 } from '../../services/firebase';
 
 export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
   const [activeTab, setActiveTab] = useState('contact'); // 'contact' | 'addresses' | 'orders'
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Profile / Contact state
-  const [profile, setProfile] = useState({
-    name: user?.name || 'Abhishek Kumar Gupta',
-    email: user?.email || 'abhish1205@gmail.com',
-    phone: '+91 98765 43210',
-    altPhone: '+91 91234 56789',
-    callsign: 'SkyPhantom',
-    bio: 'Drone pilot, FPV racer & custom 3D printing enthusiast.',
-    preferredContact: 'WhatsApp',
-    memberSince: 'October 2024',
-    badge: 'VIP Pilot'
+  // Profile / Contact state - initialized directly from cache so data never reverts on reload
+  const [profile, setProfile] = useState(() => {
+    const uid = getEffectiveUserId(user);
+    try {
+      const cached = localStorage.getItem(getStorageKey('profile', uid));
+      if (cached) {
+        return { ...DEFAULT_USER_PROFILE, ...JSON.parse(cached) };
+      }
+    } catch (e) {}
+    return {
+      ...DEFAULT_USER_PROFILE,
+      name: user?.name || DEFAULT_USER_PROFILE.name,
+      email: user?.email || DEFAULT_USER_PROFILE.email
+    };
   });
 
-  // Addresses state
-  const [addresses, setAddresses] = useState([]);
+  // Addresses state - initialized directly from cache
+  const [addresses, setAddresses] = useState(() => {
+    const uid = getEffectiveUserId(user);
+    try {
+      const cached = localStorage.getItem(getStorageKey('addresses', uid));
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return DEFAULT_ADDRESSES;
+  });
+
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState(null);
   const [addressForm, setAddressForm] = useState({
@@ -68,8 +87,19 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
     isDefault: false
   });
 
-  // Orders state
-  const [orders, setOrders] = useState([]);
+  // Orders state - initialized directly from cache
+  const [orders, setOrders] = useState(() => {
+    const uid = getEffectiveUserId(user);
+    try {
+      const cached = localStorage.getItem(getStorageKey('orders', uid));
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return DEFAULT_ORDERS;
+  });
+
   const [orderFilter, setOrderFilter] = useState('all'); // 'all' | 'Delivered' | 'Succeeded' | 'Cancelled'
   const [orderSearch, setOrderSearch] = useState('');
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
@@ -83,8 +113,7 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
   // Load all user data from Firebase / LocalStorage on mount
   useEffect(() => {
     async function loadData() {
-      setLoading(true);
-      const uid = user?.uid || 'default_user';
+      const uid = getEffectiveUserId(user);
       try {
         const [profData, addrData, orderData] = await Promise.all([
           getUserProfile(uid),
@@ -93,18 +122,19 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
         ]);
 
         if (profData) {
-          // If active user has a name in props and it's not generic 'Google User', respect it
           if (user?.name && user.name !== 'Google User' && !profData.name) {
             profData.name = user.name;
           }
           setProfile(profData);
         }
-        if (addrData) setAddresses(addrData);
-        if (orderData) setOrders(orderData);
+        if (addrData && Array.isArray(addrData) && addrData.length > 0) {
+          setAddresses(addrData);
+        }
+        if (orderData && Array.isArray(orderData) && orderData.length > 0) {
+          setOrders(orderData);
+        }
       } catch (err) {
         console.error('Failed to load profile data:', err);
-      } finally {
-        setLoading(false);
       }
     }
     loadData();
@@ -114,13 +144,15 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setSyncing(true);
-    const uid = user?.uid || 'default_user';
+    const uid = getEffectiveUserId(user);
     try {
       const res = await saveUserProfile(uid, profile);
       // Immediately notify parent App so Navbar greeting updates to "Hii, [Name]"
       if (onUpdateUser) {
         onUpdateUser({
           ...(user || {}),
+          id: uid,
+          uid: uid,
           name: profile.name,
           email: profile.email
         });
@@ -169,7 +201,7 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
   const handleSaveAddress = async (e) => {
     e.preventDefault();
     setSyncing(true);
-    const uid = user?.uid || 'default_user';
+    const uid = getEffectiveUserId(user);
 
     let updated = [...addresses];
     if (editingAddressId) {
@@ -205,7 +237,7 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
   const handleDeleteAddress = async (id) => {
     if (!window.confirm('Are you sure you want to delete this address?')) return;
     setSyncing(true);
-    const uid = user?.uid || 'default_user';
+    const uid = getEffectiveUserId(user);
     const updated = addresses.filter((a) => a.id !== id);
     setAddresses(updated);
     await saveUserAddresses(uid, updated);
@@ -215,7 +247,7 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
 
   const handleSetDefaultAddress = async (id) => {
     setSyncing(true);
-    const uid = user?.uid || 'default_user';
+    const uid = getEffectiveUserId(user);
     const updated = addresses.map((a) => ({
       ...a,
       isDefault: a.id === id
@@ -229,7 +261,7 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
   // Add Simulated Order to test Firebase storage
   const handleCreateTestOrder = async () => {
     setSyncing(true);
-    const uid = user?.uid || 'default_user';
+    const uid = getEffectiveUserId(user);
     const randId = Math.floor(10000 + Math.random() * 90000);
 
     const testOrdersConfig = {
@@ -367,7 +399,7 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     setSyncing(true);
                     try {
                       const res = await syncUserFullDataToFirebase({
-                        id: user?.uid || user?.id || 'user_abhishek_gupta',
+                        id: getEffectiveUserId(user),
                         name: profile.name,
                         email: profile.email
                       });

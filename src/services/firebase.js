@@ -74,7 +74,7 @@ const withTimeout = (promise, ms = 3500) => {
 };
 
 // ── Default User Information (Synced with Clerk / Google user) ──
-const DEFAULT_USER_PROFILE = {
+export const DEFAULT_USER_PROFILE = {
   name: "Abhishek Kumar Gupta",
   email: "abhish1205@gmail.com",
   phone: "+91 98765 43210",
@@ -88,7 +88,7 @@ const DEFAULT_USER_PROFILE = {
   firebaseConnected: true
 };
 
-const DEFAULT_ADDRESSES = [
+export const DEFAULT_ADDRESSES = [
   {
     id: "addr-1",
     tag: "Home",
@@ -115,7 +115,7 @@ const DEFAULT_ADDRESSES = [
   }
 ];
 
-const DEFAULT_ORDERS = [
+export const DEFAULT_ORDERS = [
   {
     id: "NVD-84920",
     date: "2026-10-18",
@@ -197,11 +197,25 @@ const DEFAULT_ORDERS = [
   }
 ];
 
-const sanitizeKey = (key = 'default_user') => {
+export const sanitizeKey = (key = 'default_user') => {
   return String(key).replace(/[.#$[\]/]/g, '_');
 };
 
-const getStorageKey = (prefix, uid = 'default_user') => `navidron_${prefix}_${sanitizeKey(uid)}`;
+export const getStorageKey = (prefix, uid = 'default_user') => `navidron_${prefix}_${sanitizeKey(uid)}`;
+
+export function getEffectiveUserId(user) {
+  if (!user) {
+    try {
+      const saved = localStorage.getItem('navidron_current_user');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.id || parsed?.uid) return sanitizeKey(parsed.id || parsed.uid);
+      }
+    } catch (e) {}
+    return 'user_abhishek_gupta';
+  }
+  return sanitizeKey(user.id || user.uid || 'user_abhishek_gupta');
+}
 
 // ── Direct REST API for Cloud Firestore ────────────────────────
 async function writeFirestoreRest(collectionName, docId, data) {
@@ -242,16 +256,46 @@ async function writeFirestoreRest(collectionName, docId, data) {
 // ── Synchronize Complete User Data to Firebase (Firestore) ─────
 export async function syncUserFullDataToFirebase(user) {
   if (!user) return { success: false, reason: "No user provided" };
-  const uid = sanitizeKey(user.id || user.uid || 'user_abhishek');
-  const name = user.fullName || user.name || "Abhishek Kumar Gupta";
-  const email = user.primaryEmailAddress?.emailAddress || user.email || "abhish1205@gmail.com";
+  const uid = sanitizeKey(user.id || user.uid || 'user_abhishek_gupta');
+
+  // Check if user already has saved profile, addresses, or orders in local storage
+  const cachedProfile = localStorage.getItem(getStorageKey('profile', uid));
+  let existingProfile = null;
+  if (cachedProfile) {
+    try { existingProfile = JSON.parse(cachedProfile); } catch (e) {}
+  }
+
+  const cachedAddresses = localStorage.getItem(getStorageKey('addresses', uid));
+  let existingAddresses = null;
+  if (cachedAddresses) {
+    try { existingAddresses = JSON.parse(cachedAddresses); } catch (e) {}
+  }
+
+  const cachedOrders = localStorage.getItem(getStorageKey('orders', uid));
+  let existingOrders = null;
+  if (cachedOrders) {
+    try { existingOrders = JSON.parse(cachedOrders); } catch (e) {}
+  }
+
+  // Preserve user's updated name, email, bio, phone; never revert to default!
+  const name = existingProfile?.name || user.fullName || user.name || "Abhishek Kumar Gupta";
+  const email = existingProfile?.email || user.primaryEmailAddress?.emailAddress || user.email || "abhish1205@gmail.com";
 
   const profileData = {
     ...DEFAULT_USER_PROFILE,
+    ...(existingProfile || {}),
     name: name,
     email: email,
     updatedAt: new Date().toISOString()
   };
+
+  const addressesData = (existingAddresses && Array.isArray(existingAddresses) && existingAddresses.length > 0)
+    ? existingAddresses
+    : DEFAULT_ADDRESSES;
+
+  const ordersData = (existingOrders && Array.isArray(existingOrders) && existingOrders.length > 0)
+    ? existingOrders
+    : DEFAULT_ORDERS;
 
   let firestoreOk = false;
   let lastError = null;
@@ -259,6 +303,8 @@ export async function syncUserFullDataToFirebase(user) {
   // 1. Try Direct Firestore REST API (fastest, clearest error responses)
   try {
     await writeFirestoreRest('users', uid, profileData);
+    await writeFirestoreRest('users', `${uid}_addresses`, { list: addressesData });
+    await writeFirestoreRest('users', `${uid}_orders`, { list: ordersData });
     firestoreOk = true;
   } catch (err) {
     lastError = err.message;
@@ -269,7 +315,11 @@ export async function syncUserFullDataToFirebase(user) {
   if (!firestoreOk && db) {
     try {
       await withTimeout(
-        setDoc(doc(db, 'users', uid), profileData, { merge: true }),
+        Promise.all([
+          setDoc(doc(db, 'users', uid), profileData, { merge: true }),
+          setDoc(doc(db, 'users', uid, 'data', 'addresses'), { list: addressesData }, { merge: true }),
+          setDoc(doc(db, 'users', uid, 'data', 'orders'), { list: ordersData }, { merge: true })
+        ]),
         3500
       );
       firestoreOk = true;
@@ -279,10 +329,21 @@ export async function syncUserFullDataToFirebase(user) {
     }
   }
 
-  // 3. Cache locally so user data is NEVER lost
+  // 3. Cache locally preserving all user changes
   localStorage.setItem(getStorageKey('profile', uid), JSON.stringify(profileData));
-  localStorage.setItem(getStorageKey('addresses', uid), JSON.stringify(DEFAULT_ADDRESSES));
-  localStorage.setItem(getStorageKey('orders', uid), JSON.stringify(DEFAULT_ORDERS));
+  localStorage.setItem(getStorageKey('addresses', uid), JSON.stringify(addressesData));
+  localStorage.setItem(getStorageKey('orders', uid), JSON.stringify(ordersData));
+
+  // Also update active session in localStorage
+  const currentSession = localStorage.getItem('navidron_current_user');
+  if (currentSession) {
+    try {
+      const parsed = JSON.parse(currentSession);
+      parsed.name = profileData.name;
+      parsed.email = profileData.email;
+      localStorage.setItem('navidron_current_user', JSON.stringify(parsed));
+    } catch (e) {}
+  }
 
   return {
     success: firestoreOk,
@@ -328,11 +389,35 @@ export async function signInWithGoogle() {
 }
 
 // ── User Profile Services ─────────────────────────────────────
-export async function getUserProfile(uid = 'default_user') {
-  const cleanId = sanitizeKey(uid);
+export async function getUserProfile(uidOrUser = 'user_abhishek_gupta') {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'user_abhishek_gupta');
   const localKey = getStorageKey('profile', cleanId);
 
-  // Try Firestore SDK with timeout
+  // 1. Immediately return local cache if present — eliminates lag and prevents reverting on refresh!
+  const cached = localStorage.getItem(localKey);
+  let localData = null;
+  if (cached) {
+    try {
+      localData = JSON.parse(cached);
+    } catch (e) {}
+  }
+
+  if (localData) {
+    // Background sync from remote Firestore without blocking UI render
+    if (db) {
+      withTimeout(getDoc(doc(db, 'users', cleanId)), 2000)
+        .then((docSnap) => {
+          if (docSnap && docSnap.exists()) {
+            const val = docSnap.data();
+            localStorage.setItem(localKey, JSON.stringify({ ...localData, ...val }));
+          }
+        })
+        .catch(() => {});
+    }
+    return { ...DEFAULT_USER_PROFILE, ...localData };
+  }
+
+  // 2. If no local cache, query Firestore SDK
   if (db) {
     try {
       const docSnap = await withTimeout(getDoc(doc(db, 'users', cleanId)), 2500);
@@ -344,27 +429,21 @@ export async function getUserProfile(uid = 'default_user') {
     } catch (e) {}
   }
 
-  const cached = localStorage.getItem(localKey);
-  if (cached) {
-    try {
-      return { ...DEFAULT_USER_PROFILE, ...JSON.parse(cached) };
-    } catch (e) {}
-  }
-
   return DEFAULT_USER_PROFILE;
 }
 
-export async function saveUserProfile(uid = 'default_user', profileData) {
-  const cleanId = sanitizeKey(uid);
+export async function saveUserProfile(uidOrUser = 'user_abhishek_gupta', profileData) {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'user_abhishek_gupta');
   const localKey = getStorageKey('profile', cleanId);
   const dataWithTimestamp = {
     ...profileData,
     updatedAt: new Date().toISOString()
   };
 
+  // 1. Save to local storage first (instant persistence across reloads)
   localStorage.setItem(localKey, JSON.stringify(dataWithTimestamp));
 
-  // Update active session
+  // 2. Also keep active session in sync
   const currentSession = localStorage.getItem('navidron_current_user');
   if (currentSession) {
     try {
@@ -373,12 +452,19 @@ export async function saveUserProfile(uid = 'default_user', profileData) {
       parsed.email = profileData.email;
       localStorage.setItem('navidron_current_user', JSON.stringify(parsed));
     } catch (e) {}
+  } else {
+    localStorage.setItem('navidron_current_user', JSON.stringify({
+      id: cleanId,
+      uid: cleanId,
+      name: profileData.name,
+      email: profileData.email
+    }));
   }
 
   let firestoreSaved = false;
   let lastError = null;
 
-  // Try Firestore REST
+  // 3. Try Firestore REST
   try {
     await writeFirestoreRest('users', cleanId, dataWithTimestamp);
     firestoreSaved = true;
@@ -386,7 +472,7 @@ export async function saveUserProfile(uid = 'default_user', profileData) {
     lastError = err.message;
   }
 
-  // Try Firestore SDK with timeout
+  // 4. Try Firestore SDK with timeout
   if (!firestoreSaved && db) {
     try {
       await withTimeout(setDoc(doc(db, 'users', cleanId), dataWithTimestamp, { merge: true }), 3500);
@@ -400,22 +486,35 @@ export async function saveUserProfile(uid = 'default_user', profileData) {
 }
 
 // ── Delivery Addresses Services ───────────────────────────────
-export async function getUserAddresses(uid = 'default_user') {
-  const cleanId = sanitizeKey(uid);
+export async function getUserAddresses(uidOrUser = 'user_abhishek_gupta') {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'user_abhishek_gupta');
   const localKey = getStorageKey('addresses', cleanId);
 
   const cached = localStorage.getItem(localKey);
   if (cached) {
     try {
-      return JSON.parse(cached);
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {}
+  }
+
+  // If no cache, check Firestore
+  if (db) {
+    try {
+      const docSnap = await withTimeout(getDoc(doc(db, 'users', `${cleanId}_addresses`)), 2500);
+      if (docSnap && docSnap.exists() && docSnap.data().list) {
+        const list = docSnap.data().list;
+        localStorage.setItem(localKey, JSON.stringify(list));
+        return list;
+      }
     } catch (e) {}
   }
 
   return DEFAULT_ADDRESSES;
 }
 
-export async function saveUserAddresses(uid = 'default_user', addresses) {
-  const cleanId = sanitizeKey(uid);
+export async function saveUserAddresses(uidOrUser = 'user_abhishek_gupta', addresses) {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'user_abhishek_gupta');
   const localKey = getStorageKey('addresses', cleanId);
   localStorage.setItem(localKey, JSON.stringify(addresses));
 
@@ -432,7 +531,7 @@ export async function saveUserAddresses(uid = 'default_user', addresses) {
   if (!firestoreSaved && db) {
     try {
       await withTimeout(
-        setDoc(doc(db, 'users', cleanId, 'data', 'addresses'), { list: addresses }, { merge: true }),
+        setDoc(doc(db, 'users', `${cleanId}_addresses`), { list: addresses }, { merge: true }),
         3500
       );
       firestoreSaved = true;
@@ -445,22 +544,35 @@ export async function saveUserAddresses(uid = 'default_user', addresses) {
 }
 
 // ── Order History Services ────────────────────────────────────
-export async function getUserOrders(uid = 'default_user') {
-  const cleanId = sanitizeKey(uid);
+export async function getUserOrders(uidOrUser = 'user_abhishek_gupta') {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'user_abhishek_gupta');
   const localKey = getStorageKey('orders', cleanId);
 
   const cached = localStorage.getItem(localKey);
   if (cached) {
     try {
-      return JSON.parse(cached);
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {}
+  }
+
+  // If no cache, check Firestore
+  if (db) {
+    try {
+      const docSnap = await withTimeout(getDoc(doc(db, 'users', `${cleanId}_orders`)), 2500);
+      if (docSnap && docSnap.exists() && docSnap.data().list) {
+        const list = docSnap.data().list;
+        localStorage.setItem(localKey, JSON.stringify(list));
+        return list;
+      }
     } catch (e) {}
   }
 
   return DEFAULT_ORDERS;
 }
 
-export async function saveUserOrders(uid = 'default_user', orders) {
-  const cleanId = sanitizeKey(uid);
+export async function saveUserOrders(uidOrUser = 'user_abhishek_gupta', orders) {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'user_abhishek_gupta');
   const localKey = getStorageKey('orders', cleanId);
   localStorage.setItem(localKey, JSON.stringify(orders));
 
@@ -477,7 +589,7 @@ export async function saveUserOrders(uid = 'default_user', orders) {
   if (!firestoreSaved && db) {
     try {
       await withTimeout(
-        setDoc(doc(db, 'users', cleanId, 'data', 'orders'), { list: orders }, { merge: true }),
+        setDoc(doc(db, 'users', `${cleanId}_orders`), { list: orders }, { merge: true }),
         3500
       );
       firestoreSaved = true;
