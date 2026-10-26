@@ -16,13 +16,26 @@ import GalleryPage from './pages/Gallery/GalleryPage';
 import ServicesPage from './pages/Services/ServicesPage';
 import ContactPage from './pages/Contact/ContactPage';
 import ProfilePage from './pages/Profile/ProfilePage';
-import { syncUserFullDataToFirebase } from './services/firebase';
+import AdminPortal from './pages/Admin/AdminPortal';
+import CartDrawer from './components/CartDrawer/CartDrawer';
+import {
+  syncUserFullDataToFirebase,
+  getUserCart,
+  addToUserCart,
+  updateUserCartQuantity,
+  removeFromUserCart,
+  clearUserCart,
+  getUserAddresses
+} from './services/firebase';
 
 import './styles/main.css';
 
 export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cart, setCart] = useState([]);
+  const [userAddresses, setUserAddresses] = useState([]);
 
   // Clerk authentication hooks
   const { isSignedIn, user: clerkUser } = useUser();
@@ -78,6 +91,47 @@ export default function App() {
     }
   }, [isSignedIn, clerkUser]);
 
+  // Load user's live cart and addresses from Firebase
+  useEffect(() => {
+    const fetchUserAppData = async () => {
+      const uid = user?.id || user?.uid || 'guest_user';
+      try {
+        const [c, addrs] = await Promise.all([
+          getUserCart(uid),
+          getUserAddresses(uid)
+        ]);
+        setCart(c);
+        setUserAddresses(addrs);
+      } catch (e) {}
+    };
+    fetchUserAppData();
+  }, [user]);
+
+  const handleAddToCart = async (item) => {
+    const uid = user?.id || user?.uid || 'guest_user';
+    const updated = await addToUserCart(uid, item);
+    setCart(updated);
+    setCartOpen(true);
+  };
+
+  const handleUpdateQuantity = async (itemId, newQty, size) => {
+    const uid = user?.id || user?.uid || 'guest_user';
+    const updated = await updateUserCartQuantity(uid, itemId, newQty, size);
+    setCart(updated);
+  };
+
+  const handleRemoveFromCart = async (itemId, size) => {
+    const uid = user?.id || user?.uid || 'guest_user';
+    const updated = await removeFromUserCart(uid, itemId, size);
+    setCart(updated);
+  };
+
+  const handleClearCart = async () => {
+    const uid = user?.id || user?.uid || 'guest_user';
+    await clearUserCart(uid);
+    setCart([]);
+  };
+
   const handleLoginSuccess = (userData) => {
     setUser(userData);
     localStorage.setItem('navidron_current_user', JSON.stringify(userData));
@@ -102,24 +156,40 @@ export default function App() {
     localStorage.removeItem('navidron_current_user');
   };
 
+  const totalCartCount = cart.reduce((sum, it) => sum + (it.quantity || 1), 0);
+
   return (
     <BrowserRouter>
       <div className="app-container">
-        {/* Separate Navbar Component with Dropdowns & Responsive Drawer */}
+        {/* Navbar with Cart button & Badge */}
         <Navbar
           onOpenAuth={() => setAuthModalOpen(true)}
           onOpenQuote={() => setQuoteModalOpen(true)}
           user={user}
           onLogout={handleLogout}
+          cartCount={totalCartCount}
+          onOpenCart={() => setCartOpen(true)}
         />
 
         {/* Dynamic Route Pages */}
         <Routes>
           <Route path="/" element={<HomePage onOpenQuote={() => setQuoteModalOpen(true)} />} />
-          <Route path="/uav" element={<UAVPage onOpenQuote={() => setQuoteModalOpen(true)} />} />
-          <Route path="/products" element={<ProductsPage onOpenQuote={() => setQuoteModalOpen(true)} />} />
-          <Route path="/prints" element={<PrintsPage onOpenQuote={() => setQuoteModalOpen(true)} />} />
-          <Route path="/p-brothers" element={<PBrothersPage onOpenQuote={() => setQuoteModalOpen(true)} />} />
+          <Route
+            path="/uav"
+            element={<UAVPage onOpenQuote={() => setQuoteModalOpen(true)} onAddToCart={handleAddToCart} />}
+          />
+          <Route
+            path="/products"
+            element={<ProductsPage onOpenQuote={() => setQuoteModalOpen(true)} onAddToCart={handleAddToCart} />}
+          />
+          <Route
+            path="/prints"
+            element={<PrintsPage onOpenQuote={() => setQuoteModalOpen(true)} onAddToCart={handleAddToCart} />}
+          />
+          <Route
+            path="/p-brothers"
+            element={<PBrothersPage onOpenQuote={() => setQuoteModalOpen(true)} />}
+          />
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/services" element={<ServicesPage onOpenQuote={() => setQuoteModalOpen(true)} />} />
           <Route path="/contact" element={<ContactPage />} />
@@ -130,9 +200,14 @@ export default function App() {
                 user={user}
                 onUpdateUser={handleUpdateUser}
                 onOpenAuth={() => setAuthModalOpen(true)}
+                cart={cart}
+                onOpenCart={() => setCartOpen(true)}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemoveItem={handleRemoveFromCart}
               />
             }
           />
+          <Route path="/admin" element={<AdminPortal />} />
           <Route
             path="/sso-callback"
             element={<AuthenticateWithRedirectCallback signInForceRedirectUrl="/profile" signUpForceRedirectUrl="/profile" />}
@@ -142,6 +217,19 @@ export default function App() {
 
         {/* Global Footer */}
         <Footer />
+
+        {/* Flight Cart Drawer */}
+        <CartDrawer
+          isOpen={cartOpen}
+          onClose={() => setCartOpen(false)}
+          cart={cart}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemoveItem={handleRemoveFromCart}
+          onClearCart={handleClearCart}
+          user={user}
+          userAddresses={userAddresses}
+          onOpenAuth={() => setAuthModalOpen(true)}
+        />
 
         {/* Interactive Modals */}
         <AuthModal

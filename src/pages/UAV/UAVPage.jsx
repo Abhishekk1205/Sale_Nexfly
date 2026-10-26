@@ -4,7 +4,7 @@ import { uavCategories } from '../../data/uavData';
 import { Rocket, Send, CheckCircle2, Shield, Battery, Gauge, Cpu } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export default function UAVPage({ onOpenQuote }) {
+export default function UAVPage({ onOpenQuote, onAddToCart }) {
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'fpv';
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -126,13 +126,37 @@ export default function UAVPage({ onOpenQuote }) {
                     <div className="card-price" style={{ color: 'var(--neon)', fontSize: '1.4rem' }}>
                       {mod.price}
                     </div>
-                    <button
-                      onClick={onOpenQuote}
-                      className="btn btn-primary"
-                      style={{ width: '100%', marginTop: '.75rem', padding: '.65rem 1rem', fontSize: '.84rem' }}
-                    >
-                      Configure / Buy
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '.75rem' }}>
+                      <button
+                        onClick={() => {
+                          const numPrice = parseInt(String(mod.price).replace(/[^0-9]/g, ''), 10) || 14999;
+                          if (onAddToCart) {
+                            onAddToCart({
+                              id: `uav-${mod.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+                              name: mod.name,
+                              category: selectedCategory.title,
+                              price: numPrice,
+                              quantity: 1,
+                              image: mod.img || '/images/fpv_racing_drone.jpg'
+                            });
+                          } else {
+                            onOpenQuote();
+                          }
+                        }}
+                        className="btn btn-primary"
+                        style={{ flex: 1, padding: '.65rem 0.5rem', fontSize: '.84rem' }}
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        onClick={onOpenQuote}
+                        className="btn btn-outline"
+                        style={{ padding: '.65rem 0.75rem', fontSize: '.84rem' }}
+                        title="Request custom specs"
+                      >
+                        Customize
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

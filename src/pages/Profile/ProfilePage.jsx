@@ -18,7 +18,8 @@ import {
   Sparkles,
   ArrowLeft,
   Check,
-  AlertCircle
+  AlertCircle,
+  ShoppingCart
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -38,8 +39,16 @@ import {
   RTDB_URL
 } from '../../services/firebase';
 
-export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
-  const [activeTab, setActiveTab] = useState('contact'); // 'contact' | 'addresses' | 'orders'
+export default function ProfilePage({
+  user,
+  onUpdateUser,
+  onOpenAuth,
+  cart = [],
+  onOpenCart,
+  onUpdateQuantity,
+  onRemoveItem
+}) {
+  const [activeTab, setActiveTab] = useState('contact'); // 'contact' | 'addresses' | 'orders' | 'cart'
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
@@ -411,6 +420,15 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
           >
             <Package size={18} />
             <span>Order History ({orders.length})</span>
+          </button>
+
+          <button
+            type="button"
+            className={`profile-tab-item ${activeTab === 'cart' ? 'active' : ''}`}
+            onClick={() => setActiveTab('cart')}
+          >
+            <ShoppingCart size={18} />
+            <span>Flight Cart ({cart.length})</span>
           </button>
         </div>
 
@@ -826,6 +844,128 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                       </div>
                     );
                   })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 4: FLIGHT CART ───────────────────────────── */}
+        {activeTab === 'cart' && (
+          <div className="profile-tab-content fade-in">
+            <div className="profile-card-section">
+              <div className="section-title-bar">
+                <div>
+                  <h2 className="section-main-title">Personal Cart & Items</h2>
+                  <p className="section-main-desc">
+                    Connected with your user database. Review items, select quantities, and proceed to confirmed checkout.
+                  </p>
+                </div>
+                {cart.length > 0 && (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ padding: '0.65rem 1.25rem', fontSize: '0.85rem' }}
+                    onClick={onOpenCart}
+                  >
+                    Open Checkout Drawer
+                  </button>
+                )}
+              </div>
+
+              {cart.length === 0 ? (
+                <div className="empty-state-card">
+                  <ShoppingCart size={48} className="empty-state-icon" />
+                  <h3>Your Cart is Currently Empty</h3>
+                  <p>Discover our high-precision FPV components, robotics kits, and 3D studio figures.</p>
+                  <Link to="/products" className="btn btn-primary" style={{ padding: '0.65rem 1.25rem', marginTop: '1rem', display: 'inline-block' }}>
+                    Browse Warehouse
+                  </Link>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {cart.map((item, idx) => {
+                    const numPrice = typeof item.price === 'number'
+                      ? item.price
+                      : parseInt(String(item.price).replace(/[^0-9]/g, ''), 10) || 0;
+                    return (
+                      <div
+                        key={`${item.id}-${idx}`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '12px',
+                          padding: '1rem',
+                          flexWrap: 'wrap',
+                          gap: '1rem'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <img
+                            src={item.image || '/images/fpv_racing_drone.jpg'}
+                            alt={item.name}
+                            style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover' }}
+                          />
+                          <div>
+                            <div style={{ fontWeight: 800, color: 'var(--navy)', fontSize: '0.95rem' }}>
+                              {item.name}
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '2px' }}>
+                              {item.category} {item.size ? `• Size: ${item.size}` : ''}
+                            </div>
+                            <div style={{ fontWeight: 800, color: 'var(--neon)', marginTop: '4px' }}>
+                              ₹{(numPrice * (item.quantity || 1)).toLocaleString('en-IN')}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '3px 8px' }}>
+                            <button
+                              type="button"
+                              onClick={() => onUpdateQuantity && onUpdateQuantity(item.id, (item.quantity || 1) - 1, item.size)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', fontWeight: 800 }}
+                            >
+                              -
+                            </button>
+                            <span style={{ fontWeight: 800, fontSize: '0.9rem', minWidth: '20px', textAlign: 'center' }}>
+                              {item.quantity || 1}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => onUpdateQuantity && onUpdateQuantity(item.id, (item.quantity || 1) + 1, item.size)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', fontWeight: 800 }}
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => onRemoveItem && onRemoveItem(item.id, item.size)}
+                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '6px' }}
+                            title="Remove from cart"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{ padding: '0.8rem 2rem', fontSize: '0.95rem', fontWeight: 800 }}
+                      onClick={onOpenCart}
+                    >
+                      Proceed to Place Order →
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

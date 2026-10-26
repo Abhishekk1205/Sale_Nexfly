@@ -21,7 +21,9 @@ import {
   doc,
   getDoc,
   setDoc,
-  deleteDoc
+  deleteDoc,
+  collection,
+  getDocs
 } from 'firebase/firestore';
 
 const RTDB_URL =
@@ -156,6 +158,32 @@ function formatRestFields(data) {
   return fields;
 }
 
+export function parseFirestoreRestValue(valObj) {
+  if (!valObj) return null;
+  if ('stringValue' in valObj) return valObj.stringValue;
+  if ('integerValue' in valObj) return parseInt(valObj.integerValue, 10);
+  if ('doubleValue' in valObj) return parseFloat(valObj.doubleValue);
+  if ('booleanValue' in valObj) return valObj.booleanValue;
+  if ('nullValue' in valObj) return null;
+  if ('timestampValue' in valObj) return valObj.timestampValue;
+  if ('arrayValue' in valObj) {
+    const arr = valObj.arrayValue?.values || [];
+    return arr.map(parseFirestoreRestValue);
+  }
+  if ('mapValue' in valObj) {
+    return fromFirestoreRestFields(valObj.mapValue?.fields || {});
+  }
+  return null;
+}
+
+export function fromFirestoreRestFields(fields = {}) {
+  const result = {};
+  for (const [key, valObj] of Object.entries(fields)) {
+    result[key] = parseFirestoreRestValue(valObj);
+  }
+  return result;
+}
+
 async function writeFirestoreRest(docPath, data) {
   const apiKey = firebaseConfig.apiKey;
   const projectId = firebaseConfig.projectId;
@@ -271,6 +299,15 @@ export async function syncUserFullDataToFirebase(user) {
     try { existingOrders = JSON.parse(cachedOrders); } catch (e) {}
   }
 
+  const cachedCart = localStorage.getItem(getStorageKey('cart', uid));
+  let existingCart = [];
+  if (cachedCart) {
+    try {
+      const parsed = JSON.parse(cachedCart);
+      if (Array.isArray(parsed)) existingCart = parsed;
+    } catch (e) {}
+  }
+
   // Preserve user's updated name, email, bio, phone; never revert to default!
   const name = existingProfile?.name || user.fullName || user.name || "";
   const email = existingProfile?.email || user.primaryEmailAddress?.emailAddress || user.email || "";
@@ -291,7 +328,7 @@ export async function syncUserFullDataToFirebase(user) {
     updatedAt: new Date().toISOString()
   };
 
-  // Purely 3 Fields inside the user document (no collections)
+  // Purely user fields inside the document (Contact, Delivery Address, Order History, Cart)
   const documentData = {
     Contact: contactData,
     contact: contactData,
@@ -299,6 +336,8 @@ export async function syncUserFullDataToFirebase(user) {
     deliveryAddresses: addressesData,
     "Order History": ordersData,
     orderHistory: ordersData,
+    Cart: existingCart,
+    cart: existingCart,
     name: name,
     email: email,
     updatedAt: new Date().toISOString()
@@ -630,6 +669,815 @@ export async function saveUserOrders(uidOrUser = 'guest_user', orders) {
   return { success: firestoreSaved, error: lastError };
 }
 
+// ── User Cart Services ────────────────────────────────────────
+export async function getUserCart(uidOrUser = 'guest_user') {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'guest_user');
+  const localKey = getStorageKey('cart', cleanId);
+
+  const cached = localStorage.getItem(localKey);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+  }
+
+  // Fallback to Firestore doc field
+  if (db) {
+    try {
+      const docSnap = await withTimeout(getDoc(doc(db, 'users', cleanId)), 2500);
+      if (docSnap && docSnap.exists()) {
+        const data = docSnap.data();
+        const cartList = data.Cart || data.cart || [];
+        if (Array.isArray(cartList)) {
+          localStorage.setItem(localKey, JSON.stringify(cartList));
+          return cartList;
+        }
+      }
+    } catch (e) {}
+  }
+
+  return [];
+}
+
+export async function saveUserCart(uidOrUser = 'guest_user', cartItems = []) {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'guest_user');
+  const localKey = getStorageKey('cart', cleanId);
+  localStorage.setItem(localKey, JSON.stringify(cartItems));
+
+  const updatePayload = {
+    Cart: cartItems,
+    cart: cartItems,
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    await writeFirestoreRest(`users/${cleanId}`, updatePayload);
+  } catch (e) {}
+
+  if (db) {
+    try {
+      await withTimeout(setDoc(doc(db, 'users', cleanId), updatePayload, { merge: true }), 3500);
+    } catch (e) {}
+  }
+
+  return cartItems;
+}
+
+export async function addToUserCart(uidOrUser = 'guest_user', item) {
+  const cart = await getUserCart(uidOrUser);
+  const existingIdx = cart.findIndex((i) => i.id === item.id && (i.size || '') === (item.size || ''));
+
+  let updated;
+  if (existingIdx >= 0) {
+    updated = [...cart];
+    updated[existingIdx].quantity = (updated[existingIdx].quantity || 1) + (item.quantity || 1);
+  } else {
+    updated = [
+      ...cart,
+      {
+        ...item,
+        quantity: item.quantity || 1,
+        addedAt: new Date().toISOString()
+      }
+    ];
+  }
+
+  await saveUserCart(uidOrUser, updated);
+  return updated;
+}
+
+export async function removeFromUserCart(uidOrUser = 'guest_user', itemId, size = null) {
+  const cart = await getUserCart(uidOrUser);
+  const updated = cart.filter((i) => {
+    if (i.id !== itemId) return true;
+    if (size && (i.size || '') !== size) return true;
+    return false;
+  });
+  await saveUserCart(uidOrUser, updated);
+  return updated;
+}
+
+export async function updateUserCartQuantity(uidOrUser = 'guest_user', itemId, newQty, size = null) {
+  if (newQty <= 0) {
+    return removeFromUserCart(uidOrUser, itemId, size);
+  }
+  const cart = await getUserCart(uidOrUser);
+  const updated = cart.map((i) => {
+    if (i.id === itemId && (!size || (i.size || '') === size)) {
+      return { ...i, quantity: newQty };
+    }
+    return i;
+  });
+  await saveUserCart(uidOrUser, updated);
+  return updated;
+}
+
+export async function clearUserCart(uidOrUser = 'guest_user') {
+  return saveUserCart(uidOrUser, []);
+}
+
+// ── Generic Firestore Collection Read/Write ───────────────────
+export async function readFirestoreCollection(collectionName) {
+  // 1. Try Firestore SDK
+  if (db) {
+    try {
+      const snap = await withTimeout(getDocs(collection(db, collectionName)), 3500);
+      if (snap && !snap.empty) {
+        return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      }
+    } catch (e) {
+      console.warn(`Firestore SDK getDocs(${collectionName}) fallback:`, e.message);
+    }
+  }
+
+  // 2. Try Firestore REST
+  try {
+    const apiKey = firebaseConfig.apiKey;
+    const projectId = firebaseConfig.projectId;
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collectionName}?key=${apiKey}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.documents && Array.isArray(data.documents)) {
+        return data.documents.map((docItem) => {
+          const docId = docItem.name.split('/').pop();
+          const parsed = fromFirestoreRestFields(docItem.fields || {});
+          return { id: docId, ...parsed };
+        });
+      }
+    }
+  } catch (e) {
+    console.warn(`Firestore REST getCollection(${collectionName}) fallback:`, e.message);
+  }
+
+  return [];
+}
+
+export async function writeFirestoreDoc(collectionName, docId, data) {
+  let ok = false;
+  try {
+    await writeFirestoreRest(`${collectionName}/${docId}`, data);
+    ok = true;
+  } catch (e) {}
+
+  if (db) {
+    try {
+      await withTimeout(setDoc(doc(db, collectionName, docId), data, { merge: true }), 3500);
+      ok = true;
+    } catch (e) {}
+  }
+  return ok;
+}
+
+export async function deleteFirestoreDoc(collectionName, docId) {
+  try {
+    await deleteFirestoreRest(`${collectionName}/${docId}`);
+  } catch (e) {}
+
+  if (db) {
+    try {
+      await deleteDoc(doc(db, collectionName, docId));
+    } catch (e) {}
+  }
+}
+
+// ── Root Collection 1: "Order" (Global Live Orders) ───────────
+export async function getAllOrders() {
+  const localCached = localStorage.getItem('navidron_global_orders');
+  let fallback = [];
+  if (localCached) {
+    try { fallback = JSON.parse(localCached); } catch (e) {}
+  }
+
+  try {
+    const list = await readFirestoreCollection('Order');
+    if (Array.isArray(list) && list.length > 0) {
+      // Sort newest first
+      list.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+      localStorage.setItem('navidron_global_orders', JSON.stringify(list));
+      return list;
+    }
+  } catch (e) {}
+
+  return fallback;
+}
+
+export async function createGlobalOrder(orderData) {
+  const orderId = orderData.id || `NVD-${Math.floor(10000 + Math.random() * 90000)}`;
+  const cleanOrder = {
+    ...orderData,
+    id: orderId,
+    createdAt: orderData.createdAt || new Date().toISOString(),
+    status: orderData.status || 'Succeeded',
+    date: orderData.date || new Date().toISOString().split('T')[0]
+  };
+
+  // 1. Save to global Order collection in Firestore
+  await writeFirestoreDoc('Order', orderId, cleanOrder);
+
+  // 2. Cache in global orders local list
+  const existingGlobal = await getAllOrders();
+  const updatedGlobal = [cleanOrder, ...existingGlobal.filter((o) => o.id !== orderId)];
+  localStorage.setItem('navidron_global_orders', JSON.stringify(updatedGlobal));
+
+  // 3. Update customer's own Order History inside their personal document
+  const customerUid = orderData.customer?.uid || orderData.customerUid;
+  if (customerUid) {
+    try {
+      const userOrders = await getUserOrders(customerUid);
+      const updatedUserOrders = [cleanOrder, ...userOrders.filter((o) => o.id !== orderId)];
+      await saveUserOrders(customerUid, updatedUserOrders);
+    } catch (e) {}
+  }
+
+  return cleanOrder;
+}
+
+export async function updateOrderStatus(orderId, newStatus) {
+  await writeFirestoreDoc('Order', orderId, { status: newStatus, updatedAt: new Date().toISOString() });
+
+  const existingGlobal = await getAllOrders();
+  const updatedGlobal = existingGlobal.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o));
+  localStorage.setItem('navidron_global_orders', JSON.stringify(updatedGlobal));
+
+  // Also update user's own orders if customer UID is attached
+  const target = existingGlobal.find((o) => o.id === orderId);
+  const customerUid = target?.customer?.uid || target?.customerUid;
+  if (customerUid) {
+    try {
+      const userOrders = await getUserOrders(customerUid);
+      const updatedUserOrders = userOrders.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o));
+      await saveUserOrders(customerUid, updatedUserOrders);
+    } catch (e) {}
+  }
+
+  return true;
+}
+
+// ── Root Collection 2: "3DStudio" ──────────────────────────────
+export const INITIAL_3D_STUDIO = [
+  {
+    id: "3d-luffy-gear5",
+    name: "Monkey D. Luffy — Gear 5 Sun God",
+    category: "Anime",
+    price: 949,
+    quantity: 25,
+    size: "8 inch",
+    sizes: ["6 inch", "8 inch", "12 inch"],
+    image: "/images/anime_figure_3d.jpg",
+    desc: "Whimsical Gear 5 cloud-ring sculpt with joyful laughing expression from One Piece Wano arc.",
+    badge: "TRENDING"
+  },
+  {
+    id: "3d-goku-ssj",
+    name: "Goku — Super Saiyan Kamehameha",
+    category: "Anime",
+    price: 849,
+    quantity: 20,
+    size: "8 inch",
+    sizes: ["6 inch", "8 inch", "12 inch"],
+    image: "/images/anime_figure_3d.jpg",
+    desc: "Iconic Dragon Ball Z protagonist with translucent energy wave effect piece.",
+    badge: "ANIME HERO"
+  },
+  {
+    id: "3d-naruto-sage",
+    name: "Naruto Uzumaki — Sage Mode Rasenshuriken",
+    category: "Anime",
+    price: 799,
+    quantity: 30,
+    size: "8 inch",
+    sizes: ["6 inch", "8 inch", "12 inch"],
+    image: "/images/anime_figure_3d.jpg",
+    desc: "Toad sage cloak, orange eye markings, and dual shadow clone accessory.",
+    badge: "CLASSIC"
+  },
+  {
+    id: "3d-tanjiro-flame",
+    name: "Tanjiro Kamado — Hinokami Kagura",
+    category: "Anime",
+    price: 849,
+    quantity: 18,
+    size: "8 inch",
+    sizes: ["6 inch", "8 inch", "12 inch"],
+    image: "/images/anime_figure_3d.jpg",
+    desc: "Demon Slayer sun-breathing spiral flame dragon wrapped around the Nichirin blade.",
+    badge: "FLAME RESIN"
+  },
+  {
+    id: "3d-gta-jason",
+    name: "Jason — GTA 6 Dual Pistols Edition",
+    category: "Game Characters",
+    price: 999,
+    quantity: 40,
+    size: "8 inch",
+    sizes: ["6 inch", "8 inch", "12 inch"],
+    image: "/images/gta6_merchandise_banner_1791059157486.jpg",
+    desc: "Ultra high-resolution 3D print of Jason from GTA 6. Dual pistols and custom Vice City street display base.",
+    badge: "LIMITED DROP"
+  },
+  {
+    id: "3d-gta-lucia",
+    name: "Lucia — GTA 6 Vice City Star",
+    category: "Game Characters",
+    price: 999,
+    quantity: 35,
+    size: "8 inch",
+    sizes: ["6 inch", "8 inch", "12 inch"],
+    image: "/images/gta6_merchandise_banner_1791059157486.jpg",
+    desc: "The iconic first female lead of the GTA franchise. Detailed hair sculpt and Miami street aesthetic.",
+    badge: "BESTSELLER"
+  },
+  {
+    id: "3d-val-jett",
+    name: "Jett — Blade Storm Pose",
+    category: "Game Characters",
+    price: 799,
+    quantity: 22,
+    size: "6 inch",
+    sizes: ["6 inch", "8 inch", "12 inch"],
+    image: "/images/valorant_action_figures_1791059182363.jpg",
+    desc: "Wind assassin Jett captured mid-air holding signature kunai daggers on flight stand.",
+    badge: "HOT"
+  },
+  {
+    id: "3d-val-reyna",
+    name: "Reyna — Empress Leer",
+    category: "Game Characters",
+    price: 799,
+    quantity: 15,
+    size: "6 inch",
+    sizes: ["6 inch", "8 inch", "12 inch"],
+    image: "/images/action_figure_valorant.jpg",
+    desc: "Duelist Reyna glowing in radiant purple resin with ethereal eye ability accent.",
+    badge: "POPULAR"
+  },
+  {
+    id: "3d-custom-person",
+    name: "Custom 3D Person Figure Sculpt (From Your Photo)",
+    category: "Personal Character",
+    price: 1499,
+    quantity: 999,
+    size: "8 inch",
+    sizes: ["6 inch", "8 inch", "12 inch", "Custom Scale"],
+    image: "/images/3d_print_lithophane.jpg",
+    desc: "Upload or send your photo. We craft a personalized 3D miniature resin statue of you, couples, or friends.",
+    badge: "CUSTOM PHOTO"
+  },
+  {
+    id: "3d-litho-portrait",
+    name: "Custom Photo Curved Backlit Lithophane",
+    category: "Personal Character",
+    price: 499,
+    quantity: 999,
+    size: "6 inch",
+    sizes: ["4 inch", "6 inch", "8 inch"],
+    image: "/images/3d_print_lithophane.jpg",
+    desc: "Turn your personal memory photo into a luminous curved 3D lithophane with LED back-light stand.",
+    badge: "ILLUMINATED"
+  }
+];
+
+export async function get3DStudioItems() {
+  const localKey = 'navidron_catalog_3dstudio';
+  const cached = localStorage.getItem(localKey);
+  let localList = null;
+  if (cached) {
+    try { localList = JSON.parse(cached); } catch (e) {}
+  }
+
+  const cloudList = await readFirestoreCollection('3DStudio');
+  if (Array.isArray(cloudList) && cloudList.length > 0) {
+    localStorage.setItem(localKey, JSON.stringify(cloudList));
+    return cloudList;
+  }
+
+  if (localList && localList.length > 0) return localList;
+
+  // Initialize with rich preloaded catalog
+  localStorage.setItem(localKey, JSON.stringify(INITIAL_3D_STUDIO));
+  // Background seed to Firestore
+  INITIAL_3D_STUDIO.forEach((item) => writeFirestoreDoc('3DStudio', item.id, item));
+  return INITIAL_3D_STUDIO;
+}
+
+export async function save3DStudioItem(item) {
+  const id = item.id || `3d-${Date.now()}`;
+  const cleanItem = { ...item, id, updatedAt: new Date().toISOString() };
+  await writeFirestoreDoc('3DStudio', id, cleanItem);
+
+  const current = await get3DStudioItems();
+  const updated = [cleanItem, ...current.filter((i) => i.id !== id)];
+  localStorage.setItem('navidron_catalog_3dstudio', JSON.stringify(updated));
+  return cleanItem;
+}
+
+export async function delete3DStudioItem(id) {
+  await deleteFirestoreDoc('3DStudio', id);
+  const current = await get3DStudioItems();
+  const updated = current.filter((i) => i.id !== id);
+  localStorage.setItem('navidron_catalog_3dstudio', JSON.stringify(updated));
+  return true;
+}
+
+// ── Root Collection 3: "DroneAccessories" ──────────────────────
+export const INITIAL_DRONE_ACCESSORIES = [
+  {
+    id: "part-motor-2207",
+    name: "T-Motor F60 PRO V 2207 1950KV Brushless Motor",
+    category: "Motors",
+    price: 1899,
+    quantity: 45,
+    image: "/images/fpv_racing_drone.jpg",
+    desc: "Premium racing motor built with titanium alloy shaft and Japanese NMB bearings. 6S compatible with violent thrust response."
+  },
+  {
+    id: "part-fc-stack",
+    name: "SpeedyBee F405 V4 BLS 55A 30x30 Stack",
+    category: "Electronics",
+    price: 6499,
+    quantity: 18,
+    image: "/images/fpv_racing_drone.jpg",
+    desc: "Wireless Betaflight parameter configuration via smartphone Bluetooth. 55A 4-in-1 ESC with TVS protective diode."
+  },
+  {
+    id: "part-o3-unit",
+    name: "DJI O3 Air Unit Digital HD Transmission",
+    category: "Electronics",
+    price: 19999,
+    quantity: 8,
+    image: "/images/fpv_racing_drone.jpg",
+    desc: "State-of-the-art digital FPV transmitter with 10km transmission range, 4K/60fps video capture, and 20ms ultra-low latency."
+  },
+  {
+    id: "part-carbon-frame",
+    name: "Apex 5\" Carbon Fiber Freestyle Drone Frame",
+    category: "Frames",
+    price: 2799,
+    quantity: 30,
+    image: "/images/fpv_racing_drone.jpg",
+    desc: "CNC cut 5.5mm chamfered arms, aluminum standoffs, and integrated TPU antenna/action camera mount."
+  },
+  {
+    id: "part-agri-nozzle",
+    name: "Electrostatic Centrifugal Spray Nozzle (Agri)",
+    category: "Agricultural Parts",
+    price: 2499,
+    quantity: 24,
+    image: "/images/agricultural_drone.jpg",
+    desc: "Atomizes liquid droplets down to 50–200 microns for uniform leaf coverage without clogs or overspray."
+  },
+  {
+    id: "3d-gopro-mount",
+    name: "TPU Universal GoPro Hero 9/10/11/12 Camera Mount (30°)",
+    category: "3D Parts",
+    price: 349,
+    quantity: 70,
+    image: "/images/fpv_racing_drone.jpg",
+    desc: "Flexible, impact-absorbing TPU mount that protects expensive action cameras during aggressive freestyle crashes."
+  }
+];
+
+export async function getDroneAccessories() {
+  const localKey = 'navidron_catalog_drone_accessories';
+  const cached = localStorage.getItem(localKey);
+  let localList = null;
+  if (cached) {
+    try { localList = JSON.parse(cached); } catch (e) {}
+  }
+
+  const cloudList = await readFirestoreCollection('DroneAccessories');
+  if (Array.isArray(cloudList) && cloudList.length > 0) {
+    localStorage.setItem(localKey, JSON.stringify(cloudList));
+    return cloudList;
+  }
+
+  if (localList && localList.length > 0) return localList;
+
+  localStorage.setItem(localKey, JSON.stringify(INITIAL_DRONE_ACCESSORIES));
+  INITIAL_DRONE_ACCESSORIES.forEach((item) => writeFirestoreDoc('DroneAccessories', item.id, item));
+  return INITIAL_DRONE_ACCESSORIES;
+}
+
+export async function saveDroneAccessory(item) {
+  const id = item.id || `acc-${Date.now()}`;
+  const cleanItem = { ...item, id, updatedAt: new Date().toISOString() };
+  await writeFirestoreDoc('DroneAccessories', id, cleanItem);
+
+  const current = await getDroneAccessories();
+  const updated = [cleanItem, ...current.filter((i) => i.id !== id)];
+  localStorage.setItem('navidron_catalog_drone_accessories', JSON.stringify(updated));
+  return cleanItem;
+}
+
+export async function deleteDroneAccessory(id) {
+  await deleteFirestoreDoc('DroneAccessories', id);
+  const current = await getDroneAccessories();
+  const updated = current.filter((i) => i.id !== id);
+  localStorage.setItem('navidron_catalog_drone_accessories', JSON.stringify(updated));
+  return true;
+}
+
+// ── Root Collection 4: "Robotics_Kits" ─────────────────────────
+export const INITIAL_ROBOTICS_KITS = [
+  {
+    id: "kit-4wd-chassis",
+    name: "4WD Smart Robot Car Chassis with Speed Encoders",
+    kitType: "Chassis & Base",
+    price: 1299,
+    quantity: 25,
+    image: "/images/college_project_drone.jpg",
+    desc: "Dual-layer heavy acrylic chassis platform with 4 DC motors, rubber grip wheels, battery box, and optocoupler speed discs."
+  },
+  {
+    id: "kit-esp32-ai",
+    name: "ESP32-CAM AI Surveillance & Robot Controller Kit",
+    kitType: "Microcontrollers & IoT",
+    price: 1899,
+    quantity: 35,
+    image: "/images/college_project_drone.jpg",
+    desc: "ESP32 dual-core Wi-Fi/Bluetooth board with 2MP OV2640 camera module, expansion shield, and motor driver for video streaming rovers."
+  },
+  {
+    id: "kit-arduino-starter",
+    name: "Arduino Uno R3 Ultimate Robotics Starter Kit",
+    kitType: "Learning Kits",
+    price: 2499,
+    quantity: 40,
+    image: "/images/college_project_drone.jpg",
+    desc: "Genuine ATmega328P Arduino Uno with 30+ sensors, servo motors, ultrasonic obstacle avoidance sensor, LCD display, and breadboard."
+  },
+  {
+    id: "kit-mecanum-wheels",
+    name: "Omnidirectional Mecanum Wheel 4-Motor Drive Kit",
+    kitType: "Motors & Wheels",
+    price: 3499,
+    quantity: 15,
+    image: "/images/college_project_drone.jpg",
+    desc: "Set of four 80mm heavy-load Mecanum wheels with TT gear motors for 360-degree all-direction motion robotics."
+  },
+  {
+    id: "kit-metal-servo",
+    name: "High Torque Metal Gear Servo MG996R (Pack of 2)",
+    kitType: "Motors",
+    price: 449,
+    quantity: 60,
+    image: "/images/college_project_drone.jpg",
+    desc: "11kg-cm stall torque metal gear high precision servos for robotic arms, steering knuckles, and UAV steerable landing gears."
+  }
+];
+
+export async function getRoboticsKits() {
+  const localKey = 'navidron_catalog_robotics_kits';
+  const cached = localStorage.getItem(localKey);
+  let localList = null;
+  if (cached) {
+    try { localList = JSON.parse(cached); } catch (e) {}
+  }
+
+  const cloudList = await readFirestoreCollection('Robotics_Kits');
+  if (Array.isArray(cloudList) && cloudList.length > 0) {
+    localStorage.setItem(localKey, JSON.stringify(cloudList));
+    return cloudList;
+  }
+
+  if (localList && localList.length > 0) return localList;
+
+  localStorage.setItem(localKey, JSON.stringify(INITIAL_ROBOTICS_KITS));
+  INITIAL_ROBOTICS_KITS.forEach((item) => writeFirestoreDoc('Robotics_Kits', item.id, item));
+  return INITIAL_ROBOTICS_KITS;
+}
+
+export async function saveRoboticsKit(item) {
+  const id = item.id || `kit-${Date.now()}`;
+  const cleanItem = { ...item, id, updatedAt: new Date().toISOString() };
+  await writeFirestoreDoc('Robotics_Kits', id, cleanItem);
+
+  const current = await getRoboticsKits();
+  const updated = [cleanItem, ...current.filter((i) => i.id !== id)];
+  localStorage.setItem('navidron_catalog_robotics_kits', JSON.stringify(updated));
+  return cleanItem;
+}
+
+export async function deleteRoboticsKit(id) {
+  await deleteFirestoreDoc('Robotics_Kits', id);
+  const current = await getRoboticsKits();
+  const updated = current.filter((i) => i.id !== id);
+  localStorage.setItem('navidron_catalog_robotics_kits', JSON.stringify(updated));
+  return true;
+}
+
+// ── Root Collection 5: "UAV_PreBuilt" ──────────────────────────
+export const INITIAL_UAV_PREBUILT = [
+  {
+    id: "uav-apex-5",
+    name: "Apex 5\" Freestyle FPV Drone (BNF / Ready To Fly)",
+    type: "FPV Drone",
+    price: 14999,
+    quantity: 6,
+    image: "/images/fpv_racing_drone.jpg",
+    desc: "Ready to fly 6S freestyle drone with 2207 brushless motors, tuned Betaflight 4.5, ELRS 2.4G receiver, and carbon crash cage.",
+    flightTime: "8 mins",
+    range: "3.5 km"
+  },
+  {
+    id: "uav-skysurfer-rc",
+    name: "SkySurfer V2 1400mm RC Scale Pusher Airplane",
+    type: "RC Plane",
+    price: 9999,
+    quantity: 8,
+    image: "/images/rc_plane_glider.jpg",
+    desc: "EPO foam pusher propeller glider airplane with 4-channel radio receiver, carbon spar reinforcement, and easy hand-launch capability.",
+    flightTime: "25 mins",
+    range: "2.0 km"
+  },
+  {
+    id: "uav-micro-toothpick",
+    name: "Micro Toothpick 3\" BNF FPV Quadcopter",
+    type: "Toy Drone",
+    price: 8999,
+    quantity: 12,
+    image: "/images/fpv_racing_drone.jpg",
+    desc: "Ultra-lightweight 85g racing drone for backyard cruising and tight spaces. Highly durable carbon unibody plate.",
+    flightTime: "5 mins",
+    range: "1.0 km"
+  },
+  {
+    id: "uav-kisan-16l",
+    name: "Kisan-16L Hexacopter Smart Agricultural UAV",
+    type: "Agri Drone",
+    price: 120000,
+    quantity: 3,
+    image: "/images/agricultural_drone.jpg",
+    desc: "Autonomous RTK GPS waypoint navigation, 16L spray tank, dual centrifugal spray nozzles, and terrain-follow radar.",
+    flightTime: "20 mins",
+    range: "5.0 km"
+  }
+];
+
+export async function getUAVPreBuilt() {
+  const localKey = 'navidron_catalog_uav_prebuilt';
+  const cached = localStorage.getItem(localKey);
+  let localList = null;
+  if (cached) {
+    try { localList = JSON.parse(cached); } catch (e) {}
+  }
+
+  const cloudList = await readFirestoreCollection('UAV_PreBuilt');
+  if (Array.isArray(cloudList) && cloudList.length > 0) {
+    localStorage.setItem(localKey, JSON.stringify(cloudList));
+    return cloudList;
+  }
+
+  if (localList && localList.length > 0) return localList;
+
+  localStorage.setItem(localKey, JSON.stringify(INITIAL_UAV_PREBUILT));
+  INITIAL_UAV_PREBUILT.forEach((item) => writeFirestoreDoc('UAV_PreBuilt', item.id, item));
+  return INITIAL_UAV_PREBUILT;
+}
+
+export async function saveUAVPreBuilt(item) {
+  const id = item.id || `uav-${Date.now()}`;
+  const cleanItem = { ...item, id, updatedAt: new Date().toISOString() };
+  await writeFirestoreDoc('UAV_PreBuilt', id, cleanItem);
+
+  const current = await getUAVPreBuilt();
+  const updated = [cleanItem, ...current.filter((i) => i.id !== id)];
+  localStorage.setItem('navidron_catalog_uav_prebuilt', JSON.stringify(updated));
+  return cleanItem;
+}
+
+export async function deleteUAVPreBuilt(id) {
+  await deleteFirestoreDoc('UAV_PreBuilt', id);
+  const current = await getUAVPreBuilt();
+  const updated = current.filter((i) => i.id !== id);
+  localStorage.setItem('navidron_catalog_uav_prebuilt', JSON.stringify(updated));
+  return true;
+}
+
+// ── Root Collection 6: "UAV_Custom" ────────────────────────────
+export async function getUAVCustomOrders() {
+  const localKey = 'navidron_custom_uav_orders';
+  const cached = localStorage.getItem(localKey);
+  let fallback = [];
+  if (cached) {
+    try { fallback = JSON.parse(cached); } catch (e) {}
+  }
+
+  const cloudList = await readFirestoreCollection('UAV_Custom');
+  if (Array.isArray(cloudList) && cloudList.length > 0) {
+    cloudList.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    localStorage.setItem(localKey, JSON.stringify(cloudList));
+    return cloudList;
+  }
+
+  return fallback;
+}
+
+export async function submitUAVCustomOrder(orderData) {
+  const id = orderData.id || `CUSTOM-UAV-${Math.floor(10000 + Math.random() * 90000)}`;
+  const cleanOrder = {
+    ...orderData,
+    id,
+    createdAt: new Date().toISOString(),
+    status: orderData.status || 'Pending Review'
+  };
+
+  await writeFirestoreDoc('UAV_Custom', id, cleanOrder);
+
+  // Cache in local list
+  const existing = await getUAVCustomOrders();
+  const updated = [cleanOrder, ...existing.filter((o) => o.id !== id)];
+  localStorage.setItem('navidron_custom_uav_orders', JSON.stringify(updated));
+
+  // Also create a record in global "Order" collection
+  await createGlobalOrder({
+    ...cleanOrder,
+    totalAmount: orderData.estimatedPrice || orderData.price || 14999,
+    type: 'UAV_Custom',
+    items: [
+      {
+        id: cleanOrder.id,
+        name: `Custom UAV: ${cleanOrder.droneType || 'Custom Configured Drone'} (${cleanOrder.frameSize || '5 inch'})`,
+        price: orderData.estimatedPrice || orderData.price || 14999,
+        quantity: 1,
+        image: '/images/fpv_racing_drone.jpg'
+      }
+    ]
+  });
+
+  return cleanOrder;
+}
+
+export async function updateUAVCustomOrderStatus(orderId, status) {
+  await writeFirestoreDoc('UAV_Custom', orderId, { status, updatedAt: new Date().toISOString() });
+  await updateOrderStatus(orderId, status);
+
+  const existing = await getUAVCustomOrders();
+  const updated = existing.map((o) => (o.id === orderId ? { ...o, status } : o));
+  localStorage.setItem('navidron_custom_uav_orders', JSON.stringify(updated));
+  return true;
+}
+
+// ── Root Collection: "users" (Admin User Management) ───────────
+export async function getAllUsers() {
+  const usersList = await readFirestoreCollection('users');
+  if (Array.isArray(usersList) && usersList.length > 0) {
+    return usersList.map((u) => {
+      const contact = u.Contact || u.contact || {};
+      const addresses = u['Delivery Address'] || u.deliveryAddresses || [];
+      const orders = u['Order History'] || u.orderHistory || [];
+      const cart = u.Cart || u.cart || [];
+      return {
+        id: u.id,
+        name: contact.name || u.name || 'Unnamed Pilot',
+        email: contact.email || u.email || '',
+        phone: contact.phone || '',
+        altPhone: contact.altPhone || '',
+        addressesCount: Array.isArray(addresses) ? addresses.length : 0,
+        addresses: Array.isArray(addresses) ? addresses : [],
+        ordersCount: Array.isArray(orders) ? orders.length : 0,
+        orders: Array.isArray(orders) ? orders : [],
+        cartCount: Array.isArray(cart) ? cart.length : 0,
+        cart: Array.isArray(cart) ? cart : [],
+        updatedAt: u.updatedAt || contact.updatedAt || ''
+      };
+    });
+  }
+
+  // If offline or empty, check local storage for currently cached user
+  const current = localStorage.getItem('navidron_current_user');
+  if (current) {
+    try {
+      const parsed = JSON.parse(current);
+      const uid = getEffectiveUserId(parsed);
+      const cachedProfile = JSON.parse(localStorage.getItem(getStorageKey('profile', uid)) || '{}');
+      const cachedAddrs = JSON.parse(localStorage.getItem(getStorageKey('addresses', uid)) || '[]');
+      const cachedOrds = JSON.parse(localStorage.getItem(getStorageKey('orders', uid)) || '[]');
+      const cachedCart = JSON.parse(localStorage.getItem(getStorageKey('cart', uid)) || '[]');
+      return [
+        {
+          id: uid,
+          name: cachedProfile.name || parsed.name || 'Active User',
+          email: cachedProfile.email || parsed.email || '',
+          phone: cachedProfile.phone || '',
+          altPhone: cachedProfile.altPhone || '',
+          addressesCount: cachedAddrs.length,
+          addresses: cachedAddrs,
+          ordersCount: cachedOrds.length,
+          orders: cachedOrds,
+          cartCount: cachedCart.length,
+          cart: cachedCart,
+          updatedAt: new Date().toISOString()
+        }
+      ];
+    } catch (e) {}
+  }
+
+  return [];
+}
+
 // ── Bills / Invoices Services ─────────────────────────────────
 export async function getUserBills(uidOrUser = 'guest_user') {
   const orders = await getUserOrders(uidOrUser);
@@ -638,3 +1486,4 @@ export async function getUserBills(uidOrUser = 'guest_user') {
 }
 
 export { auth, db, isFirebaseOnline, RTDB_URL };
+

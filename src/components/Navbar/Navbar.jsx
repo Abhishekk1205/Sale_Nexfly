@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Menu, X, Flame, Sparkles, Send, User } from 'lucide-react';
+import { ChevronDown, Menu, X, Flame, Sparkles, Send, User, ShoppingCart, ShieldCheck } from 'lucide-react';
 
 const getFirstName = (u) => {
   if (!u) return 'Pilot';
@@ -18,7 +18,7 @@ const getFirstName = (u) => {
   return 'Pilot';
 };
 
-export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
+export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout, cartCount = 0, onOpenCart }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
@@ -150,9 +150,27 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
                 Contact
               </Link>
             </li>
+
+            <li className="nav-item">
+              <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`} style={{ color: 'var(--neon)', fontWeight: 700 }}>
+                <ShieldCheck size={14} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'text-top' }} /> Admin
+              </Link>
+            </li>
           </ul>
 
           <div className="nav-actions">
+            {/* Flight Cart Trigger */}
+            <button
+              type="button"
+              className="nav-cart-btn"
+              onClick={onOpenCart}
+              title="View Cart & Checkout"
+              aria-label="Open flight cart"
+            >
+              <ShoppingCart size={18} />
+              {cartCount > 0 && <span className="nav-cart-badge">{cartCount}</span>}
+            </button>
+
             {user ? (
               <>
                 <Link
@@ -289,9 +307,25 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
             <span>📬 Contact & Support</span>
             <span className="mob-arrow">›</span>
           </Link>
+          <Link to="/admin" className={`mob-link ${isActive('/admin') ? 'active' : ''}`} onClick={() => setMobileOpen(false)} style={{ color: 'var(--neon)', fontWeight: 700 }}>
+            <span>🛡️ Admin Portal</span>
+            <span className="mob-arrow">›</span>
+          </Link>
         </div>
 
         <div className="mobile-menu-actions">
+          {/* Cart in mobile */}
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ width: '100%', padding: '.85rem 1.5rem', marginBottom: '.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem' }}
+            onClick={() => {
+              setMobileOpen(false);
+              onOpenCart();
+            }}
+          >
+            <ShoppingCart size={16} /> View Cart ({cartCount})
+          </button>
           {user && (
             <Link
               to="/profile"
