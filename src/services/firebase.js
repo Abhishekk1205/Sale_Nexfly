@@ -20,7 +20,8 @@ import {
   getFirestore,
   doc,
   getDoc,
-  setDoc
+  setDoc,
+  deleteDoc
 } from 'firebase/firestore';
 
 const RTDB_URL =
@@ -113,18 +114,35 @@ export function getEffectiveUserId(user) {
 }
 
 // ── Direct REST API for Cloud Firestore ────────────────────────
-async function writeFirestoreRest(collectionName, docId, data) {
-  const apiKey = firebaseConfig.apiKey;
-  const projectId = firebaseConfig.projectId;
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collectionName}/${docId}?key=${apiKey}`;
-
+function formatRestFields(data) {
   const fields = {};
   for (const [k, v] of Object.entries(data)) {
-    if (typeof v === 'string') fields[k] = { stringValue: v };
-    else if (typeof v === 'number') fields[k] = { integerValue: String(v) };
-    else if (typeof v === 'boolean') fields[k] = { booleanValue: v };
-    else if (Array.isArray(v) || typeof v === 'object') fields[k] = { stringValue: JSON.stringify(v) };
+    if (v === null || v === undefined) {
+      fields[k] = { nullValue: null };
+    } else if (typeof v === 'string') {
+      fields[k] = { stringValue: v };
+    } else if (typeof v === 'number') {
+      if (Number.isInteger(v)) {
+        fields[k] = { integerValue: String(v) };
+      } else {
+        fields[k] = { doubleValue: v };
+      }
+    } else if (typeof v === 'boolean') {
+      fields[k] = { booleanValue: v };
+    } else if (Array.isArray(v) || typeof v === 'object') {
+      fields[k] = { stringValue: JSON.stringify(v) };
+    }
   }
+  return fields;
+}
+
+async function writeFirestoreRest(docPath, data) {
+  const apiKey = firebaseConfig.apiKey;
+  const projectId = firebaseConfig.projectId;
+  const cleanPath = docPath.startsWith('/') ? docPath.slice(1) : docPath;
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${cleanPath}?key=${apiKey}`;
+
+  const fields = formatRestFields(data);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 3500);
@@ -146,6 +164,53 @@ async function writeFirestoreRest(collectionName, docId, data) {
     clearTimeout(timeoutId);
     throw err;
   }
+}
+
+async function deleteFirestoreRest(docPath) {
+  const apiKey = firebaseConfig.apiKey;
+  const projectId = firebaseConfig.projectId;
+  const cleanPath = docPath.startsWith('/') ? docPath.slice(1) : docPath;
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${cleanPath}?key=${apiKey}`;
+
+  try {
+    await fetch(url, { method: 'DELETE' });
+  } catch (err) {}
+}
+
+// Automatically cleans up old duplicate documents (e.g. user_xxx_addresses) so only the single user doc appears in Firestore
+async function cleanupLegacyUserDocs(uid) {
+  if (!uid) return;
+  try {
+    deleteFirestoreRest(`users/${uid}_addresses`);
+    deleteFirestoreRest(`users/${uid}_orders`);
+    if (db) {
+      deleteDoc(doc(db, 'users', `${uid}_addresses`)).catch(() => {});
+      deleteDoc(doc(db, 'users', `${uid}_orders`)).catch(() => {});
+    }
+  } catch (e) {}
+}
+
+// Generate bill records from user orders
+export function generateBillsFromOrders(orders = [], userProfile = {}) {
+  if (!Array.isArray(orders)) return [];
+  return orders.map((order, idx) => {
+    const numericId = String(order.id || idx).replace(/[^0-9]/g, '') || String(1001 + idx);
+    return {
+      id: `BILL-${order.id || numericId}`,
+      orderId: order.id || `NVD-${numericId}`,
+      billNumber: `INV-2026-${numericId}`,
+      date: order.date || new Date().toISOString().split('T')[0],
+      customerName: userProfile.name || 'Valued Pilot',
+      customerEmail: userProfile.email || '',
+      totalAmount: order.totalAmount || 5499,
+      tax: Math.round((order.totalAmount || 5499) * 0.18),
+      paymentStatus: order.paymentStatus || 'Paid Online',
+      status: 'Paid',
+      itemsCount: Array.isArray(order.items) ? order.items.length : 1,
+      items: order.items || [],
+      issuedAt: new Date().toISOString()
+    };
+  });
 }
 
 // ── Synchronize Complete User Data to Firebase (Firestore) ─────
@@ -176,14 +241,6 @@ export async function syncUserFullDataToFirebase(user) {
   const name = existingProfile?.name || user.fullName || user.name || "";
   const email = existingProfile?.email || user.primaryEmailAddress?.emailAddress || user.email || "";
 
-  const profileData = {
-    ...DEFAULT_USER_PROFILE,
-    ...(existingProfile || {}),
-    name: name,
-    email: email,
-    updatedAt: new Date().toISOString()
-  };
-
   const addressesData = (existingAddresses && Array.isArray(existingAddresses))
     ? existingAddresses
     : [];
@@ -192,14 +249,49 @@ export async function syncUserFullDataToFirebase(user) {
     ? existingOrders
     : [];
 
+  const billsData = generateBillsFromOrders(ordersData, { name, email });
+
+  const profileData = {
+    ...DEFAULT_USER_PROFILE,
+    ...(existingProfile || {}),
+    name: name,
+    email: email,
+    updatedAt: new Date().toISOString(),
+    // Keep addresses, orders, and bills inside the user document as fields
+    addresses: addressesData,
+    orders: ordersData,
+    bills: billsData
+  };
+
   let firestoreOk = false;
   let lastError = null;
 
-  // 1. Try Direct Firestore REST API (fastest, clearest error responses)
+  // 1. Try Direct Firestore REST API: Write to single User document: users/{uid}
   try {
-    await writeFirestoreRest('users', uid, profileData);
-    await writeFirestoreRest('users', `${uid}_addresses`, { list: addressesData });
-    await writeFirestoreRest('users', `${uid}_orders`, { list: ordersData });
+    await writeFirestoreRest(`users/${uid}`, profileData);
+
+    // Also create subcollections directly inside this user document:
+    // users/{uid}/addresses/all, users/{uid}/orders/all, users/{uid}/bills/all
+    await writeFirestoreRest(`users/${uid}/addresses/all`, { list: addressesData, count: addressesData.length, updatedAt: profileData.updatedAt });
+    await writeFirestoreRest(`users/${uid}/orders/all`, { list: ordersData, count: ordersData.length, updatedAt: profileData.updatedAt });
+    await writeFirestoreRest(`users/${uid}/bills/all`, { list: billsData, count: billsData.length, updatedAt: profileData.updatedAt });
+
+    for (const addr of addressesData) {
+      if (addr.id) {
+        await writeFirestoreRest(`users/${uid}/addresses/${addr.id}`, { ...addr, updatedAt: profileData.updatedAt }).catch(() => {});
+      }
+    }
+    for (const ord of ordersData) {
+      if (ord.id) {
+        await writeFirestoreRest(`users/${uid}/orders/${ord.id}`, { ...ord, updatedAt: profileData.updatedAt }).catch(() => {});
+      }
+    }
+    for (const bill of billsData) {
+      if (bill.id) {
+        await writeFirestoreRest(`users/${uid}/bills/${bill.id}`, { ...bill, updatedAt: profileData.updatedAt }).catch(() => {});
+      }
+    }
+
     firestoreOk = true;
   } catch (err) {
     lastError = err.message;
@@ -207,16 +299,32 @@ export async function syncUserFullDataToFirebase(user) {
   }
 
   // 2. Try Firestore JS SDK (with 3.5s timeout)
-  if (!firestoreOk && db) {
+  if (db) {
     try {
-      await withTimeout(
-        Promise.all([
-          setDoc(doc(db, 'users', uid), profileData, { merge: true }),
-          setDoc(doc(db, 'users', `${uid}_addresses`), { list: addressesData }, { merge: true }),
-          setDoc(doc(db, 'users', `${uid}_orders`), { list: ordersData }, { merge: true })
-        ]),
-        3500
-      );
+      const promises = [
+        setDoc(doc(db, 'users', uid), profileData, { merge: true }),
+        setDoc(doc(db, 'users', uid, 'addresses', 'all'), { list: addressesData, count: addressesData.length, updatedAt: profileData.updatedAt }, { merge: true }),
+        setDoc(doc(db, 'users', uid, 'orders', 'all'), { list: ordersData, count: ordersData.length, updatedAt: profileData.updatedAt }, { merge: true }),
+        setDoc(doc(db, 'users', uid, 'bills', 'all'), { list: billsData, count: billsData.length, updatedAt: profileData.updatedAt }, { merge: true })
+      ];
+
+      for (const addr of addressesData) {
+        if (addr.id) {
+          promises.push(setDoc(doc(db, 'users', uid, 'addresses', addr.id), addr, { merge: true }));
+        }
+      }
+      for (const ord of ordersData) {
+        if (ord.id) {
+          promises.push(setDoc(doc(db, 'users', uid, 'orders', ord.id), ord, { merge: true }));
+        }
+      }
+      for (const bill of billsData) {
+        if (bill.id) {
+          promises.push(setDoc(doc(db, 'users', uid, 'bills', bill.id), bill, { merge: true }));
+        }
+      }
+
+      await withTimeout(Promise.all(promises), 3500);
       firestoreOk = true;
     } catch (err) {
       if (!lastError) lastError = err.message;
@@ -224,10 +332,14 @@ export async function syncUserFullDataToFirebase(user) {
     }
   }
 
+  // Clean up any old stray documents so they disappear from users collection
+  cleanupLegacyUserDocs(uid);
+
   // 3. Cache locally preserving all user changes
   localStorage.setItem(getStorageKey('profile', uid), JSON.stringify(profileData));
   localStorage.setItem(getStorageKey('addresses', uid), JSON.stringify(addressesData));
   localStorage.setItem(getStorageKey('orders', uid), JSON.stringify(ordersData));
+  localStorage.setItem(getStorageKey('bills', uid), JSON.stringify(billsData));
 
   // Also update active session in localStorage if logged in
   const currentSession = localStorage.getItem('navidron_current_user');
@@ -352,7 +464,7 @@ export async function saveUserProfile(uidOrUser = 'guest_user', profileData) {
 
   // 3. Try Firestore REST
   try {
-    await writeFirestoreRest('users', cleanId, dataWithTimestamp);
+    await writeFirestoreRest(`users/${cleanId}`, dataWithTimestamp);
     firestoreSaved = true;
   } catch (err) {
     lastError = err.message;
@@ -367,6 +479,9 @@ export async function saveUserProfile(uidOrUser = 'guest_user', profileData) {
       if (!lastError) lastError = e.message;
     }
   }
+
+  // Clean up any stray legacy docs
+  cleanupLegacyUserDocs(cleanId);
 
   return { success: firestoreSaved, error: lastError };
 }
@@ -384,12 +499,23 @@ export async function getUserAddresses(uidOrUser = 'guest_user') {
     } catch (e) {}
   }
 
-  // If no cache, check Firestore
+  // If no cache, check Firestore inside user doc and subcollections
   if (db) {
     try {
-      const docSnap = await withTimeout(getDoc(doc(db, 'users', `${cleanId}_addresses`)), 2500);
-      if (docSnap && docSnap.exists() && docSnap.data().list) {
-        const list = docSnap.data().list;
+      // 1. Check user document field first
+      const docSnap = await withTimeout(getDoc(doc(db, 'users', cleanId)), 2500);
+      if (docSnap && docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.addresses && Array.isArray(data.addresses) && data.addresses.length > 0) {
+          localStorage.setItem(localKey, JSON.stringify(data.addresses));
+          return data.addresses;
+        }
+      }
+
+      // 2. Check subcollection users/{cleanId}/addresses/all
+      const subSnap = await withTimeout(getDoc(doc(db, 'users', cleanId, 'addresses', 'all')), 2500);
+      if (subSnap && subSnap.exists() && subSnap.data().list) {
+        const list = subSnap.data().list;
         localStorage.setItem(localKey, JSON.stringify(list));
         return list;
       }
@@ -406,25 +532,43 @@ export async function saveUserAddresses(uidOrUser = 'guest_user', addresses) {
 
   let firestoreSaved = false;
   let lastError = null;
+  const updatedAt = new Date().toISOString();
 
+  // 1. Try Firestore REST: update user doc fields AND subcollections inside this same user
   try {
-    await writeFirestoreRest('users', `${cleanId}_addresses`, { list: addresses });
+    await writeFirestoreRest(`users/${cleanId}`, { addresses, updatedAt });
+    await writeFirestoreRest(`users/${cleanId}/addresses/all`, { list: addresses, count: addresses.length, updatedAt });
+    for (const addr of addresses) {
+      if (addr.id) {
+        await writeFirestoreRest(`users/${cleanId}/addresses/${addr.id}`, { ...addr, updatedAt }).catch(() => {});
+      }
+    }
     firestoreSaved = true;
   } catch (e) {
     lastError = e.message;
   }
 
-  if (!firestoreSaved && db) {
+  // 2. Try Firestore SDK
+  if (db) {
     try {
-      await withTimeout(
-        setDoc(doc(db, 'users', `${cleanId}_addresses`), { list: addresses }, { merge: true }),
-        3500
-      );
+      const promises = [
+        setDoc(doc(db, 'users', cleanId), { addresses, updatedAt }, { merge: true }),
+        setDoc(doc(db, 'users', cleanId, 'addresses', 'all'), { list: addresses, count: addresses.length, updatedAt }, { merge: true })
+      ];
+      for (const addr of addresses) {
+        if (addr.id) {
+          promises.push(setDoc(doc(db, 'users', cleanId, 'addresses', addr.id), addr, { merge: true }));
+        }
+      }
+      await withTimeout(Promise.all(promises), 3500);
       firestoreSaved = true;
     } catch (e) {
       if (!lastError) lastError = e.message;
     }
   }
+
+  // Clean up any stray legacy docs from users collection
+  cleanupLegacyUserDocs(cleanId);
 
   return { success: firestoreSaved, error: lastError };
 }
@@ -442,12 +586,23 @@ export async function getUserOrders(uidOrUser = 'guest_user') {
     } catch (e) {}
   }
 
-  // If no cache, check Firestore
+  // If no cache, check Firestore inside user doc and subcollections
   if (db) {
     try {
-      const docSnap = await withTimeout(getDoc(doc(db, 'users', `${cleanId}_orders`)), 2500);
-      if (docSnap && docSnap.exists() && docSnap.data().list) {
-        const list = docSnap.data().list;
+      // 1. Check user document field first
+      const docSnap = await withTimeout(getDoc(doc(db, 'users', cleanId)), 2500);
+      if (docSnap && docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.orders && Array.isArray(data.orders) && data.orders.length > 0) {
+          localStorage.setItem(localKey, JSON.stringify(data.orders));
+          return data.orders;
+        }
+      }
+
+      // 2. Check subcollection users/{cleanId}/orders/all
+      const subSnap = await withTimeout(getDoc(doc(db, 'users', cleanId, 'orders', 'all')), 2500);
+      if (subSnap && subSnap.exists() && subSnap.data().list) {
+        const list = subSnap.data().list;
         localStorage.setItem(localKey, JSON.stringify(list));
         return list;
       }
@@ -462,29 +617,106 @@ export async function saveUserOrders(uidOrUser = 'guest_user', orders) {
   const localKey = getStorageKey('orders', cleanId);
   localStorage.setItem(localKey, JSON.stringify(orders));
 
+  // Get current profile for bill details
+  let userProfile = {};
+  try {
+    const cached = localStorage.getItem(getStorageKey('profile', cleanId));
+    if (cached) userProfile = JSON.parse(cached);
+  } catch (e) {}
+
+  const bills = generateBillsFromOrders(orders, userProfile);
+  localStorage.setItem(getStorageKey('bills', cleanId), JSON.stringify(bills));
+
   let firestoreSaved = false;
   let lastError = null;
+  const updatedAt = new Date().toISOString();
 
+  // 1. Try Firestore REST: update user doc fields AND subcollections inside this same user
   try {
-    await writeFirestoreRest('users', `${cleanId}_orders`, { list: orders });
+    await writeFirestoreRest(`users/${cleanId}`, { orders, bills, updatedAt });
+    await writeFirestoreRest(`users/${cleanId}/orders/all`, { list: orders, count: orders.length, updatedAt });
+    await writeFirestoreRest(`users/${cleanId}/bills/all`, { list: bills, count: bills.length, updatedAt });
+
+    for (const ord of orders) {
+      if (ord.id) {
+        await writeFirestoreRest(`users/${cleanId}/orders/${ord.id}`, { ...ord, updatedAt }).catch(() => {});
+      }
+    }
+    for (const bill of bills) {
+      if (bill.id) {
+        await writeFirestoreRest(`users/${cleanId}/bills/${bill.id}`, { ...bill, updatedAt }).catch(() => {});
+      }
+    }
     firestoreSaved = true;
   } catch (e) {
     lastError = e.message;
   }
 
-  if (!firestoreSaved && db) {
+  // 2. Try Firestore SDK
+  if (db) {
     try {
-      await withTimeout(
-        setDoc(doc(db, 'users', `${cleanId}_orders`), { list: orders }, { merge: true }),
-        3500
-      );
+      const promises = [
+        setDoc(doc(db, 'users', cleanId), { orders, bills, updatedAt }, { merge: true }),
+        setDoc(doc(db, 'users', cleanId, 'orders', 'all'), { list: orders, count: orders.length, updatedAt }, { merge: true }),
+        setDoc(doc(db, 'users', cleanId, 'bills', 'all'), { list: bills, count: bills.length, updatedAt }, { merge: true })
+      ];
+      for (const ord of orders) {
+        if (ord.id) {
+          promises.push(setDoc(doc(db, 'users', cleanId, 'orders', ord.id), ord, { merge: true }));
+        }
+      }
+      for (const bill of bills) {
+        if (bill.id) {
+          promises.push(setDoc(doc(db, 'users', cleanId, 'bills', bill.id), bill, { merge: true }));
+        }
+      }
+      await withTimeout(Promise.all(promises), 3500);
       firestoreSaved = true;
     } catch (e) {
       if (!lastError) lastError = e.message;
     }
   }
 
+  // Clean up any stray legacy docs from users collection
+  cleanupLegacyUserDocs(cleanId);
+
   return { success: firestoreSaved, error: lastError };
+}
+
+// ── Bills / Invoices Services ─────────────────────────────────
+export async function getUserBills(uidOrUser = 'guest_user') {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'guest_user');
+  const localKey = getStorageKey('bills', cleanId);
+
+  const cached = localStorage.getItem(localKey);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {}
+  }
+
+  if (db) {
+    try {
+      const docSnap = await withTimeout(getDoc(doc(db, 'users', cleanId)), 2500);
+      if (docSnap && docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.bills && Array.isArray(data.bills) && data.bills.length > 0) {
+          localStorage.setItem(localKey, JSON.stringify(data.bills));
+          return data.bills;
+        }
+      }
+
+      const subSnap = await withTimeout(getDoc(doc(db, 'users', cleanId, 'bills', 'all')), 2500);
+      if (subSnap && subSnap.exists() && subSnap.data().list) {
+        const list = subSnap.data().list;
+        localStorage.setItem(localKey, JSON.stringify(list));
+        return list;
+      }
+    } catch (e) {}
+  }
+
+  return [];
 }
 
 export { auth, db, isFirebaseOnline, RTDB_URL };
