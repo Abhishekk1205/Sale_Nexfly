@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Menu, X, Flame, Sparkles, Send } from 'lucide-react';
+import { ChevronDown, Menu, X, Flame, Sparkles, Send, User } from 'lucide-react';
 
 export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
   const [scrolled, setScrolled] = useState(false);
@@ -94,7 +94,7 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
 
             <li className="nav-item">
               <Link to="/prints" className={`nav-link ${isActive('/prints') ? 'active' : ''}`}>
-                3D Prints <ChevronDown className="chevron" />
+                3Dstudio <ChevronDown className="chevron" />
               </Link>
               <div className="dropdown">
                 <Link to="/prints?filter=gta6">🎮 GTA 6 Vice City Figures</Link>
@@ -139,10 +139,20 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
           <div className="nav-actions">
             {user ? (
               <>
-                <span style={{ fontSize: '.84rem', color: 'var(--neon)', fontWeight: 700 }} className="nav-user-greeting">
-                  Hi, {user.name}
-                </span>
-                <button className="btn-nav-outline" onClick={onLogout}>
+                <Link
+                  to="/profile"
+                  className="nav-user-badge-link"
+                  title="Manage Profile, Delivery Addresses & Order History"
+                >
+                  <span className="nav-user-greeting">
+                    Hii, {user.name || 'Abhishek'}
+                  </span>
+                </Link>
+                <Link to="/profile" className="btn-nav-outline btn-nav-profile" title="View Profile">
+                  <User size={14} />
+                  <span>Profile</span>
+                </Link>
+                <button className="btn-nav-outline" onClick={onLogout} title="Sign Out">
                   Sign Out
                 </button>
               </>
@@ -197,6 +207,45 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
         </div>
 
         <div className="mobile-links-container">
+          {user && (
+            <Link
+              to="/profile"
+              className={`mob-link mob-link-profile ${isActive('/profile') ? 'active' : ''}`}
+              onClick={() => setMobileOpen(false)}
+              style={{
+                background: 'linear-gradient(135deg, rgba(0,200,255,0.12), rgba(123,47,255,0.1))',
+                borderColor: 'var(--neon)',
+                padding: '0.9rem 1rem'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--neon), var(--neon2))',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 800,
+                  fontSize: '0.85rem'
+                }}>
+                  {(user.name || 'Abhishek').slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.92rem', color: 'var(--navy)', fontWeight: 800 }}>
+                    Hii, {user.name || 'Abhishek'}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--neon)', fontWeight: 600 }}>
+                    👤 Profile, Addresses & Orders
+                  </div>
+                </div>
+              </div>
+              <span className="mob-arrow">›</span>
+            </Link>
+          )}
+
           <Link to="/" className={`mob-link ${isActive('/') ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
             <span>🏠 Home</span>
             <span className="mob-arrow">›</span>
@@ -210,7 +259,7 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
             <span className="mob-arrow">›</span>
           </Link>
           <Link to="/prints" className={`mob-link ${isActive('/prints') ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
-            <span>🖨️ 3D Prints & Action Figures</span>
+            <span>🖨️ 3Dstudio & Action Figures</span>
             <span className="mob-arrow">›</span>
           </Link>
           <Link
@@ -236,6 +285,17 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
         </div>
 
         <div className="mobile-menu-actions">
+          {user && (
+            <Link
+              to="/profile"
+              className="btn btn-secondary"
+              style={{ width: '100%', padding: '.85rem 1.5rem', marginBottom: '.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem' }}
+              onClick={() => setMobileOpen(false)}
+            >
+              <User size={16} /> My Profile & Order History
+            </Link>
+          )}
+
           <button
             className="btn btn-primary"
             style={{ width: '100%', padding: '.85rem 1.5rem' }}
@@ -266,7 +326,7 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
                 onLogout();
               }}
             >
-              Sign Out ({user.name})
+              Sign Out ({user.name || 'Abhishek'})
             </button>
           )}
         </div>
