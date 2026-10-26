@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useUser, useClerk, AuthenticateWithRedirectCallback } from '@clerk/clerk-react';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
 import AuthModal from './components/AuthModal/AuthModal';
@@ -24,10 +23,6 @@ export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
 
-  // Clerk authentication hooks
-  const { isSignedIn, user: clerkUser } = useUser();
-  const clerk = useClerk();
-
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('navidron_current_user');
@@ -49,34 +44,6 @@ export default function App() {
     return null;
   });
 
-  // Keep state in sync with Clerk authenticated user without overwriting profile changes
-  useEffect(() => {
-    if (isSignedIn && clerkUser) {
-      const cleanUid = String(clerkUser.id).replace(/[.#$[\]/]/g, '_');
-      let customName = null;
-      let customEmail = null;
-      try {
-        const cached = localStorage.getItem(`navidron_profile_${cleanUid}`);
-        if (cached) {
-          const prof = JSON.parse(cached);
-          if (prof.name && prof.name !== 'Google User') customName = prof.name;
-          if (prof.email) customEmail = prof.email;
-        }
-      } catch (e) {}
-
-      const activeUser = {
-        uid: clerkUser.id,
-        id: clerkUser.id,
-        name: customName || clerkUser.fullName || clerkUser.firstName || clerkUser.primaryEmailAddress?.emailAddress?.split('@')[0] || 'Pilot',
-        email: customEmail || clerkUser.primaryEmailAddress?.emailAddress || '',
-        photoURL: clerkUser.imageUrl || null,
-        isClerk: true
-      };
-      setUser(activeUser);
-      localStorage.setItem('navidron_current_user', JSON.stringify(activeUser));
-    }
-  }, [isSignedIn, clerkUser]);
-
   const handleLoginSuccess = (userData) => {
     setUser(userData);
     localStorage.setItem('navidron_current_user', JSON.stringify(userData));
@@ -89,14 +56,7 @@ export default function App() {
     syncUserFullDataToFirebase(updatedUserData);
   };
 
-  const handleLogout = async () => {
-    if (isSignedIn && clerk) {
-      try {
-        await clerk.signOut();
-      } catch (e) {
-        console.warn('Clerk sign out error:', e);
-      }
-    }
+  const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('navidron_current_user');
   };
@@ -131,10 +91,6 @@ export default function App() {
                 onOpenAuth={() => setAuthModalOpen(true)}
               />
             }
-          />
-          <Route
-            path="/sso-callback"
-            element={<AuthenticateWithRedirectCallback signInForceRedirectUrl="/profile" signUpForceRedirectUrl="/profile" />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

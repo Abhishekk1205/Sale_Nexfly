@@ -393,7 +393,7 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                 Project: <code>navidron-e2983</code> | Collection: <code>users</code>
               </p>
               <div style={{ fontSize: '0.74rem', color: '#10b981', fontWeight: 700, marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <CheckCircle size={12} /> Clerk Auth & Firestore Linked
+                <CheckCircle size={12} /> Account & Firestore Linked
               </div>
               <div className="cloud-sync-btn-wrap">
                 <button
