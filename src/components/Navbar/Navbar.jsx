@@ -145,7 +145,7 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
                   title="Manage Profile, Delivery Addresses & Order History"
                 >
                   <span className="nav-user-greeting">
-                    Hii, {user.name || 'Abhishek'}
+                    Hii, {user.name || (user.email ? user.email.split('@')[0] : 'Pilot')}
                   </span>
                 </Link>
                 <Link to="/profile" className="btn-nav-outline btn-nav-profile" title="View Profile">
@@ -231,11 +231,11 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
                   fontWeight: 800,
                   fontSize: '0.85rem'
                 }}>
-                  {(user.name || 'Abhishek').slice(0, 2).toUpperCase()}
+                  {(user.name || user.email || 'Pilot').slice(0, 2).toUpperCase()}
                 </div>
                 <div>
                   <div style={{ fontSize: '0.92rem', color: 'var(--navy)', fontWeight: 800 }}>
-                    Hii, {user.name || 'Abhishek'}
+                    Hii, {user.name || (user.email ? user.email.split('@')[0] : 'Pilot')}
                   </div>
                   <div style={{ fontSize: '0.72rem', color: 'var(--neon)', fontWeight: 600 }}>
                     👤 Profile, Addresses & Orders

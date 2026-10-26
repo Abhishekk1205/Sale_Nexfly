@@ -1,58 +1,27 @@
 import React, { useState } from 'react';
-import { X, Check, Sparkles } from 'lucide-react';
+import { X, Mail, Lock, User as UserIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useClerk } from '@clerk/clerk-react';
 import { signInWithGoogle, getUserProfile, syncUserFullDataToFirebase } from '../../services/firebase';
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
-  const [tab, setTab] = useState('login');
+  const [tab, setTab] = useState('login'); // 'login' | 'register'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isAuthorizing, setIsAuthorizing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const clerk = useClerk();
 
   if (!isOpen) return null;
 
-  // Standard Email/Password
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsAuthorizing(true);
-
-    try {
-      let finalName = name;
-      if (tab === 'login') {
-        const saved = await getUserProfile('default_user');
-        finalName = saved?.name || (email.split('@')[0] || 'Abhishek Kumar Gupta');
-      }
-
-      const userObj = {
-        uid: 'user_' + (email.replace(/[^a-zA-Z0-9]/g, '_') || 'pilot'),
-        id: 'user_' + (email.replace(/[^a-zA-Z0-9]/g, '_') || 'pilot'),
-        name: finalName || 'Abhishek Kumar Gupta',
-        email: email
-      };
-
-      try {
-        confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
-      } catch (err) {}
-
-      await syncUserFullDataToFirebase(userObj);
-      onLoginSuccess(userObj);
-      onClose();
-    } catch (err) {
-      console.error('Auth error:', err);
-    } finally {
-      setIsAuthorizing(false);
-    }
-  };
-
-  // Google Account Authorization through Clerk & Firebase
+  // Option 1: Continue with Google
   const handleGoogleAuth = async () => {
+    setErrorMsg('');
     setIsAuthorizing(true);
     try {
-      // 1. If Clerk is configured and openSignIn is available, trigger Clerk's Google Auth flow
+      // 1. If Clerk is configured and openSignIn is available, trigger Clerk Google Auth
       if (clerk && clerk.openSignIn) {
         onClose();
         clerk.openSignIn({
@@ -76,43 +45,56 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         } catch (err) {}
         onLoginSuccess(res.user);
         onClose();
+      } else if (res && res.error) {
+        setErrorMsg(res.error);
       }
     } catch (err) {
       console.error('Google Sign-in failed:', err);
-      const fallback = {
-        uid: 'user_abhishek_gupta',
-        id: 'user_abhishek_gupta',
-        name: 'Abhishek Kumar Gupta',
-        email: 'abhish1205@gmail.com'
-      };
-      await syncUserFullDataToFirebase(fallback);
-      onLoginSuccess(fallback);
-      onClose();
+      setErrorMsg(err.message || 'Google Sign-in failed. Please try again.');
     } finally {
       setIsAuthorizing(false);
     }
   };
 
-  // Instant Clerk Google Account link
-  const handleQuickGoogleAccount = async () => {
+  // Option 2: Sign in / Register with Email & Password
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    if (!email || !password) {
+      setErrorMsg('Please enter both email and password.');
+      return;
+    }
+
     setIsAuthorizing(true);
-    const googleUser = {
-      uid: 'user_abhishek_gupta',
-      id: 'user_abhishek_gupta',
-      name: 'Abhishek Kumar Gupta',
-      email: 'abhish1205@gmail.com',
-      photoURL: null,
-      provider: 'google_clerk'
-    };
 
     try {
-      confetti({ particleCount: 60, spread: 80, origin: { y: 0.6 } });
-    } catch (err) {}
+      const cleanUid = 'user_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      let resolvedName = name.trim();
+      if (!resolvedName) {
+        const saved = await getUserProfile(cleanUid);
+        resolvedName = saved?.name || email.split('@')[0];
+      }
 
-    await syncUserFullDataToFirebase(googleUser);
-    onLoginSuccess(googleUser);
-    setIsAuthorizing(false);
-    onClose();
+      const userObj = {
+        uid: cleanUid,
+        id: cleanUid,
+        name: resolvedName,
+        email: email.trim().toLowerCase()
+      };
+
+      try {
+        confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
+      } catch (err) {}
+
+      await syncUserFullDataToFirebase(userObj);
+      onLoginSuccess(userObj);
+      onClose();
+    } catch (err) {
+      console.error('Auth error:', err);
+      setErrorMsg(err.message || 'Authentication failed.');
+    } finally {
+      setIsAuthorizing(false);
+    }
   };
 
   return (
@@ -128,12 +110,27 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
           <X size={18} />
         </button>
 
-        <h2 className="auth-title">NaviDron Account</h2>
+        <h2 className="auth-title">Welcome to NaviDron</h2>
         <p className="auth-subtitle">
-          Sign in with Clerk & Google to track orders, manage delivery addresses & sync with Firebase Realtime Database.
+          Sign in to access your profile, track UAV orders, and manage saved delivery addresses.
         </p>
 
-        {/* Primary Clerk Google Button */}
+        {errorMsg && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid #ef4444',
+            color: '#f87171',
+            borderRadius: '8px',
+            padding: '0.65rem 0.85rem',
+            fontSize: '0.82rem',
+            marginBottom: '1rem',
+            textAlign: 'center'
+          }}>
+            {errorMsg}
+          </div>
+        )}
+
+        {/* Option 1: Continue with Google */}
         <button
           type="button"
           className="auth-btn-google-primary"
@@ -158,28 +155,14 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          <span>Continue with Google (Clerk Authorization)</span>
-        </button>
-
-        {/* Quick One-Click Auth for Abhishek */}
-        <button
-          type="button"
-          className="auth-btn-oneclick-user"
-          onClick={handleQuickGoogleAccount}
-          disabled={isAuthorizing}
-        >
-          <div className="oneclick-avatar">AG</div>
-          <div className="oneclick-info">
-            <div className="oneclick-name">Abhishek Kumar Gupta</div>
-            <div className="oneclick-email">abhish1205@gmail.com</div>
-          </div>
-          <span className="oneclick-badge">1-Click Login</span>
+          <span>Continue with Google</span>
         </button>
 
         <div className="auth-divider">
-          <span>or sign in with email</span>
+          <span>or continue with email</span>
         </div>
 
+        {/* Option 2: Email & Password */}
         <div className="auth-tabs">
           <button
             type="button"
@@ -204,7 +187,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               <input
                 className="auth-input"
                 type="text"
-                placeholder="Abhishek Kumar Gupta"
+                placeholder="Enter your full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -217,7 +200,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
             <input
               className="auth-input"
               type="email"
-              placeholder="abhish1205@gmail.com"
+              placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -238,11 +221,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
           <button className="auth-btn" type="submit" disabled={isAuthorizing}>
             {isAuthorizing ? (
-              'Authorizing...'
+              'Authenticating...'
             ) : tab === 'login' ? (
-              'Sign In to NaviDron'
+              'Sign In with Email'
             ) : (
-              'Create Free Account'
+              'Create Account'
             )}
           </button>
         </form>

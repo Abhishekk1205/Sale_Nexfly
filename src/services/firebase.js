@@ -73,135 +73,30 @@ const withTimeout = (promise, ms = 3500) => {
   ]);
 };
 
-// ── Default User Information (Synced with Clerk / Google user) ──
+// ── Clean Fresh Profile Default (No fake or mock details) ──────
 export const DEFAULT_USER_PROFILE = {
-  name: "Abhishek Kumar Gupta",
-  email: "abhish1205@gmail.com",
-  phone: "+91 98765 43210",
-  altPhone: "+91 91234 56789",
-  callsign: "SkyPhantom",
-  bio: "Drone pilot, FPV racer & custom 3D printing enthusiast.",
+  name: "",
+  email: "",
+  phone: "",
+  altPhone: "",
+  callsign: "",
+  bio: "",
   preferredContact: "WhatsApp",
-  memberSince: "October 2026",
-  badge: "VIP Pilot",
-  clerkLinked: true,
+  memberSince: "",
+  badge: "Pilot Member",
+  clerkLinked: false,
   firebaseConnected: true
 };
 
-export const DEFAULT_ADDRESSES = [
-  {
-    id: "addr-1",
-    tag: "Home",
-    isDefault: true,
-    recipient: "Abhishek Kumar Gupta",
-    phone: "+91 98765 43210",
-    street: "Flat 402, Skyline Heights, 12th Main Road, Indiranagar",
-    city: "Bengaluru",
-    state: "Karnataka",
-    pincode: "560038",
-    landmark: "Near Metro Pillar 84"
-  },
-  {
-    id: "addr-2",
-    tag: "Workshop",
-    isDefault: false,
-    recipient: "Abhishek Kumar Gupta (NaviDron Lab)",
-    phone: "+91 91234 56789",
-    street: "Unit 14B, Nexfly Robotics Hangar, Electronic City Phase 1",
-    city: "Bengaluru",
-    state: "Karnataka",
-    pincode: "560100",
-    landmark: "Opposite Tech Park Gate 3"
-  }
-];
+export const DEFAULT_ADDRESSES = [];
 
-export const DEFAULT_ORDERS = [
-  {
-    id: "NVD-84920",
-    date: "2026-10-18",
-    status: "Delivered",
-    statusLabel: "Delivered",
-    statusDesc: "Handed over to recipient. Signed by Abhishek Kumar Gupta.",
-    paymentStatus: "Paid Online (UPI)",
-    totalAmount: 18499,
-    trackingNumber: "DEL-EXP-9921448",
-    deliveryAddress: "Flat 402, Skyline Heights, Indiranagar, Bengaluru - 560038",
-    items: [
-      {
-        id: "p1",
-        name: "NaviDron FPV Phantom 5'' Freestyle Drone",
-        category: "UAV Systems",
-        price: 15999,
-        quantity: 1,
-        image: "/images/drone-action.jpg"
-      },
-      {
-        id: "p2",
-        name: "GTA 6 Lucia Vice City Collectible Figure (18cm)",
-        category: "3Dstudio Collection",
-        price: 2500,
-        quantity: 1,
-        image: "/images/gta6-banner.jpg"
-      }
-    ]
-  },
-  {
-    id: "NVD-73911",
-    date: "2026-10-22",
-    status: "Succeeded",
-    statusLabel: "Succeeded & Dispatched",
-    statusDesc: "Payment successful. Package in transit via BlueDart Air.",
-    paymentStatus: "Paid (Google Pay)",
-    totalAmount: 4999,
-    trackingNumber: "BD-AIR-5582910",
-    deliveryAddress: "Flat 402, Skyline Heights, Indiranagar, Bengaluru - 560038",
-    items: [
-      {
-        id: "p3",
-        name: "P_Brothers GTA 6 Vice City Neon Hoodie (Official)",
-        category: "Streetwear Merch",
-        price: 2999,
-        quantity: 1,
-        image: "/images/pbrothers-collab.jpg"
-      },
-      {
-        id: "p4",
-        name: "Custom 3D Lithophane Lightbox with LED Stand",
-        category: "3Dstudio Custom",
-        price: 2000,
-        quantity: 1,
-        image: "/images/drone-action.jpg"
-      }
-    ]
-  },
-  {
-    id: "NVD-61042",
-    date: "2026-09-30",
-    status: "Cancelled",
-    statusLabel: "Cancelled after payment",
-    statusDesc: "Cancelled by user request. 100% Refund credited back to original payment source (UPI/Bank) on Oct 01, 2026.",
-    refundInfo: "Refund ID: REF-994821 - ₹14,999 Credited",
-    paymentStatus: "Refunded to Source",
-    totalAmount: 14999,
-    deliveryAddress: "Unit 14B, Nexfly Robotics Hangar, Electronic City, Bengaluru",
-    items: [
-      {
-        id: "p5",
-        name: "Agri-Hexacopter Spraying Frame Kit (10L Capacity)",
-        category: "Agricultural UAV",
-        price: 14999,
-        quantity: 1,
-        image: "/images/drone-action.jpg"
-      }
-    ]
-  }
-];
+export const DEFAULT_ORDERS = [];
 
-export const sanitizeKey = (key = 'default_user') => {
+export const sanitizeKey = (key = 'guest_user') => {
   return String(key).replace(/[.#$[\]/]/g, '_');
 };
 
-export const getStorageKey = (prefix, uid = 'default_user') => `navidron_${prefix}_${sanitizeKey(uid)}`;
+export const getStorageKey = (prefix, uid = 'guest_user') => `navidron_${prefix}_${sanitizeKey(uid)}`;
 
 export function getEffectiveUserId(user) {
   if (!user) {
@@ -212,9 +107,9 @@ export function getEffectiveUserId(user) {
         if (parsed?.id || parsed?.uid) return sanitizeKey(parsed.id || parsed.uid);
       }
     } catch (e) {}
-    return 'user_abhishek_gupta';
+    return 'guest_user';
   }
-  return sanitizeKey(user.id || user.uid || 'user_abhishek_gupta');
+  return sanitizeKey(user.id || user.uid || 'guest_user');
 }
 
 // ── Direct REST API for Cloud Firestore ────────────────────────
@@ -256,7 +151,7 @@ async function writeFirestoreRest(collectionName, docId, data) {
 // ── Synchronize Complete User Data to Firebase (Firestore) ─────
 export async function syncUserFullDataToFirebase(user) {
   if (!user) return { success: false, reason: "No user provided" };
-  const uid = sanitizeKey(user.id || user.uid || 'user_abhishek_gupta');
+  const uid = getEffectiveUserId(user);
 
   // Check if user already has saved profile, addresses, or orders in local storage
   const cachedProfile = localStorage.getItem(getStorageKey('profile', uid));
@@ -278,8 +173,8 @@ export async function syncUserFullDataToFirebase(user) {
   }
 
   // Preserve user's updated name, email, bio, phone; never revert to default!
-  const name = existingProfile?.name || user.fullName || user.name || "Abhishek Kumar Gupta";
-  const email = existingProfile?.email || user.primaryEmailAddress?.emailAddress || user.email || "abhish1205@gmail.com";
+  const name = existingProfile?.name || user.fullName || user.name || "";
+  const email = existingProfile?.email || user.primaryEmailAddress?.emailAddress || user.email || "";
 
   const profileData = {
     ...DEFAULT_USER_PROFILE,
@@ -289,13 +184,13 @@ export async function syncUserFullDataToFirebase(user) {
     updatedAt: new Date().toISOString()
   };
 
-  const addressesData = (existingAddresses && Array.isArray(existingAddresses) && existingAddresses.length > 0)
+  const addressesData = (existingAddresses && Array.isArray(existingAddresses))
     ? existingAddresses
-    : DEFAULT_ADDRESSES;
+    : [];
 
-  const ordersData = (existingOrders && Array.isArray(existingOrders) && existingOrders.length > 0)
+  const ordersData = (existingOrders && Array.isArray(existingOrders))
     ? existingOrders
-    : DEFAULT_ORDERS;
+    : [];
 
   let firestoreOk = false;
   let lastError = null;
@@ -317,8 +212,8 @@ export async function syncUserFullDataToFirebase(user) {
       await withTimeout(
         Promise.all([
           setDoc(doc(db, 'users', uid), profileData, { merge: true }),
-          setDoc(doc(db, 'users', uid, 'data', 'addresses'), { list: addressesData }, { merge: true }),
-          setDoc(doc(db, 'users', uid, 'data', 'orders'), { list: ordersData }, { merge: true })
+          setDoc(doc(db, 'users', `${uid}_addresses`), { list: addressesData }, { merge: true }),
+          setDoc(doc(db, 'users', `${uid}_orders`), { list: ordersData }, { merge: true })
         ]),
         3500
       );
@@ -334,13 +229,13 @@ export async function syncUserFullDataToFirebase(user) {
   localStorage.setItem(getStorageKey('addresses', uid), JSON.stringify(addressesData));
   localStorage.setItem(getStorageKey('orders', uid), JSON.stringify(ordersData));
 
-  // Also update active session in localStorage
+  // Also update active session in localStorage if logged in
   const currentSession = localStorage.getItem('navidron_current_user');
   if (currentSession) {
     try {
       const parsed = JSON.parse(currentSession);
-      parsed.name = profileData.name;
-      parsed.email = profileData.email;
+      if (profileData.name) parsed.name = profileData.name;
+      if (profileData.email) parsed.email = profileData.email;
       localStorage.setItem('navidron_current_user', JSON.stringify(parsed));
     } catch (e) {}
   }
@@ -362,8 +257,8 @@ export async function signInWithGoogle() {
       const userObj = {
         uid: googleUser.uid,
         id: googleUser.uid,
-        name: googleUser.displayName || "Abhishek Kumar Gupta",
-        email: googleUser.email || "abhish1205@gmail.com",
+        name: googleUser.displayName || (googleUser.email ? googleUser.email.split('@')[0] : "Pilot"),
+        email: googleUser.email || "",
         photoURL: googleUser.photoURL || null
       };
 
@@ -371,26 +266,17 @@ export async function signInWithGoogle() {
       localStorage.setItem('navidron_current_user', JSON.stringify(userObj));
       return { success: true, user: userObj, isRealFirebase: true };
     } catch (err) {
-      console.warn("Google popup fallback:", err.message);
+      console.warn("Google popup error:", err.message);
+      return { success: false, error: err.message };
     }
   }
 
-  const fallbackUser = {
-    uid: "user_abhishek_gupta",
-    id: "user_abhishek_gupta",
-    name: "Abhishek Kumar Gupta",
-    email: "abhish1205@gmail.com",
-    photoURL: null
-  };
-
-  await syncUserFullDataToFirebase(fallbackUser);
-  localStorage.setItem('navidron_current_user', JSON.stringify(fallbackUser));
-  return { success: true, user: fallbackUser, isRealFirebase: false };
+  return { success: false, error: "Firebase Auth not available" };
 }
 
 // ── User Profile Services ─────────────────────────────────────
-export async function getUserProfile(uidOrUser = 'user_abhishek_gupta') {
-  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'user_abhishek_gupta');
+export async function getUserProfile(uidOrUser = 'guest_user') {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'guest_user');
   const localKey = getStorageKey('profile', cleanId);
 
   // 1. Immediately return local cache if present — eliminates lag and prevents reverting on refresh!
@@ -432,8 +318,8 @@ export async function getUserProfile(uidOrUser = 'user_abhishek_gupta') {
   return DEFAULT_USER_PROFILE;
 }
 
-export async function saveUserProfile(uidOrUser = 'user_abhishek_gupta', profileData) {
-  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'user_abhishek_gupta');
+export async function saveUserProfile(uidOrUser = 'guest_user', profileData) {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'guest_user');
   const localKey = getStorageKey('profile', cleanId);
   const dataWithTimestamp = {
     ...profileData,
@@ -486,8 +372,8 @@ export async function saveUserProfile(uidOrUser = 'user_abhishek_gupta', profile
 }
 
 // ── Delivery Addresses Services ───────────────────────────────
-export async function getUserAddresses(uidOrUser = 'user_abhishek_gupta') {
-  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'user_abhishek_gupta');
+export async function getUserAddresses(uidOrUser = 'guest_user') {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'guest_user');
   const localKey = getStorageKey('addresses', cleanId);
 
   const cached = localStorage.getItem(localKey);
@@ -513,8 +399,8 @@ export async function getUserAddresses(uidOrUser = 'user_abhishek_gupta') {
   return DEFAULT_ADDRESSES;
 }
 
-export async function saveUserAddresses(uidOrUser = 'user_abhishek_gupta', addresses) {
-  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'user_abhishek_gupta');
+export async function saveUserAddresses(uidOrUser = 'guest_user', addresses) {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'guest_user');
   const localKey = getStorageKey('addresses', cleanId);
   localStorage.setItem(localKey, JSON.stringify(addresses));
 
@@ -544,8 +430,8 @@ export async function saveUserAddresses(uidOrUser = 'user_abhishek_gupta', addre
 }
 
 // ── Order History Services ────────────────────────────────────
-export async function getUserOrders(uidOrUser = 'user_abhishek_gupta') {
-  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'user_abhishek_gupta');
+export async function getUserOrders(uidOrUser = 'guest_user') {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'guest_user');
   const localKey = getStorageKey('orders', cleanId);
 
   const cached = localStorage.getItem(localKey);
@@ -571,8 +457,8 @@ export async function getUserOrders(uidOrUser = 'user_abhishek_gupta') {
   return DEFAULT_ORDERS;
 }
 
-export async function saveUserOrders(uidOrUser = 'user_abhishek_gupta', orders) {
-  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'user_abhishek_gupta');
+export async function saveUserOrders(uidOrUser = 'guest_user', orders) {
+  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'guest_user');
   const localKey = getStorageKey('orders', cleanId);
   localStorage.setItem(localKey, JSON.stringify(orders));
 

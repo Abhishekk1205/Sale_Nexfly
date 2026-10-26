@@ -185,12 +185,12 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
       setEditingAddressId(null);
       setAddressForm({
         tag: 'Home',
-        recipient: profile.name || 'Abhishek',
-        phone: profile.phone || '+91 98765 43210',
+        recipient: profile.name || '',
+        phone: profile.phone || '',
         street: '',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        pincode: '560038',
+        city: '',
+        state: '',
+        pincode: '',
         landmark: '',
         isDefault: addresses.length === 0
       });
@@ -359,21 +359,25 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
             <div className="profile-avatar-block">
               <div className="profile-avatar-glow">
                 <div className="profile-avatar-letters">
-                  {profile.name ? profile.name.slice(0, 2).toUpperCase() : 'AB'}
+                  {profile.name
+                    ? profile.name.slice(0, 2).toUpperCase()
+                    : user?.email
+                    ? user.email.slice(0, 2).toUpperCase()
+                    : 'ND'}
                 </div>
               </div>
               <div className="profile-user-summary">
                 <div className="profile-greeting-tag">
                   <span className="pulse-dot"></span>
-                  Connected Account
+                  {user ? 'Verified Pilot' : 'Guest Account'}
                 </div>
                 <h1 className="profile-user-title">
-                  Hii, <span className="profile-neon-name">{profile.name || 'Abhishek'}</span>
+                  Hii, <span className="profile-neon-name">{profile.name || user?.name || (user?.email ? user.email.split('@')[0] : 'Pilot')}</span>
                 </h1>
                 <p className="profile-user-email">
-                  <Mail size={14} /> {profile.email || 'abhishek@gmail.com'}
+                  <Mail size={14} /> {profile.email || user?.email || 'No email registered'}
                   <span className="profile-member-pill">
-                    <ShieldCheck size={12} /> {profile.badge || 'VIP Pilot'}
+                    <ShieldCheck size={12} /> {profile.badge || 'Pilot Member'}
                   </span>
                 </p>
               </div>
@@ -464,6 +468,38 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
 
       {/* Main Content Area with Tabs */}
       <div className="profile-body-container">
+        {!user && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(0, 200, 255, 0.08), rgba(0, 100, 255, 0.04))',
+            border: '1px solid rgba(0, 200, 255, 0.25)',
+            borderRadius: '12px',
+            padding: '1rem 1.5rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}>
+            <div>
+              <strong style={{ color: 'var(--neon)', display: 'block', fontSize: '0.95rem', marginBottom: '0.2rem' }}>
+                👋 Sign In to Sync Across Devices
+              </strong>
+              <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>
+                Sign in with Google or Email to link orders, delivery addresses and cloud data to your account.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{ padding: '0.55rem 1.25rem', fontSize: '0.85rem' }}
+              onClick={onOpenAuth}
+            >
+              Sign In / Register
+            </button>
+          </div>
+        )}
+
         {/* Navigation Tabs */}
         <div className="profile-tabs-header">
           <button
@@ -520,11 +556,11 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     className="profile-input"
                     value={profile.name}
                     onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                    placeholder="e.g. Abhishek"
+                    placeholder="Enter your full name"
                     required
                   />
                   <span className="field-hint">
-                    This updates your greeting across the navbar (e.g. <strong>Hii, {profile.name || 'Abhishek'}</strong>).
+                    This updates your greeting across the navbar (e.g. <strong>Hii, {profile.name || 'Pilot'}</strong>).
                   </span>
                 </div>
 
@@ -537,7 +573,7 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     className="profile-input"
                     value={profile.email}
                     onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                    placeholder="abhishek@gmail.com"
+                    placeholder="name@example.com"
                     required
                   />
                   <span className="field-hint">Used for order receipts and Firebase authentication.</span>
@@ -552,7 +588,7 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     className="profile-input"
                     value={profile.phone}
                     onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 XXXXX XXXXX"
                     required
                   />
                   <span className="field-hint">For instant dispatch tracking & delivery updates.</span>
@@ -565,7 +601,7 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     className="profile-input"
                     value={profile.altPhone}
                     onChange={(e) => setProfile({ ...profile, altPhone: e.target.value })}
-                    placeholder="+91 91234 56789"
+                    placeholder="+91 XXXXX XXXXX"
                   />
                   <span className="field-hint">Backup contact if primary is unreachable during delivery.</span>
                 </div>
@@ -577,7 +613,7 @@ export default function ProfilePage({ user, onUpdateUser, onOpenAuth }) {
                     className="profile-input"
                     value={profile.callsign}
                     onChange={(e) => setProfile({ ...profile, callsign: e.target.value })}
-                    placeholder="e.g. SkyPhantom"
+                    placeholder="e.g. Maverick"
                   />
                   <span className="field-hint">Display handle for NaviDron Leaderboard & 3Dstudio.</span>
                 </div>

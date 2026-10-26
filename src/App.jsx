@@ -33,39 +33,20 @@ export default function App() {
       const saved = localStorage.getItem('navidron_current_user');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.name === 'Google User') {
-          parsed.name = 'Abhishek Kumar Gupta';
-        }
-        // If user edited profile details, ensure name & email reflect the saved profile
-        const uid = parsed.id || parsed.uid || 'user_abhishek_gupta';
-        const profileCached = localStorage.getItem(`navidron_profile_${String(uid).replace(/[.#$[\]/]/g, '_')}`);
-        if (profileCached) {
-          const prof = JSON.parse(profileCached);
-          if (prof.name) parsed.name = prof.name;
-          if (prof.email) parsed.email = prof.email;
+        const uid = parsed.id || parsed.uid;
+        if (uid) {
+          const profileCached = localStorage.getItem(`navidron_profile_${String(uid).replace(/[.#$[\]/]/g, '_')}`);
+          if (profileCached) {
+            const prof = JSON.parse(profileCached);
+            if (prof.name) parsed.name = prof.name;
+            if (prof.email) parsed.email = prof.email;
+          }
         }
         return parsed;
       }
     } catch (e) {}
 
-    // Check if custom profile was saved for user_abhishek_gupta
-    let fallbackName = 'Abhishek Kumar Gupta';
-    let fallbackEmail = 'abhish1205@gmail.com';
-    try {
-      const profileCached = localStorage.getItem('navidron_profile_user_abhishek_gupta');
-      if (profileCached) {
-        const prof = JSON.parse(profileCached);
-        if (prof.name) fallbackName = prof.name;
-        if (prof.email) fallbackEmail = prof.email;
-      }
-    } catch (e) {}
-
-    return {
-      uid: 'user_abhishek_gupta',
-      id: 'user_abhishek_gupta',
-      name: fallbackName,
-      email: fallbackEmail
-    };
+    return null;
   });
 
   // Keep state in sync with Clerk authenticated user without overwriting profile changes
@@ -86,8 +67,8 @@ export default function App() {
       const activeUser = {
         uid: clerkUser.id,
         id: clerkUser.id,
-        name: customName || clerkUser.fullName || clerkUser.firstName || 'Abhishek Kumar Gupta',
-        email: customEmail || clerkUser.primaryEmailAddress?.emailAddress || 'abhish1205@gmail.com',
+        name: customName || clerkUser.fullName || clerkUser.firstName || clerkUser.primaryEmailAddress?.emailAddress?.split('@')[0] || 'Pilot',
+        email: customEmail || clerkUser.primaryEmailAddress?.emailAddress || '',
         photoURL: clerkUser.imageUrl || null,
         isClerk: true
       };
@@ -97,9 +78,6 @@ export default function App() {
   }, [isSignedIn, clerkUser]);
 
   const handleLoginSuccess = (userData) => {
-    if (userData.name === 'Google User') {
-      userData.name = 'Abhishek Kumar Gupta';
-    }
     setUser(userData);
     localStorage.setItem('navidron_current_user', JSON.stringify(userData));
     syncUserFullDataToFirebase(userData);
