@@ -575,7 +575,11 @@ export default function ProfilePage({
 
                       <div className="address-body-text">
                         <p>{addr.street}</p>
-                        {addr.landmark && <p className="landmark-text">Landmark: {addr.landmark}</p>}
+                        {addr.landmark && (
+                          <p className="landmark-text" style={{ color: 'var(--neon)', fontSize: '0.84rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem', margin: '0.25rem 0' }}>
+                            <MapPin size={13} style={{ flexShrink: 0 }} /> Landmark: {addr.landmark}
+                          </p>
+                        )}
                         <p>
                           <strong>{addr.city}</strong>, {addr.state} - <strong>{addr.pincode}</strong>
                         </p>
@@ -1039,7 +1043,7 @@ export default function ProfilePage({
               </div>
 
               <div className="modal-field">
-                <label>Landmark (Optional)</label>
+                <label>Nearby Landmark</label>
                 <input
                   type="text"
                   className="profile-input"

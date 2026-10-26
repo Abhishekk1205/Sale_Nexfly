@@ -18,6 +18,7 @@ export default function CartDrawer({
     userAddresses.find((a) => a.isDefault) || userAddresses[0] || null
   );
   const [customAddress, setCustomAddress] = useState('');
+  const [customLandmark, setCustomLandmark] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
 
@@ -36,8 +37,8 @@ export default function CartDrawer({
     setIsPlacingOrder(true);
 
     const deliveryAddressStr = selectedAddress
-      ? `${selectedAddress.recipient ? selectedAddress.recipient + ', ' : ''}${selectedAddress.street}, ${selectedAddress.city} - ${selectedAddress.pincode} (Phone: ${selectedAddress.phone || 'N/A'})`
-      : customAddress.trim() || 'A. M. Das Lane, Brahmpura, Muzaffarpur, Bihar - 842003';
+      ? `${selectedAddress.recipient ? selectedAddress.recipient + ', ' : ''}${selectedAddress.street}${selectedAddress.landmark ? ', Landmark: ' + selectedAddress.landmark : ''}, ${selectedAddress.city}${selectedAddress.state ? ', ' + selectedAddress.state : ''} - ${selectedAddress.pincode} (Phone: ${selectedAddress.phone || 'N/A'})`
+      : `${customAddress.trim()}${customLandmark.trim() ? ', Landmark: ' + customLandmark.trim() : ''}` || 'A. M. Das Lane, Brahmpura, Muzaffarpur, Bihar - 842003';
 
     const randId = Math.floor(10000 + Math.random() * 90000);
     const orderPayload = {
@@ -243,21 +244,28 @@ export default function CartDrawer({
                         onChange={() => setSelectedAddress(addr)}
                       />
                       <span>
-                        <strong>{addr.tag || 'Address'}:</strong> {addr.street}, {addr.city} ({addr.pincode})
+                        <strong>{addr.tag || 'Address'}:</strong> {addr.street}{addr.landmark ? `, Landmark: ${addr.landmark}` : ''}, {addr.city} ({addr.pincode})
                       </span>
                     </label>
                   ))}
                 </div>
               ) : (
-                <div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
                   <input
                     type="text"
                     className="cart-address-input"
                     value={customAddress}
                     onChange={(e) => setCustomAddress(e.target.value)}
-                    placeholder="Enter street, city, pin code (e.g. Brahmpura, Muzaffarpur, 842003)"
+                    placeholder="House / Flat / Street / Area, City, PIN Code"
                   />
-                  <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '0.25rem' }}>
+                  <input
+                    type="text"
+                    className="cart-address-input"
+                    value={customLandmark}
+                    onChange={(e) => setCustomLandmark(e.target.value)}
+                    placeholder="Nearby Landmark"
+                  />
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '0.15rem' }}>
                     Pan-India express shipping from Nexfly Robotics Labs.
                   </span>
                 </div>

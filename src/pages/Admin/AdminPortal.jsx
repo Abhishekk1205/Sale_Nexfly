@@ -850,7 +850,7 @@ export default function AdminPortal() {
                               <div className="admin-order-address-box">
                                 <MapPin size={15} color="#ff00aa" style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} />
                                 {typeof ord.deliveryAddress === 'object'
-                                  ? `${ord.deliveryAddress.street || ''}, ${ord.deliveryAddress.city || ''} (${ord.deliveryAddress.pincode || ''})`
+                                  ? `${ord.deliveryAddress.street || ''}${ord.deliveryAddress.landmark ? ', Landmark: ' + ord.deliveryAddress.landmark : ''}, ${ord.deliveryAddress.city || ''} (${ord.deliveryAddress.pincode || ''})`
                                   : ord.deliveryAddress || 'Address on file'}
                               </div>
                             </div>
@@ -1492,7 +1492,7 @@ export default function AdminPortal() {
                       {usr.addresses && usr.addresses.length > 0 && (
                         <div style={{ fontSize: '0.78rem', color: '#94a3b8', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '6px', marginBottom: '0.85rem' }}>
                           <MapPin size={12} color="var(--neon)" style={{ display: 'inline', marginRight: '4px' }} />
-                          {usr.addresses[0].street}, {usr.addresses[0].city} ({usr.addresses[0].pincode})
+                          {usr.addresses[0].street}{usr.addresses[0].landmark ? `, Landmark: ${usr.addresses[0].landmark}` : ''}, {usr.addresses[0].city} ({usr.addresses[0].pincode})
                         </div>
                       )}
 
