@@ -2,6 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown, Menu, X, Flame, Sparkles, Send, User } from 'lucide-react';
 
+const getFirstName = (u) => {
+  if (!u) return 'Pilot';
+  if (u.name && u.name.trim()) {
+    const firstWord = u.name.trim().split(/\s+/)[0];
+    if (firstWord) return firstWord;
+  }
+  if (u.email && u.email.trim()) {
+    const emailPrefix = u.email.trim().split('@')[0];
+    const cleanEmail = emailPrefix.split(/[._-]/)[0];
+    if (cleanEmail) {
+      return cleanEmail.charAt(0).toUpperCase() + cleanEmail.slice(1);
+    }
+  }
+  return 'Pilot';
+};
+
 export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -145,12 +161,8 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
                   title="Manage Profile, Delivery Addresses & Order History"
                 >
                   <span className="nav-user-greeting">
-                    Hii, {user.name || (user.email ? user.email.split('@')[0] : 'Pilot')}
+                    Hii, {getFirstName(user)}
                   </span>
-                </Link>
-                <Link to="/profile" className="btn-nav-outline btn-nav-profile" title="View Profile">
-                  <User size={14} />
-                  <span>Profile</span>
                 </Link>
                 <button className="btn-nav-outline" onClick={onLogout} title="Sign Out">
                   Sign Out
@@ -161,11 +173,6 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
                 Login
               </button>
             )}
-
-            <button className="btn-nav" onClick={onOpenQuote}>
-              <Send size={14} />
-              <span>Quote</span>
-            </button>
           </div>
 
           <button
@@ -235,7 +242,7 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
                 </div>
                 <div>
                   <div style={{ fontSize: '0.92rem', color: 'var(--navy)', fontWeight: 800 }}>
-                    Hii, {user.name || (user.email ? user.email.split('@')[0] : 'Pilot')}
+                    Hii, {getFirstName(user)}
                   </div>
                   <div style={{ fontSize: '0.72rem', color: 'var(--neon)', fontWeight: 600 }}>
                     👤 Profile, Addresses & Orders
@@ -296,16 +303,6 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
             </Link>
           )}
 
-          <button
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '.85rem 1.5rem' }}
-            onClick={() => {
-              setMobileOpen(false);
-              onOpenQuote();
-            }}
-          >
-            <Send size={16} /> Get a Custom Quote
-          </button>
           {!user ? (
             <button
               className="btn btn-secondary"
@@ -326,7 +323,7 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout }) {
                 onLogout();
               }}
             >
-              Sign Out ({user.name || 'Abhishek'})
+              Sign Out ({getFirstName(user)})
             </button>
           )}
         </div>

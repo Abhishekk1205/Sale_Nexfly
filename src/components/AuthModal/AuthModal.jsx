@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User as UserIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { useClerk } from '@clerk/clerk-react';
 import { signInWithGoogle, getUserProfile, syncUserFullDataToFirebase } from '../../services/firebase';
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
@@ -12,32 +11,13 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [isAuthorizing, setIsAuthorizing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const clerk = useClerk();
-
   if (!isOpen) return null;
 
-  // Option 1: Continue with Google
+  // Option 1: Continue with Google (Single window Google sign-in, no secondary Clerk popup)
   const handleGoogleAuth = async () => {
     setErrorMsg('');
     setIsAuthorizing(true);
     try {
-      // 1. If Clerk is configured and openSignIn is available, trigger Clerk Google Auth
-      if (clerk && clerk.openSignIn) {
-        onClose();
-        clerk.openSignIn({
-          appearance: {
-            variables: {
-              colorPrimary: '#00c8ff'
-            }
-          },
-          afterSignInUrl: '/profile',
-          afterSignUpUrl: '/profile',
-          fallbackRedirectUrl: '/profile'
-        });
-        return;
-      }
-
-      // 2. Fallback to Firebase Google Provider
       const res = await signInWithGoogle();
       if (res && res.user) {
         try {
@@ -46,11 +26,15 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         onLoginSuccess(res.user);
         onClose();
       } else if (res && res.error) {
-        setErrorMsg(res.error);
+        if (!res.error.includes('popup-closed-by-user')) {
+          setErrorMsg(res.error);
+        }
       }
     } catch (err) {
       console.error('Google Sign-in failed:', err);
-      setErrorMsg(err.message || 'Google Sign-in failed. Please try again.');
+      if (!err.message?.includes('popup-closed-by-user')) {
+        setErrorMsg(err.message || 'Google Sign-in failed. Please try again.');
+      }
     } finally {
       setIsAuthorizing(false);
     }
