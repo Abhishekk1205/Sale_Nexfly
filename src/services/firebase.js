@@ -114,23 +114,46 @@ export function getEffectiveUserId(user) {
 }
 
 // ── Direct REST API for Cloud Firestore ────────────────────────
+function toFirestoreRestValue(val) {
+  if (val === null || val === undefined) {
+    return { nullValue: null };
+  }
+  if (typeof val === 'string') {
+    return { stringValue: val };
+  }
+  if (typeof val === 'number') {
+    return Number.isInteger(val) ? { integerValue: String(val) } : { doubleValue: val };
+  }
+  if (typeof val === 'boolean') {
+    return { booleanValue: val };
+  }
+  if (Array.isArray(val)) {
+    if (val.length === 0) {
+      return { arrayValue: {} };
+    }
+    return {
+      arrayValue: {
+        values: val.map((item) => toFirestoreRestValue(item))
+      }
+    };
+  }
+  if (typeof val === 'object') {
+    const fields = {};
+    for (const [k, v] of Object.entries(val)) {
+      if (v !== undefined) {
+        fields[k] = toFirestoreRestValue(v);
+      }
+    }
+    return { mapValue: { fields } };
+  }
+  return { stringValue: String(val) };
+}
+
 function formatRestFields(data) {
   const fields = {};
   for (const [k, v] of Object.entries(data)) {
-    if (v === null || v === undefined) {
-      fields[k] = { nullValue: null };
-    } else if (typeof v === 'string') {
-      fields[k] = { stringValue: v };
-    } else if (typeof v === 'number') {
-      if (Number.isInteger(v)) {
-        fields[k] = { integerValue: String(v) };
-      } else {
-        fields[k] = { doubleValue: v };
-      }
-    } else if (typeof v === 'boolean') {
-      fields[k] = { booleanValue: v };
-    } else if (Array.isArray(v) || typeof v === 'object') {
-      fields[k] = { stringValue: JSON.stringify(v) };
+    if (v !== undefined) {
+      fields[k] = toFirestoreRestValue(v);
     }
   }
   return fields;
@@ -177,17 +200,30 @@ async function deleteFirestoreRest(docPath) {
   } catch (err) {}
 }
 
-// Automatically cleans up old duplicate documents (e.g. user_xxx_addresses) so only the single user doc appears in Firestore
+// Clean up any stray documents or subcollection artifacts so only the single user doc appears in Firestore
 async function cleanupLegacyUserDocs(uid) {
   if (!uid) return;
-  try {
-    deleteFirestoreRest(`users/${uid}_addresses`);
-    deleteFirestoreRest(`users/${uid}_orders`);
-    if (db) {
+  const docsToDelete = [
+    `users/${uid}_addresses`,
+    `users/${uid}_orders`,
+    `users/${uid}/addresses/all`,
+    `users/${uid}/orders/all`,
+    `users/${uid}/bills/all`
+  ];
+
+  for (const p of docsToDelete) {
+    deleteFirestoreRest(p).catch(() => {});
+  }
+
+  if (db) {
+    try {
       deleteDoc(doc(db, 'users', `${uid}_addresses`)).catch(() => {});
       deleteDoc(doc(db, 'users', `${uid}_orders`)).catch(() => {});
-    }
-  } catch (e) {}
+      deleteDoc(doc(db, 'users', uid, 'addresses', 'all')).catch(() => {});
+      deleteDoc(doc(db, 'users', uid, 'orders', 'all')).catch(() => {});
+      deleteDoc(doc(db, 'users', uid, 'bills', 'all')).catch(() => {});
+    } catch (e) {}
+  }
 }
 
 // Generate bill records from user orders
@@ -214,6 +250,7 @@ export function generateBillsFromOrders(orders = [], userProfile = {}) {
 }
 
 // ── Synchronize Complete User Data to Firebase (Firestore) ─────
+// Saves everything as 3 FIELDS (Contact, Delivery Address, Order History) inside the single user document
 export async function syncUserFullDataToFirebase(user) {
   if (!user) return { success: false, reason: "No user provided" };
   const uid = getEffectiveUserId(user);
@@ -249,49 +286,33 @@ export async function syncUserFullDataToFirebase(user) {
     ? existingOrders
     : [];
 
-  const billsData = generateBillsFromOrders(ordersData, { name, email });
-
-  const profileData = {
+  const contactData = {
     ...DEFAULT_USER_PROFILE,
     ...(existingProfile || {}),
     name: name,
     email: email,
-    updatedAt: new Date().toISOString(),
-    // Keep addresses, orders, and bills inside the user document as fields
-    addresses: addressesData,
-    orders: ordersData,
-    bills: billsData
+    updatedAt: new Date().toISOString()
+  };
+
+  // Purely 3 Fields inside the user document (no collections)
+  const documentData = {
+    Contact: contactData,
+    contact: contactData,
+    "Delivery Address": addressesData,
+    deliveryAddresses: addressesData,
+    "Order History": ordersData,
+    orderHistory: ordersData,
+    name: name,
+    email: email,
+    updatedAt: new Date().toISOString()
   };
 
   let firestoreOk = false;
   let lastError = null;
 
-  // 1. Try Direct Firestore REST API: Write to single User document: users/{uid}
+  // 1. Try Direct Firestore REST API
   try {
-    await writeFirestoreRest(`users/${uid}`, profileData);
-
-    // Also create subcollections directly inside this user document:
-    // users/{uid}/addresses/all, users/{uid}/orders/all, users/{uid}/bills/all
-    await writeFirestoreRest(`users/${uid}/addresses/all`, { list: addressesData, count: addressesData.length, updatedAt: profileData.updatedAt });
-    await writeFirestoreRest(`users/${uid}/orders/all`, { list: ordersData, count: ordersData.length, updatedAt: profileData.updatedAt });
-    await writeFirestoreRest(`users/${uid}/bills/all`, { list: billsData, count: billsData.length, updatedAt: profileData.updatedAt });
-
-    for (const addr of addressesData) {
-      if (addr.id) {
-        await writeFirestoreRest(`users/${uid}/addresses/${addr.id}`, { ...addr, updatedAt: profileData.updatedAt }).catch(() => {});
-      }
-    }
-    for (const ord of ordersData) {
-      if (ord.id) {
-        await writeFirestoreRest(`users/${uid}/orders/${ord.id}`, { ...ord, updatedAt: profileData.updatedAt }).catch(() => {});
-      }
-    }
-    for (const bill of billsData) {
-      if (bill.id) {
-        await writeFirestoreRest(`users/${uid}/bills/${bill.id}`, { ...bill, updatedAt: profileData.updatedAt }).catch(() => {});
-      }
-    }
-
+    await writeFirestoreRest(`users/${uid}`, documentData);
     firestoreOk = true;
   } catch (err) {
     lastError = err.message;
@@ -301,30 +322,7 @@ export async function syncUserFullDataToFirebase(user) {
   // 2. Try Firestore JS SDK (with 3.5s timeout)
   if (db) {
     try {
-      const promises = [
-        setDoc(doc(db, 'users', uid), profileData, { merge: true }),
-        setDoc(doc(db, 'users', uid, 'addresses', 'all'), { list: addressesData, count: addressesData.length, updatedAt: profileData.updatedAt }, { merge: true }),
-        setDoc(doc(db, 'users', uid, 'orders', 'all'), { list: ordersData, count: ordersData.length, updatedAt: profileData.updatedAt }, { merge: true }),
-        setDoc(doc(db, 'users', uid, 'bills', 'all'), { list: billsData, count: billsData.length, updatedAt: profileData.updatedAt }, { merge: true })
-      ];
-
-      for (const addr of addressesData) {
-        if (addr.id) {
-          promises.push(setDoc(doc(db, 'users', uid, 'addresses', addr.id), addr, { merge: true }));
-        }
-      }
-      for (const ord of ordersData) {
-        if (ord.id) {
-          promises.push(setDoc(doc(db, 'users', uid, 'orders', ord.id), ord, { merge: true }));
-        }
-      }
-      for (const bill of billsData) {
-        if (bill.id) {
-          promises.push(setDoc(doc(db, 'users', uid, 'bills', bill.id), bill, { merge: true }));
-        }
-      }
-
-      await withTimeout(Promise.all(promises), 3500);
+      await withTimeout(setDoc(doc(db, 'users', uid), documentData, { merge: true }), 3500);
       firestoreOk = true;
     } catch (err) {
       if (!lastError) lastError = err.message;
@@ -332,22 +330,21 @@ export async function syncUserFullDataToFirebase(user) {
     }
   }
 
-  // Clean up any old stray documents so they disappear from users collection
+  // Clean up any legacy separate documents or subcollections
   cleanupLegacyUserDocs(uid);
 
-  // 3. Cache locally preserving all user changes
-  localStorage.setItem(getStorageKey('profile', uid), JSON.stringify(profileData));
+  // 3. Cache locally
+  localStorage.setItem(getStorageKey('profile', uid), JSON.stringify(contactData));
   localStorage.setItem(getStorageKey('addresses', uid), JSON.stringify(addressesData));
   localStorage.setItem(getStorageKey('orders', uid), JSON.stringify(ordersData));
-  localStorage.setItem(getStorageKey('bills', uid), JSON.stringify(billsData));
 
   // Also update active session in localStorage if logged in
   const currentSession = localStorage.getItem('navidron_current_user');
   if (currentSession) {
     try {
       const parsed = JSON.parse(currentSession);
-      if (profileData.name) parsed.name = profileData.name;
-      if (profileData.email) parsed.email = profileData.email;
+      if (contactData.name) parsed.name = contactData.name;
+      if (contactData.email) parsed.email = contactData.email;
       localStorage.setItem('navidron_current_user', JSON.stringify(parsed));
     } catch (e) {}
   }
@@ -391,7 +388,7 @@ export async function getUserProfile(uidOrUser = 'guest_user') {
   const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'guest_user');
   const localKey = getStorageKey('profile', cleanId);
 
-  // 1. Immediately return local cache if present — eliminates lag and prevents reverting on refresh!
+  // 1. Immediately return local cache if present
   const cached = localStorage.getItem(localKey);
   let localData = null;
   if (cached) {
@@ -407,7 +404,8 @@ export async function getUserProfile(uidOrUser = 'guest_user') {
         .then((docSnap) => {
           if (docSnap && docSnap.exists()) {
             const val = docSnap.data();
-            localStorage.setItem(localKey, JSON.stringify({ ...localData, ...val }));
+            const contact = val.Contact || val.contact || val;
+            localStorage.setItem(localKey, JSON.stringify({ ...localData, ...contact }));
           }
         })
         .catch(() => {});
@@ -421,8 +419,9 @@ export async function getUserProfile(uidOrUser = 'guest_user') {
       const docSnap = await withTimeout(getDoc(doc(db, 'users', cleanId)), 2500);
       if (docSnap && docSnap.exists()) {
         const val = docSnap.data();
-        localStorage.setItem(localKey, JSON.stringify(val));
-        return { ...DEFAULT_USER_PROFILE, ...val };
+        const contact = val.Contact || val.contact || val;
+        localStorage.setItem(localKey, JSON.stringify(contact));
+        return { ...DEFAULT_USER_PROFILE, ...contact };
       }
     } catch (e) {}
   }
@@ -438,7 +437,7 @@ export async function saveUserProfile(uidOrUser = 'guest_user', profileData) {
     updatedAt: new Date().toISOString()
   };
 
-  // 1. Save to local storage first (instant persistence across reloads)
+  // 1. Save to local storage first
   localStorage.setItem(localKey, JSON.stringify(dataWithTimestamp));
 
   // 2. Also keep active session in sync
@@ -462,9 +461,17 @@ export async function saveUserProfile(uidOrUser = 'guest_user', profileData) {
   let firestoreSaved = false;
   let lastError = null;
 
+  const updatePayload = {
+    Contact: dataWithTimestamp,
+    contact: dataWithTimestamp,
+    name: profileData.name || "",
+    email: profileData.email || "",
+    updatedAt: dataWithTimestamp.updatedAt
+  };
+
   // 3. Try Firestore REST
   try {
-    await writeFirestoreRest(`users/${cleanId}`, dataWithTimestamp);
+    await writeFirestoreRest(`users/${cleanId}`, updatePayload);
     firestoreSaved = true;
   } catch (err) {
     lastError = err.message;
@@ -473,7 +480,7 @@ export async function saveUserProfile(uidOrUser = 'guest_user', profileData) {
   // 4. Try Firestore SDK with timeout
   if (!firestoreSaved && db) {
     try {
-      await withTimeout(setDoc(doc(db, 'users', cleanId), dataWithTimestamp, { merge: true }), 3500);
+      await withTimeout(setDoc(doc(db, 'users', cleanId), updatePayload, { merge: true }), 3500);
       firestoreSaved = true;
     } catch (e) {
       if (!lastError) lastError = e.message;
@@ -499,25 +506,17 @@ export async function getUserAddresses(uidOrUser = 'guest_user') {
     } catch (e) {}
   }
 
-  // If no cache, check Firestore inside user doc and subcollections
+  // If no cache, check Firestore inside user doc field
   if (db) {
     try {
-      // 1. Check user document field first
       const docSnap = await withTimeout(getDoc(doc(db, 'users', cleanId)), 2500);
       if (docSnap && docSnap.exists()) {
         const data = docSnap.data();
-        if (data.addresses && Array.isArray(data.addresses) && data.addresses.length > 0) {
-          localStorage.setItem(localKey, JSON.stringify(data.addresses));
-          return data.addresses;
+        const list = data['Delivery Address'] || data.deliveryAddresses || data.addresses;
+        if (Array.isArray(list) && list.length > 0) {
+          localStorage.setItem(localKey, JSON.stringify(list));
+          return list;
         }
-      }
-
-      // 2. Check subcollection users/{cleanId}/addresses/all
-      const subSnap = await withTimeout(getDoc(doc(db, 'users', cleanId, 'addresses', 'all')), 2500);
-      if (subSnap && subSnap.exists() && subSnap.data().list) {
-        const list = subSnap.data().list;
-        localStorage.setItem(localKey, JSON.stringify(list));
-        return list;
       }
     } catch (e) {}
   }
@@ -534,15 +533,15 @@ export async function saveUserAddresses(uidOrUser = 'guest_user', addresses) {
   let lastError = null;
   const updatedAt = new Date().toISOString();
 
-  // 1. Try Firestore REST: update user doc fields AND subcollections inside this same user
+  const updatePayload = {
+    "Delivery Address": addresses,
+    deliveryAddresses: addresses,
+    updatedAt
+  };
+
+  // 1. Try Firestore REST: update user doc field directly (no subcollection)
   try {
-    await writeFirestoreRest(`users/${cleanId}`, { addresses, updatedAt });
-    await writeFirestoreRest(`users/${cleanId}/addresses/all`, { list: addresses, count: addresses.length, updatedAt });
-    for (const addr of addresses) {
-      if (addr.id) {
-        await writeFirestoreRest(`users/${cleanId}/addresses/${addr.id}`, { ...addr, updatedAt }).catch(() => {});
-      }
-    }
+    await writeFirestoreRest(`users/${cleanId}`, updatePayload);
     firestoreSaved = true;
   } catch (e) {
     lastError = e.message;
@@ -551,16 +550,7 @@ export async function saveUserAddresses(uidOrUser = 'guest_user', addresses) {
   // 2. Try Firestore SDK
   if (db) {
     try {
-      const promises = [
-        setDoc(doc(db, 'users', cleanId), { addresses, updatedAt }, { merge: true }),
-        setDoc(doc(db, 'users', cleanId, 'addresses', 'all'), { list: addresses, count: addresses.length, updatedAt }, { merge: true })
-      ];
-      for (const addr of addresses) {
-        if (addr.id) {
-          promises.push(setDoc(doc(db, 'users', cleanId, 'addresses', addr.id), addr, { merge: true }));
-        }
-      }
-      await withTimeout(Promise.all(promises), 3500);
+      await withTimeout(setDoc(doc(db, 'users', cleanId), updatePayload, { merge: true }), 3500);
       firestoreSaved = true;
     } catch (e) {
       if (!lastError) lastError = e.message;
@@ -586,25 +576,17 @@ export async function getUserOrders(uidOrUser = 'guest_user') {
     } catch (e) {}
   }
 
-  // If no cache, check Firestore inside user doc and subcollections
+  // If no cache, check Firestore inside user doc field
   if (db) {
     try {
-      // 1. Check user document field first
       const docSnap = await withTimeout(getDoc(doc(db, 'users', cleanId)), 2500);
       if (docSnap && docSnap.exists()) {
         const data = docSnap.data();
-        if (data.orders && Array.isArray(data.orders) && data.orders.length > 0) {
-          localStorage.setItem(localKey, JSON.stringify(data.orders));
-          return data.orders;
+        const list = data['Order History'] || data.orderHistory || data.orders;
+        if (Array.isArray(list) && list.length > 0) {
+          localStorage.setItem(localKey, JSON.stringify(list));
+          return list;
         }
-      }
-
-      // 2. Check subcollection users/{cleanId}/orders/all
-      const subSnap = await withTimeout(getDoc(doc(db, 'users', cleanId, 'orders', 'all')), 2500);
-      if (subSnap && subSnap.exists() && subSnap.data().list) {
-        const list = subSnap.data().list;
-        localStorage.setItem(localKey, JSON.stringify(list));
-        return list;
       }
     } catch (e) {}
   }
@@ -617,36 +599,19 @@ export async function saveUserOrders(uidOrUser = 'guest_user', orders) {
   const localKey = getStorageKey('orders', cleanId);
   localStorage.setItem(localKey, JSON.stringify(orders));
 
-  // Get current profile for bill details
-  let userProfile = {};
-  try {
-    const cached = localStorage.getItem(getStorageKey('profile', cleanId));
-    if (cached) userProfile = JSON.parse(cached);
-  } catch (e) {}
-
-  const bills = generateBillsFromOrders(orders, userProfile);
-  localStorage.setItem(getStorageKey('bills', cleanId), JSON.stringify(bills));
-
   let firestoreSaved = false;
   let lastError = null;
   const updatedAt = new Date().toISOString();
 
-  // 1. Try Firestore REST: update user doc fields AND subcollections inside this same user
-  try {
-    await writeFirestoreRest(`users/${cleanId}`, { orders, bills, updatedAt });
-    await writeFirestoreRest(`users/${cleanId}/orders/all`, { list: orders, count: orders.length, updatedAt });
-    await writeFirestoreRest(`users/${cleanId}/bills/all`, { list: bills, count: bills.length, updatedAt });
+  const updatePayload = {
+    "Order History": orders,
+    orderHistory: orders,
+    updatedAt
+  };
 
-    for (const ord of orders) {
-      if (ord.id) {
-        await writeFirestoreRest(`users/${cleanId}/orders/${ord.id}`, { ...ord, updatedAt }).catch(() => {});
-      }
-    }
-    for (const bill of bills) {
-      if (bill.id) {
-        await writeFirestoreRest(`users/${cleanId}/bills/${bill.id}`, { ...bill, updatedAt }).catch(() => {});
-      }
-    }
+  // 1. Try Firestore REST: update user doc field directly (no subcollection)
+  try {
+    await writeFirestoreRest(`users/${cleanId}`, updatePayload);
     firestoreSaved = true;
   } catch (e) {
     lastError = e.message;
@@ -655,22 +620,7 @@ export async function saveUserOrders(uidOrUser = 'guest_user', orders) {
   // 2. Try Firestore SDK
   if (db) {
     try {
-      const promises = [
-        setDoc(doc(db, 'users', cleanId), { orders, bills, updatedAt }, { merge: true }),
-        setDoc(doc(db, 'users', cleanId, 'orders', 'all'), { list: orders, count: orders.length, updatedAt }, { merge: true }),
-        setDoc(doc(db, 'users', cleanId, 'bills', 'all'), { list: bills, count: bills.length, updatedAt }, { merge: true })
-      ];
-      for (const ord of orders) {
-        if (ord.id) {
-          promises.push(setDoc(doc(db, 'users', cleanId, 'orders', ord.id), ord, { merge: true }));
-        }
-      }
-      for (const bill of bills) {
-        if (bill.id) {
-          promises.push(setDoc(doc(db, 'users', cleanId, 'bills', bill.id), bill, { merge: true }));
-        }
-      }
-      await withTimeout(Promise.all(promises), 3500);
+      await withTimeout(setDoc(doc(db, 'users', cleanId), updatePayload, { merge: true }), 3500);
       firestoreSaved = true;
     } catch (e) {
       if (!lastError) lastError = e.message;
@@ -685,38 +635,9 @@ export async function saveUserOrders(uidOrUser = 'guest_user', orders) {
 
 // ── Bills / Invoices Services ─────────────────────────────────
 export async function getUserBills(uidOrUser = 'guest_user') {
-  const cleanId = typeof uidOrUser === 'object' ? getEffectiveUserId(uidOrUser) : sanitizeKey(uidOrUser || 'guest_user');
-  const localKey = getStorageKey('bills', cleanId);
-
-  const cached = localStorage.getItem(localKey);
-  if (cached) {
-    try {
-      const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    } catch (e) {}
-  }
-
-  if (db) {
-    try {
-      const docSnap = await withTimeout(getDoc(doc(db, 'users', cleanId)), 2500);
-      if (docSnap && docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.bills && Array.isArray(data.bills) && data.bills.length > 0) {
-          localStorage.setItem(localKey, JSON.stringify(data.bills));
-          return data.bills;
-        }
-      }
-
-      const subSnap = await withTimeout(getDoc(doc(db, 'users', cleanId, 'bills', 'all')), 2500);
-      if (subSnap && subSnap.exists() && subSnap.data().list) {
-        const list = subSnap.data().list;
-        localStorage.setItem(localKey, JSON.stringify(list));
-        return list;
-      }
-    } catch (e) {}
-  }
-
-  return [];
+  const orders = await getUserOrders(uidOrUser);
+  const profile = await getUserProfile(uidOrUser);
+  return generateBillsFromOrders(orders, profile);
 }
 
 export { auth, db, isFirebaseOnline, RTDB_URL };
