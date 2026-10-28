@@ -11,6 +11,9 @@ import HomePage from './pages/Home/HomePage';
 import UAVPage from './pages/UAV/UAVPage';
 import ProductsPage from './pages/Products/ProductsPage';
 import PrintsPage from './pages/Prints/PrintsPage';
+import PrintDetailPage from './pages/Prints/PrintDetailPage';
+import ProductDetailPage from './pages/Products/ProductDetailPage';
+import UAVDetailPage from './pages/UAV/UAVDetailPage';
 import PBrothersPage from './pages/PBrothers/PBrothersPage';
 import GalleryPage from './pages/Gallery/GalleryPage';
 import ServicesPage from './pages/Services/ServicesPage';
@@ -185,6 +188,18 @@ export default function App() {
           <Route
             path="/prints"
             element={<PrintsPage onOpenQuote={() => setQuoteModalOpen(true)} onAddToCart={handleAddToCart} />}
+          />
+          <Route
+            path="/prints/:id"
+            element={<PrintDetailPage onAddToCart={handleAddToCart} onOpenQuote={() => setQuoteModalOpen(true)} />}
+          />
+          <Route
+            path="/products/:id"
+            element={<ProductDetailPage onAddToCart={handleAddToCart} onOpenQuote={() => setQuoteModalOpen(true)} />}
+          />
+          <Route
+            path="/uav/:id"
+            element={<UAVDetailPage onAddToCart={handleAddToCart} onOpenQuote={() => setQuoteModalOpen(true)} />}
           />
           <Route
             path="/p-brothers"

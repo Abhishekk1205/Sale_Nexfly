@@ -31,9 +31,11 @@ import {
   EyeOff,
   LogOut,
   AlertTriangle,
-  User
+  User,
+  Image as ImageIcon
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import ImageSlider from '../../components/ImageSlider/ImageSlider';
 
 const VALID_ADMIN_ACCOUNTS = [
   { id: 'admin@nexfly.com', pass: 'Abhi@2076', display: 'Admin@nexfly.com' },
@@ -96,31 +98,118 @@ export default function AdminPortal() {
   // Modal states for adding new items
   const [showAddModal, setShowAddModal] = useState(false);
   const [modalType, setModalType] = useState('3dstudio'); // '3dstudio' | 'drone' | 'robotics' | 'uav'
+  const [newPhotosList, setNewPhotosList] = useState([]);
+  const [addPhotoInput, setAddPhotoInput] = useState('');
   const [newItemForm, setNewItemForm] = useState({
     name: '',
     category: 'Anime',
+    brand: '',
     kitType: 'Chassis & Base',
     type: 'FPV Drone',
     price: '',
     quantity: '',
     size: '8 inch',
     image: '',
+    images: [],
     desc: '',
     flightTime: '',
     range: ''
   });
 
+  // Modal states for updating photos on existing products
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [editingPhotoTarget, setEditingPhotoTarget] = useState(null); // { item, type, images: [] }
+  const [editPhotoInput, setEditPhotoInput] = useState('');
+
+  const handleOpenPhotoManager = (item, type) => {
+    const images = Array.isArray(item.images) && item.images.length > 0
+      ? [...item.images]
+      : [item.image || '/images/fpv_racing_drone.jpg'];
+    setEditingPhotoTarget({ item, type, images });
+    setEditPhotoInput('');
+    setPhotoModalOpen(true);
+  };
+
+  const handleAddPhotoToTarget = () => {
+    if (!editPhotoInput.trim()) return;
+    const url = editPhotoInput.trim();
+    setEditingPhotoTarget((prev) => ({
+      ...prev,
+      images: [...prev.images, url]
+    }));
+    setEditPhotoInput('');
+  };
+
+  const handleRemovePhotoFromTarget = (indexToRemove) => {
+    if (editingPhotoTarget.images.length <= 1) {
+      alert('Product must have at least one photo.');
+      return;
+    }
+    setEditingPhotoTarget((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, idx) => idx !== indexToRemove)
+    }));
+  };
+
+  const handleSetPrimaryPhoto = (indexToPrimary) => {
+    setEditingPhotoTarget((prev) => {
+      const selected = prev.images[indexToPrimary];
+      const rest = prev.images.filter((_, idx) => idx !== indexToPrimary);
+      return {
+        ...prev,
+        images: [selected, ...rest]
+      };
+    });
+  };
+
+  const handleSavePhotoUpdates = async () => {
+    if (!editingPhotoTarget) return;
+    const { item, type, images } = editingPhotoTarget;
+    const updatedItem = {
+      ...item,
+      image: images[0],
+      images: images
+    };
+
+    setActionLoading(true);
+    try {
+      if (type === '3dstudio') {
+        await save3DStudioItem(updatedItem);
+        setThreeDItems((prev) => prev.map((i) => (i.id === item.id ? updatedItem : i)));
+      } else if (type === 'drone') {
+        await saveDroneAccessory(updatedItem);
+        setDroneParts((prev) => prev.map((i) => (i.id === item.id ? updatedItem : i)));
+      } else if (type === 'robotics') {
+        await saveRoboticsKit(updatedItem);
+        setRoboticsKits((prev) => prev.map((i) => (i.id === item.id ? updatedItem : i)));
+      } else if (type === 'uav') {
+        await saveUAVPreBuilt(updatedItem);
+        setUavPreBuilt((prev) => prev.map((i) => (i.id === item.id ? updatedItem : i)));
+      }
+      showToast(`📸 Updated ${images.length} photos for "${item.name}"!`);
+      setPhotoModalOpen(false);
+    } catch (err) {
+      showToast(`❌ Error saving photos: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleOpenAddModal = (type) => {
     setModalType(type);
+    setNewPhotosList([]);
+    setAddPhotoInput('');
     setNewItemForm({
       name: '',
       category: type === '3dstudio' ? 'Anime' : 'Motors',
+      brand: type === '3dstudio' ? 'P_Brothers × NaviDron 3D' : type === 'robotics' ? 'NaviDron Robotics' : 'NaviDron AeroLab',
       kitType: 'Chassis & Base',
       type: 'FPV Drone',
       price: '',
       quantity: '',
       size: '8 inch',
       image: '',
+      images: [],
       desc: '',
       flightTime: '',
       range: ''
@@ -328,10 +417,16 @@ export default function AdminPortal() {
     setActionLoading(true);
     const priceVal = typeof newItemForm.price === 'number' ? newItemForm.price : parseInt(newItemForm.price, 10) || 0;
     const qtyVal = typeof newItemForm.quantity === 'number' ? newItemForm.quantity : parseInt(newItemForm.quantity, 10) || 0;
+    const finalImages = newPhotosList.length > 0
+      ? newPhotosList
+      : (newItemForm.image ? [newItemForm.image] : ['/images/fpv_racing_drone.jpg']);
+
     const cleanedPayload = {
       ...newItemForm,
       price: priceVal,
-      quantity: qtyVal
+      quantity: qtyVal,
+      image: finalImages[0],
+      images: finalImages
     };
 
     try {
@@ -341,28 +436,28 @@ export default function AdminPortal() {
           id: `3d-${Date.now()}`
         });
         setThreeDItems((prev) => [created, ...prev]);
-        showToast(`🎉 Added "${created.name}" to 3DStudio catalog!`);
+        showToast(`🎉 Added "${created.name}" to 3DStudio catalog with ${finalImages.length} photos!`);
       } else if (modalType === 'drone') {
         const created = await saveDroneAccessory({
           ...cleanedPayload,
           id: `part-${Date.now()}`
         });
         setDroneParts((prev) => [created, ...prev]);
-        showToast(`🎉 Added "${created.name}" to Drone Accessories catalog!`);
+        showToast(`🎉 Added "${created.name}" to Drone Accessories catalog with ${finalImages.length} photos!`);
       } else if (modalType === 'robotics') {
         const created = await saveRoboticsKit({
           ...cleanedPayload,
           id: `kit-${Date.now()}`
         });
         setRoboticsKits((prev) => [created, ...prev]);
-        showToast(`🎉 Added "${created.name}" to Robotics Kits catalog!`);
+        showToast(`🎉 Added "${created.name}" to Robotics Kits catalog with ${finalImages.length} photos!`);
       } else if (modalType === 'uav') {
         const created = await saveUAVPreBuilt({
           ...cleanedPayload,
           id: `uav-${Date.now()}`
         });
         setUavPreBuilt((prev) => [created, ...prev]);
-        showToast(`🎉 Added "${created.name}" to Pre-Built UAV catalog!`);
+        showToast(`🎉 Added "${created.name}" to Pre-Built UAV catalog with ${finalImages.length} photos!`);
       }
 
       try {
@@ -370,15 +465,19 @@ export default function AdminPortal() {
       } catch (err) {}
 
       setShowAddModal(false);
+      setNewPhotosList([]);
+      setAddPhotoInput('');
       setNewItemForm({
         name: '',
         category: 'Anime',
+        brand: '',
         kitType: 'Chassis & Base',
         type: 'FPV Drone',
         price: '',
         quantity: '',
         size: '8 inch',
         image: '',
+        images: [],
         desc: '',
         flightTime: '',
         range: ''
@@ -955,12 +1054,54 @@ export default function AdminPortal() {
                   <div className="admin-items-grid">
                     {droneParts.map((item) => (
                       <div key={item.id} className="admin-prod-card">
-                        <img src={item.image} alt={item.name} className="admin-prod-thumb" />
-                        <span style={{ fontSize: '0.7rem', color: 'var(--neon)', fontWeight: 700, textTransform: 'uppercase' }}>
-                          {item.category || 'Parts'}
-                        </span>
+                        <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
+                          <ImageSlider
+                            images={item.images || [item.image]}
+                            alt={item.name}
+                            aspectRatio="16/9"
+                            compact={true}
+                            showThumbnails={false}
+                          />
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--neon)', fontWeight: 700, textTransform: 'uppercase' }}>
+                            {item.category || 'Parts'}
+                          </span>
+                          <a
+                            href={`/products/${item.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontSize: '0.72rem', color: 'var(--neon)', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none' }}
+                            title="Preview Customer Detail Page"
+                          >
+                            <ExternalLink size={12} /> Detail Page
+                          </a>
+                        </div>
+
                         <div className="admin-prod-title">{item.name}</div>
                         <div className="admin-prod-desc">{item.desc}</div>
+
+                        {/* Button to Update / Manage Photos */}
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          style={{
+                            width: '100%',
+                            margin: '0.65rem 0',
+                            padding: '0.45rem',
+                            fontSize: '0.78rem',
+                            borderColor: 'var(--neon)',
+                            color: 'var(--neon)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '5px'
+                          }}
+                          onClick={() => handleOpenPhotoManager(item, 'drone')}
+                        >
+                          <ImageIcon size={14} /> Update / Manage Photos ({(item.images || [item.image]).length})
+                        </button>
 
                         {/* Inline editable price & quantity */}
                         <div className="admin-inline-inputs">
@@ -1024,12 +1165,54 @@ export default function AdminPortal() {
                   <div className="admin-items-grid">
                     {roboticsKits.map((item) => (
                       <div key={item.id} className="admin-prod-card">
-                        <img src={item.image} alt={item.name} className="admin-prod-thumb" />
-                        <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 700, textTransform: 'uppercase' }}>
-                          {item.kitType || 'Kit'}
-                        </span>
+                        <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
+                          <ImageSlider
+                            images={item.images || [item.image]}
+                            alt={item.name}
+                            aspectRatio="16/9"
+                            compact={true}
+                            showThumbnails={false}
+                          />
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                          <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 700, textTransform: 'uppercase' }}>
+                            {item.kitType || 'Kit'}
+                          </span>
+                          <a
+                            href={`/products/${item.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontSize: '0.72rem', color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none' }}
+                            title="Preview Customer Detail Page"
+                          >
+                            <ExternalLink size={12} /> Detail Page
+                          </a>
+                        </div>
+
                         <div className="admin-prod-title">{item.name}</div>
                         <div className="admin-prod-desc">{item.desc}</div>
+
+                        {/* Button to Update / Manage Photos */}
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          style={{
+                            width: '100%',
+                            margin: '0.65rem 0',
+                            padding: '0.45rem',
+                            fontSize: '0.78rem',
+                            borderColor: '#10b981',
+                            color: '#10b981',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '5px'
+                          }}
+                          onClick={() => handleOpenPhotoManager(item, 'robotics')}
+                        >
+                          <ImageIcon size={14} /> Update / Manage Photos ({(item.images || [item.image]).length})
+                        </button>
 
                         {/* Inline editable price & quantity */}
                         <div className="admin-inline-inputs">
@@ -1141,18 +1324,54 @@ export default function AdminPortal() {
                     .filter((it) => threeDSubTab === 'all' || it.category === threeDSubTab)
                     .map((item) => (
                       <div key={item.id} className="admin-prod-card">
-                        <img src={item.image} alt={item.name} className="admin-prod-thumb" />
+                        <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
+                          <ImageSlider
+                            images={item.images || [item.image]}
+                            alt={item.name}
+                            aspectRatio="16/9"
+                            compact={true}
+                            showThumbnails={false}
+                          />
+                        </div>
+
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
                           <span style={{ fontSize: '0.7rem', color: '#ff00aa', fontWeight: 700, textTransform: 'uppercase' }}>
                             {item.category || '3D Studio'}
                           </span>
-                          <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#fff' }}>
-                            Size: {item.size || '8 inch'}
-                          </span>
+                          <a
+                            href={`/prints/${item.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontSize: '0.72rem', color: '#ff00aa', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none' }}
+                            title="Preview Customer Detail Page"
+                          >
+                            <ExternalLink size={12} /> Detail Page
+                          </a>
                         </div>
 
                         <div className="admin-prod-title">{item.name}</div>
                         <div className="admin-prod-desc">{item.desc}</div>
+
+                        {/* Button to Update / Manage Photos */}
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          style={{
+                            width: '100%',
+                            margin: '0.65rem 0',
+                            padding: '0.45rem',
+                            fontSize: '0.78rem',
+                            borderColor: '#ff00aa',
+                            color: '#ff00aa',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '5px'
+                          }}
+                          onClick={() => handleOpenPhotoManager(item, '3dstudio')}
+                        >
+                          <ImageIcon size={14} /> Update / Manage Photos ({(item.images || [item.image]).length})
+                        </button>
 
                         {/* Inline price & stock editing */}
                         <div className="admin-inline-inputs">
@@ -1292,15 +1511,57 @@ export default function AdminPortal() {
                   <div className="admin-items-grid">
                     {uavPreBuilt.map((item) => (
                       <div key={item.id} className="admin-prod-card">
-                        <img src={item.image} alt={item.name} className="admin-prod-thumb" />
-                        <span style={{ fontSize: '0.7rem', color: 'var(--neon)', fontWeight: 700, textTransform: 'uppercase' }}>
-                          {item.type || 'UAV'}
-                        </span>
+                        <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
+                          <ImageSlider
+                            images={item.images || [item.image]}
+                            alt={item.name}
+                            aspectRatio="16/9"
+                            compact={true}
+                            showThumbnails={false}
+                          />
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--neon)', fontWeight: 700, textTransform: 'uppercase' }}>
+                            {item.type || 'UAV'}
+                          </span>
+                          <a
+                            href={`/uav/${item.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontSize: '0.72rem', color: 'var(--neon)', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none' }}
+                            title="Preview Customer Detail Page"
+                          >
+                            <ExternalLink size={12} /> Detail Page
+                          </a>
+                        </div>
+
                         <div className="admin-prod-title">{item.name}</div>
                         <div className="admin-prod-desc">{item.desc}</div>
                         <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '0.5rem' }}>
                           ⏱ Flight Time: {item.flightTime || '10 mins'} | 📡 Range: {item.range || '2 km'}
                         </div>
+
+                        {/* Button to Update / Manage Photos */}
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          style={{
+                            width: '100%',
+                            margin: '0.65rem 0',
+                            padding: '0.45rem',
+                            fontSize: '0.78rem',
+                            borderColor: 'var(--neon)',
+                            color: 'var(--neon)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '5px'
+                          }}
+                          onClick={() => handleOpenPhotoManager(item, 'uav')}
+                        >
+                          <ImageIcon size={14} /> Update / Manage Photos ({(item.images || [item.image]).length})
+                        </button>
 
                         <div className="admin-inline-inputs">
                           <div className="admin-input-group">
@@ -1663,15 +1924,97 @@ export default function AdminPortal() {
               </div>
 
               <div className="full-span">
-                <label className="form-field-label" style={{ color: '#cbd5e1' }}>Image URL / Asset Path *</label>
-                <input
-                  type="text"
-                  className="profile-input"
-                  value={newItemForm.image}
-                  onChange={(e) => setNewItemForm({ ...newItemForm, image: e.target.value })}
-                  placeholder=""
-                  required
-                />
+                <label className="form-field-label" style={{ color: '#cbd5e1' }}>Primary Image URL / Asset Path *</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    className="profile-input"
+                    value={newItemForm.image}
+                    onChange={(e) => setNewItemForm({ ...newItemForm, image: e.target.value })}
+                    placeholder="e.g. /images/fpv_racing_drone.jpg or https://..."
+                    required={newPhotosList.length === 0}
+                  />
+                  <button
+                    type="button"
+                    className="admin-btn-assist"
+                    style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '0.5rem 1rem', whiteSpace: 'nowrap', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+                    onClick={() => {
+                      if (newItemForm.image.trim() && !newPhotosList.includes(newItemForm.image.trim())) {
+                        setNewPhotosList([...newPhotosList, newItemForm.image.trim()]);
+                      }
+                    }}
+                  >
+                    + Add to Gallery
+                  </button>
+                </div>
+              </div>
+
+              {/* Multi-Photo Input for New Item */}
+              <div className="full-span" style={{ background: 'rgba(255,255,255,0.03)', padding: '0.85rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <label className="form-field-label" style={{ color: '#cbd5e1', marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <ImageIcon size={14} color="#38bdf8" /> Multiple Photos Gallery ({newPhotosList.length} photos)
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>First photo is Cover / Primary</span>
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.6rem' }}>
+                  <input
+                    type="text"
+                    className="profile-input"
+                    value={addPhotoInput}
+                    onChange={(e) => setAddPhotoInput(e.target.value)}
+                    placeholder="Paste additional image URL (e.g. /images/drone_flying_sunset.jpg)"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (addPhotoInput.trim()) {
+                          setNewPhotosList([...newPhotosList, addPhotoInput.trim()]);
+                          if (!newItemForm.image) setNewItemForm({ ...newItemForm, image: addPhotoInput.trim() });
+                          setAddPhotoInput('');
+                        }
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="admin-btn-assist"
+                    style={{ background: '#10b981', color: '#fff', border: 'none', padding: '0.5rem 1.1rem', whiteSpace: 'nowrap', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+                    onClick={() => {
+                      if (addPhotoInput.trim()) {
+                        setNewPhotosList([...newPhotosList, addPhotoInput.trim()]);
+                        if (!newItemForm.image) setNewItemForm({ ...newItemForm, image: addPhotoInput.trim() });
+                        setAddPhotoInput('');
+                      }
+                    }}
+                  >
+                    Add Photo
+                  </button>
+                </div>
+
+                {newPhotosList.length > 0 ? (
+                  <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                    {newPhotosList.map((photo, idx) => (
+                      <div key={idx} style={{ position: 'relative', width: '70px', height: '70px', borderRadius: '8px', overflow: 'hidden', border: idx === 0 ? '2px solid #38bdf8' : '1px solid rgba(255,255,255,0.15)', background: '#0f172a' }}>
+                        <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = '/images/fpv_racing_drone.jpg'; }} />
+                        {idx === 0 && (
+                          <span style={{ position: 'absolute', top: 0, left: 0, background: '#0284c7', color: '#fff', fontSize: '9px', padding: '1px 4px', fontWeight: 700, borderRadius: '0 0 4px 0' }}>COVER</span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setNewPhotosList(newPhotosList.filter((_, i) => i !== idx))}
+                          style={{ position: 'absolute', top: '3px', right: '3px', background: 'rgba(0,0,0,0.75)', color: '#fff', border: 'none', borderRadius: '50%', width: '18px', height: '18px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                          title="Remove photo"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>
+                    No extra photos added yet. Add multiple photos so customers can slide and view angles on the detail page.
+                  </p>
+                )}
               </div>
 
               <div className="full-span">
@@ -1702,6 +2045,214 @@ export default function AdminPortal() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: PHOTO GALLERY MANAGER ───────────────────────────── */}
+      {photoModalOpen && editingPhotoTarget && (
+        <div className="admin-modal-overlay" onClick={() => setPhotoModalOpen(false)}>
+          <div className="admin-modal-card" style={{ maxWidth: '680px', width: '92%' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.85rem' }}>
+              <div>
+                <h3 style={{ fontFamily: 'var(--font-head)', color: '#fff', margin: 0, fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <ImageIcon size={18} color="#38bdf8" /> Manage Product Photos
+                </h3>
+                <p style={{ margin: '0.2rem 0 0', fontSize: '0.82rem', color: '#94a3b8' }}>
+                  {editingPhotoTarget.item.name} &bull; <span style={{ color: '#38bdf8', textTransform: 'capitalize' }}>{editingPhotoTarget.type}</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPhotoModalOpen(false)}
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '1.3rem', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ marginTop: '1.2rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              {/* Live Preview Slider */}
+              <div>
+                <label className="form-field-label" style={{ color: '#cbd5e1', marginBottom: '0.4rem', display: 'block' }}>
+                  Customer Live Slider Preview ({editingPhotoTarget.images.length} Photos)
+                </label>
+                <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', background: '#0a0f2e' }}>
+                  <ImageSlider
+                    images={editingPhotoTarget.images}
+                    alt={editingPhotoTarget.item.name}
+                    height="200px"
+                  />
+                </div>
+              </div>
+
+              {/* Add New Photo Input */}
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.9rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <label className="form-field-label" style={{ color: '#cbd5e1', marginBottom: '0.4rem', display: 'block' }}>
+                  Add Another Photo to this Product
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    className="profile-input"
+                    value={editPhotoInput}
+                    onChange={(e) => setEditPhotoInput(e.target.value)}
+                    placeholder="Enter image URL or local path (e.g. /images/fpv_racing_drone.jpg)"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddPhotoToTarget();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddPhotoToTarget}
+                    className="admin-btn-action-primary"
+                    style={{ whiteSpace: 'nowrap', padding: '0.55rem 1.1rem' }}
+                  >
+                    + Add Photo
+                  </button>
+                </div>
+
+                {/* Quick suggestions */}
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.6rem' }}>
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', alignSelf: 'center' }}>Presets:</span>
+                  {[
+                    '/images/fpv_racing_drone.jpg',
+                    '/images/hero_drone_bg.jpg',
+                    '/images/drone_flying_sunset.jpg',
+                    '/images/drone_farming_action.jpg'
+                  ].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => {
+                        if (!editingPhotoTarget.images.includes(preset)) {
+                          setEditingPhotoTarget((prev) => ({
+                            ...prev,
+                            images: [...prev.images, preset]
+                          }));
+                        }
+                      }}
+                      style={{
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#94a3b8',
+                        fontSize: '0.72rem',
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      + {preset.replace('/images/', '')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Photo Thumbnails List with Reorder / Delete */}
+              <div>
+                <label className="form-field-label" style={{ color: '#cbd5e1', marginBottom: '0.4rem', display: 'block' }}>
+                  Current Photos in Gallery (Drag order or click to set Cover)
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.75rem' }}>
+                  {editingPhotoTarget.images.map((photo, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        position: 'relative',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        border: idx === 0 ? '2px solid #0284c7' : '1px solid rgba(255,255,255,0.12)',
+                        background: '#090d24',
+                        display: 'flex',
+                        flexDirection: 'column'
+                      }}
+                    >
+                      <div style={{ height: '90px', width: '100%', position: 'relative' }}>
+                        <img
+                          src={photo}
+                          alt=""
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e) => { e.target.src = '/images/fpv_racing_drone.jpg'; }}
+                        />
+                        {idx === 0 && (
+                          <span style={{ position: 'absolute', top: '4px', left: '4px', background: '#0284c7', color: '#fff', fontSize: '9px', padding: '2px 5px', fontWeight: 700, borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.4)' }}>
+                            PRIMARY COVER
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhotoFromTarget(idx)}
+                          style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            background: 'rgba(239,68,68,0.85)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '20px',
+                            height: '20px',
+                            fontSize: '11px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer'
+                          }}
+                          title="Remove photo"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div style={{ padding: '0.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#060a1f' }}>
+                        <span style={{ fontSize: '0.7rem', color: '#64748b' }}>#{idx + 1}</span>
+                        {idx !== 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimaryPhoto(idx)}
+                            style={{
+                              background: 'transparent',
+                              border: '1px solid #38bdf8',
+                              color: '#38bdf8',
+                              borderRadius: '4px',
+                              padding: '2px 6px',
+                              fontSize: '0.68rem',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Set Cover
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions Footer */}
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  className="modal-btn-cancel"
+                  onClick={() => setPhotoModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="modal-btn-save"
+                  onClick={handleSavePhotoUpdates}
+                  disabled={actionLoading}
+                  style={{ background: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <Save size={14} />
+                  {actionLoading ? 'Saving Changes...' : `Save Photos (${editingPhotoTarget.images.length})`}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

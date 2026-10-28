@@ -921,120 +921,280 @@ export const INITIAL_3D_STUDIO = [
     id: "3d-luffy-gear5",
     name: "Monkey D. Luffy — Gear 5 Sun God",
     category: "Anime",
+    brand: "P_Brothers × NaviDron 3D",
     price: 949,
     quantity: 25,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 45m", weight: "120g" },
+      { size: "8 inch (200mm)", priceOffset: 350, printTime: "6h 30m", weight: "240g" },
+      { size: "10 inch (250mm)", priceOffset: 750, printTime: "11h 15m", weight: "420g" },
+      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "18h 40m", weight: "710g" }
+    ],
     image: "/images/anime_figure_3d.jpg",
-    desc: "Whimsical Gear 5 cloud-ring sculpt with joyful laughing expression from One Piece Wano arc.",
+    images: [
+      "/images/anime_figure_3d.jpg",
+      "/images/3d_printed_gift_pack.jpg",
+      "/images/valorant_action_figures_1791059182363.jpg"
+    ],
+    printTime: "6h 30m",
+    material: "SLA UV-Tough Photopolymer Resin (8K Detail)",
+    layerHeight: "0.08mm Ultra-Precision",
+    infill: "100% Solid Resin Core",
+    desc: "Whimsical Gear 5 cloud-ring sculpt with joyful laughing expression from One Piece Wano arc. Meticulously cured, hand-sanded, and coated in matte UV-resistant sealant.",
     badge: "TRENDING"
   },
   {
     id: "3d-goku-ssj",
     name: "Goku — Super Saiyan Kamehameha",
     category: "Anime",
+    brand: "P_Brothers × NaviDron 3D",
     price: 849,
     quantity: 20,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 20m", weight: "115g" },
+      { size: "8 inch (200mm)", priceOffset: 350, printTime: "6h 15m", weight: "230g" },
+      { size: "10 inch (250mm)", priceOffset: 750, printTime: "10h 50m", weight: "410g" },
+      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "17h 50m", weight: "690g" }
+    ],
     image: "/images/anime_figure_3d.jpg",
-    desc: "Iconic Dragon Ball Z protagonist with translucent energy wave effect piece.",
+    images: [
+      "/images/anime_figure_3d.jpg",
+      "/images/action_figure_valorant.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "6h 15m",
+    material: "SLA UV-Tough Photopolymer Resin (8K Detail)",
+    layerHeight: "0.08mm Ultra-Precision",
+    infill: "100% Solid Resin Core",
+    desc: "Iconic Dragon Ball Z protagonist with translucent golden energy wave aura piece and battle-damaged gi texture.",
     badge: "ANIME HERO"
   },
   {
     id: "3d-naruto-sage",
     name: "Naruto Uzumaki — Sage Mode Rasenshuriken",
     category: "Anime",
+    brand: "P_Brothers × NaviDron 3D",
     price: 799,
     quantity: 30,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 10m", weight: "110g" },
+      { size: "8 inch (200mm)", priceOffset: 350, printTime: "5h 50m", weight: "220g" },
+      { size: "10 inch (250mm)", priceOffset: 750, printTime: "10h 20m", weight: "390g" },
+      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "16h 30m", weight: "660g" }
+    ],
     image: "/images/anime_figure_3d.jpg",
-    desc: "Toad sage cloak, orange eye markings, and dual shadow clone accessory.",
+    images: [
+      "/images/anime_figure_3d.jpg",
+      "/images/valorant_action_figures_1791059182363.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "5h 50m",
+    material: "SLA UV-Tough Photopolymer Resin",
+    layerHeight: "0.08mm Ultra-Precision",
+    infill: "100% Solid Resin Core",
+    desc: "Toad sage cloak, orange eye markings, and translucent wind spiral Rasenshuriken hovering on custom stone stand.",
     badge: "CLASSIC"
   },
   {
     id: "3d-tanjiro-flame",
     name: "Tanjiro Kamado — Hinokami Kagura",
     category: "Anime",
+    brand: "P_Brothers × NaviDron 3D",
     price: 849,
     quantity: 18,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 30m", weight: "125g" },
+      { size: "8 inch (200mm)", priceOffset: 350, printTime: "6h 40m", weight: "245g" },
+      { size: "10 inch (250mm)", priceOffset: 750, printTime: "11h 30m", weight: "430g" },
+      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "18h 15m", weight: "720g" }
+    ],
     image: "/images/anime_figure_3d.jpg",
-    desc: "Demon Slayer sun-breathing spiral flame dragon wrapped around the Nichirin blade.",
+    images: [
+      "/images/anime_figure_3d.jpg",
+      "/images/action_figure_valorant.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "6h 40m",
+    material: "SLA UV-Tough Photopolymer Resin + Amber Translucent Resin",
+    layerHeight: "0.08mm Ultra-Precision",
+    infill: "100% Solid Resin Core",
+    desc: "Demon Slayer sun-breathing spiral flame dragon wrapped around the Nichirin black blade with dynamic haori folds.",
     badge: "FLAME RESIN"
   },
   {
     id: "3d-gta-jason",
     name: "Jason — GTA 6 Dual Pistols Edition",
     category: "Game Characters",
+    brand: "Rockstar Fan Art × NaviDron",
     price: 999,
     quantity: 40,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", priceOffset: 0, printTime: "4h 00m", weight: "135g" },
+      { size: "8 inch (200mm)", priceOffset: 350, printTime: "7h 15m", weight: "260g" },
+      { size: "10 inch (250mm)", priceOffset: 750, printTime: "12h 45m", weight: "460g" },
+      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "20h 10m", weight: "780g" }
+    ],
     image: "/images/gta6_merchandise_banner_1791059157486.jpg",
-    desc: "Ultra high-resolution 3D print of Jason from GTA 6. Dual pistols and custom Vice City street display base.",
+    images: [
+      "/images/gta6_merchandise_banner_1791059157486.jpg",
+      "/images/action_figure_valorant.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "7h 15m",
+    material: "SLA UV-Tough Photopolymer Resin",
+    layerHeight: "0.08mm Ultra-Precision",
+    infill: "100% Solid Resin Core",
+    desc: "Ultra high-resolution 3D print of Jason from GTA 6. Dual pistols, Miami tactical outfit, and custom Vice City street display base.",
     badge: "LIMITED DROP"
   },
   {
     id: "3d-gta-lucia",
     name: "Lucia — GTA 6 Vice City Star",
     category: "Game Characters",
+    brand: "Rockstar Fan Art × NaviDron",
     price: 999,
     quantity: 35,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 50m", weight: "130g" },
+      { size: "8 inch (200mm)", priceOffset: 350, printTime: "7h 00m", weight: "250g" },
+      { size: "10 inch (250mm)", priceOffset: 750, printTime: "12h 20m", weight: "450g" },
+      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "19h 45m", weight: "760g" }
+    ],
     image: "/images/gta6_merchandise_banner_1791059157486.jpg",
-    desc: "The iconic first female lead of the GTA franchise. Detailed hair sculpt and Miami street aesthetic.",
+    images: [
+      "/images/gta6_merchandise_banner_1791059157486.jpg",
+      "/images/valorant_action_figures_1791059182363.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "7h 00m",
+    material: "SLA UV-Tough Photopolymer Resin",
+    layerHeight: "0.08mm Ultra-Precision",
+    infill: "100% Solid Resin Core",
+    desc: "The iconic first female lead of the GTA franchise. Detailed hair sculpt, bandana, and realistic Miami palm street aesthetic.",
     badge: "BESTSELLER"
   },
   {
     id: "3d-val-jett",
     name: "Jett — Blade Storm Pose",
     category: "Game Characters",
+    brand: "Riot Fan Art × NaviDron",
     price: 799,
     quantity: 22,
     size: "6 inch",
-    sizes: ["6 inch", "8 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 15m", weight: "115g" },
+      { size: "8 inch (200mm)", priceOffset: 350, printTime: "6h 00m", weight: "225g" },
+      { size: "10 inch (250mm)", priceOffset: 750, printTime: "10h 30m", weight: "400g" },
+      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "16h 50m", weight: "670g" }
+    ],
     image: "/images/valorant_action_figures_1791059182363.jpg",
-    desc: "Wind assassin Jett captured mid-air holding signature kunai daggers on flight stand.",
+    images: [
+      "/images/valorant_action_figures_1791059182363.jpg",
+      "/images/action_figure_valorant.jpg",
+      "/images/anime_figure_3d.jpg"
+    ],
+    printTime: "3h 15m",
+    material: "SLA UV-Tough Photopolymer Resin",
+    layerHeight: "0.08mm Ultra-Precision",
+    infill: "100% Solid Resin Core",
+    desc: "Wind assassin Jett captured mid-air holding signature kunai daggers on a transparent acrylic flight stand with wind swirls.",
     badge: "HOT"
   },
   {
     id: "3d-val-reyna",
     name: "Reyna — Empress Leer",
     category: "Game Characters",
+    brand: "Riot Fan Art × NaviDron",
     price: 799,
     quantity: 15,
     size: "6 inch",
-    sizes: ["6 inch", "8 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 15m", weight: "115g" },
+      { size: "8 inch (200mm)", priceOffset: 350, printTime: "6h 00m", weight: "225g" },
+      { size: "10 inch (250mm)", priceOffset: 750, printTime: "10h 30m", weight: "400g" },
+      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "16h 50m", weight: "670g" }
+    ],
     image: "/images/action_figure_valorant.jpg",
-    desc: "Duelist Reyna glowing in radiant purple resin with ethereal eye ability accent.",
+    images: [
+      "/images/action_figure_valorant.jpg",
+      "/images/valorant_action_figures_1791059182363.jpg",
+      "/images/anime_figure_3d.jpg"
+    ],
+    printTime: "3h 15m",
+    material: "SLA UV-Tough Photopolymer Resin",
+    layerHeight: "0.08mm Ultra-Precision",
+    infill: "100% Solid Resin Core",
+    desc: "Duelist Reyna glowing in radiant purple resin with ethereal eye ability accent and Soul Orb hovering by her side.",
     badge: "POPULAR"
   },
   {
     id: "3d-custom-person",
     name: "Custom 3D Person Figure Sculpt (From Your Photo)",
     category: "Personal Character",
+    brand: "NaviDron Bespoke Sculpting Labs",
     price: 1499,
     quantity: 999,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "12 inch", "Custom Scale"],
+    sizes: ["6 inch", "8 inch", "10 inch", "12 inch", "Custom Scale"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", priceOffset: 0, printTime: "5h 30m", weight: "140g" },
+      { size: "8 inch (200mm)", priceOffset: 450, printTime: "8h 45m", weight: "270g" },
+      { size: "10 inch (250mm)", priceOffset: 950, printTime: "14h 20m", weight: "490g" },
+      { size: "12 inch (300mm)", priceOffset: 1600, printTime: "22h 00m", weight: "820g" }
+    ],
     image: "/images/3d_print_lithophane.jpg",
-    desc: "Upload or send your photo. We craft a personalized 3D miniature resin statue of you, couples, or friends.",
+    images: [
+      "/images/3d_print_lithophane.jpg",
+      "/images/lithophane_3d_print_1791059239454.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "8h 45m",
+    material: "Dual-Layer 8K SLA Resin + Personalized Wooden Display Plaque",
+    layerHeight: "0.05mm Micro-Detail Precision",
+    infill: "100% Solid Resin Core",
+    desc: "Upload or send your photo. Our digital sculptors convert facial features, posture, and clothing into a lifelike miniature 3D statue with custom name engraving.",
     badge: "CUSTOM PHOTO"
   },
   {
     id: "3d-litho-portrait",
     name: "Custom Photo Curved Backlit Lithophane",
     category: "Personal Character",
+    brand: "NaviDron Bespoke Sculpting Labs",
     price: 499,
     quantity: 999,
     size: "6 inch",
-    sizes: ["4 inch", "6 inch", "8 inch"],
-    image: "/images/3d_print_lithophane.jpg",
-    desc: "Turn your personal memory photo into a luminous curved 3D lithophane with LED back-light stand.",
+    sizes: ["4 inch", "6 inch", "8 inch", "10 inch"],
+    sizeOptions: [
+      { size: "4 inch (100mm)", priceOffset: 0, printTime: "2h 30m", weight: "65g" },
+      { size: "6 inch (150mm)", priceOffset: 250, printTime: "4h 45m", weight: "130g" },
+      { size: "8 inch (200mm)", priceOffset: 550, printTime: "8h 15m", weight: "250g" },
+      { size: "10 inch (250mm)", priceOffset: 950, printTime: "13h 00m", weight: "430g" }
+    ],
+    image: "/images/lithophane_3d_print_1791059239454.jpg",
+    images: [
+      "/images/lithophane_3d_print_1791059239454.jpg",
+      "/images/3d_print_lithophane.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "4h 45m",
+    material: "High-Density Translucent PLA+ / Cured Resin",
+    layerHeight: "0.08mm Optical Density Shift",
+    infill: "100% Solid Optical Infill",
+    desc: "Turn your personal memory photo into a luminous curved 3D lithophane with integrated USB warm LED backlight stand.",
     badge: "ILLUMINATED"
   }
 ];
@@ -1049,11 +1209,21 @@ export async function get3DStudioItems() {
 
   const cloudList = await readFirestoreCollection('3DStudio');
   if (Array.isArray(cloudList) && cloudList.length > 0) {
-    localStorage.setItem(localKey, JSON.stringify(cloudList));
-    return cloudList;
+    const normalized = cloudList.map((item) => ({
+      ...item,
+      images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/anime_figure_3d.jpg']
+    }));
+    localStorage.setItem(localKey, JSON.stringify(normalized));
+    return normalized;
   }
 
-  if (localList && localList.length > 0) return localList;
+  if (localList && localList.length > 0) {
+    const normalized = localList.map((item) => ({
+      ...item,
+      images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/anime_figure_3d.jpg']
+    }));
+    return normalized;
+  }
 
   // Initialize with rich preloaded catalog
   localStorage.setItem(localKey, JSON.stringify(INITIAL_3D_STUDIO));
@@ -1064,7 +1234,16 @@ export async function get3DStudioItems() {
 
 export async function save3DStudioItem(item) {
   const id = item.id || `3d-${Date.now()}`;
-  const cleanItem = { ...item, id, updatedAt: new Date().toISOString() };
+  const images = Array.isArray(item.images) && item.images.length > 0
+    ? item.images
+    : [item.image || '/images/anime_figure_3d.jpg'];
+  const cleanItem = {
+    ...item,
+    id,
+    image: images[0] || item.image || '/images/anime_figure_3d.jpg',
+    images,
+    updatedAt: new Date().toISOString()
+  };
   await writeFirestoreDoc('3DStudio', id, cleanItem);
 
   const current = await get3DStudioItems();
@@ -1087,55 +1266,178 @@ export const INITIAL_DRONE_ACCESSORIES = [
     id: "part-motor-2207",
     name: "T-Motor F60 PRO V 2207 1950KV Brushless Motor",
     category: "Motors",
+    brand: "T-Motor Aviation",
     price: 1899,
     quantity: 45,
     image: "/images/fpv_racing_drone.jpg",
-    desc: "Premium racing motor built with titanium alloy shaft and Japanese NMB bearings. 6S compatible with violent thrust response."
+    images: [
+      "/images/fpv_racing_drone.jpg",
+      "/images/hero_drone_bg.jpg",
+      "/images/college_project_drone.jpg"
+    ],
+    desc: "Premium racing motor built with titanium alloy hollow shaft, N52H curved arc magnets, and Japanese NMB bearings. 6S compatible with explosive throttle burst response.",
+    boxIncludes: [
+      "1x T-Motor F60 PRO V 2207 1950KV Motor",
+      "1x M5 Aluminum Low-Profile Lock Nut",
+      "4x M3*8mm High-Tensile Steel Hex Screws",
+      "1x Washer & Spare Circlip Set"
+    ],
+    specs: [
+      { label: "Configuration", val: "12N14P" },
+      { label: "Shaft Diameter", val: "4.0mm Titanium" },
+      { label: "Input Voltage", val: "4S–6S LiPo (16V–25.2V)" },
+      { label: "Peak Current (60s)", val: "44.6A" },
+      { label: "Max Thrust", val: "2,180g (with 5.1\" prop)" },
+      { label: "Weight", val: "33.9g (with wire)" }
+    ]
   },
   {
     id: "part-fc-stack",
     name: "SpeedyBee F405 V4 BLS 55A 30x30 Stack",
     category: "Electronics",
+    brand: "SpeedyBee Technology",
     price: 6499,
     quantity: 18,
     image: "/images/fpv_racing_drone.jpg",
-    desc: "Wireless Betaflight parameter configuration via smartphone Bluetooth. 55A 4-in-1 ESC with TVS protective diode."
+    images: [
+      "/images/fpv_racing_drone.jpg",
+      "/images/college_project_drone.jpg",
+      "/images/hero_drone_bg.jpg"
+    ],
+    desc: "Wireless Betaflight parameter configuration via smartphone Bluetooth. 55A 4-in-1 ESC with TVS protective diode, 8-motor output support, and 4-level battery LED gauge.",
+    boxIncludes: [
+      "1x SpeedyBee F405 V4 Flight Controller",
+      "1x SpeedyBee 55A 4-in-1 BLHeli_S ESC",
+      "1x 35V 1000uF Low-ESR Filter Capacitor",
+      "1x XT60 Pigtail Cable (70mm 12AWG)",
+      "5x M3 Anti-Vibration Silicone Grommets",
+      "1x DJI O3 6-Pin Pre-Crimped Wire Harness"
+    ],
+    specs: [
+      { label: "MCU", val: "STM32F405 @ 168MHz" },
+      { label: "IMU (Gyro)", val: "ICM42688P Dual Damping" },
+      { label: "Bluetooth", val: "BLE 5.0 Wireless Config" },
+      { label: "ESC Firmware", val: "BLHeli_S J-H-40 / Bluejay" },
+      { label: "Continuous Current", val: "55A × 4 (Burst 70A 10s)" },
+      { label: "Mounting Size", val: "30.5 × 30.5mm (M3 hole)" }
+    ]
   },
   {
     id: "part-o3-unit",
     name: "DJI O3 Air Unit Digital HD Transmission",
     category: "Electronics",
+    brand: "DJI Innovations",
     price: 19999,
     quantity: 8,
     image: "/images/fpv_racing_drone.jpg",
-    desc: "State-of-the-art digital FPV transmitter with 10km transmission range, 4K/60fps video capture, and 20ms ultra-low latency."
+    images: [
+      "/images/fpv_racing_drone.jpg",
+      "/images/hero_drone_bg.jpg",
+      "/images/rc_plane_hobby.jpg"
+    ],
+    desc: "State-of-the-art digital FPV transmitter with 10km transmission range, 4K/60fps video capture, 155° super-wide FOV, and 30ms ultra-low latency canvas mode OSD.",
+    boxIncludes: [
+      "1x DJI O3 Air Unit Transmission Module",
+      "1x DJI O3 HD 1/1.7\" Camera Module",
+      "1x Dual-Band Dual-Polarized Antenna (MMCX)",
+      "1x 3-in-1 Coaxial Connection Cable (115mm)"
+    ],
+    specs: [
+      { label: "Sensor Size", val: "1/1.7-inch CMOS (48MP)" },
+      { label: "Video Max Res", val: "4K @ 60fps / 2.7K @ 120fps" },
+      { label: "Transmission Range", val: "Up to 10 km (FCC)" },
+      { label: "Latency", val: "Lowest 30 ms" },
+      { label: "EIS Stabilization", val: "RockSteady + Gyroflow Log" },
+      { label: "Internal Storage", val: "20 GB High-Speed Flash" }
+    ]
   },
   {
     id: "part-carbon-frame",
     name: "Apex 5\" Carbon Fiber Freestyle Drone Frame",
     category: "Frames",
+    brand: "NaviDron AeroLab",
     price: 2799,
     quantity: 30,
     image: "/images/fpv_racing_drone.jpg",
-    desc: "CNC cut 5.5mm chamfered arms, aluminum standoffs, and integrated TPU antenna/action camera mount."
+    images: [
+      "/images/fpv_racing_drone.jpg",
+      "/images/college_project_drone.jpg",
+      "/images/hero_drone_bg.jpg"
+    ],
+    desc: "CNC cut 5.5mm chamfered T700 carbon arms, 7075 aluminum camera bracket standoffs, keylocked arm design, and integrated TPU antenna/action camera mount.",
+    boxIncludes: [
+      "4x 5.5mm T700 Carbon Fiber Arms",
+      "1x 2.5mm Carbon Top Plate",
+      "1x 2.0mm Carbon Main Center Plate",
+      "1x 2.0mm Carbon Bottom Plate",
+      "8x 7075 Aerospace Aluminum Standoffs",
+      "1x Full Pack of Grade 12.9 Black Steel Screws",
+      "1x NaviDron Silicone Battery Pad + Kevlar Strap"
+    ],
+    specs: [
+      { label: "Wheelbase", val: "225mm Diagonal" },
+      { label: "Arm Thickness", val: "5.5mm Chamfered Carbon" },
+      { label: "Top/Bottom Plates", val: "2.0mm / 2.5mm" },
+      { label: "Camera Mount", val: "19mm Micro / 20mm Nano" },
+      { label: "Stack Mounting", val: "20x20mm & 30.5x30.5mm" },
+      { label: "Dry Weight", val: "128g (with hardware)" }
+    ]
   },
   {
     id: "part-agri-nozzle",
     name: "Electrostatic Centrifugal Spray Nozzle (Agri)",
     category: "Agricultural Parts",
+    brand: "NaviDron AgriTech",
     price: 2499,
     quantity: 24,
     image: "/images/agricultural_drone.jpg",
-    desc: "Atomizes liquid droplets down to 50–200 microns for uniform leaf coverage without clogs or overspray."
+    images: [
+      "/images/agricultural_drone.jpg",
+      "/images/agricultural_drone_field_1791059225277.jpg",
+      "/images/college_project_drone.jpg"
+    ],
+    desc: "Atomizes liquid droplets down to 50–200 microns using high-speed rotary disc for uniform leaf underside coverage without clogs or chemical overspray drift.",
+    boxIncludes: [
+      "1x High-Speed Centrifugal Brushless Atomizer",
+      "1x Integrated Speed Control ESC (PWM 12-24V)",
+      "1x 8mm Quick-Connect Liquid Pipe Fitting",
+      "1x Anti-Vibration Carbon Extension Bracket"
+    ],
+    specs: [
+      { label: "Motor Speed", val: "12,000–18,000 RPM" },
+      { label: "Droplet Size", val: "50–200 μm Adjustable" },
+      { label: "Spray Flow Rate", val: "0.5–3.5 L/min" },
+      { label: "Effective Width", val: "1.5–2.5 meters per nozzle" },
+      { label: "Operating Voltage", val: "12V–24V DC" },
+      { label: "Weight", val: "145g" }
+    ]
   },
   {
     id: "3d-gopro-mount",
     name: "TPU Universal GoPro Hero 9/10/11/12 Camera Mount (30°)",
     category: "3D Parts",
+    brand: "NaviDron 3D Prototyping",
     price: 349,
     quantity: 70,
     image: "/images/fpv_racing_drone.jpg",
-    desc: "Flexible, impact-absorbing TPU mount that protects expensive action cameras during aggressive freestyle crashes."
+    images: [
+      "/images/fpv_racing_drone.jpg",
+      "/images/hero_drone_bg.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    desc: "Flexible, impact-absorbing 95A TPU mount that protects expensive action cameras during high-speed freestyle crashes. Pre-angled at 30 degrees for high-speed cruising.",
+    boxIncludes: [
+      "1x 95A High-Toughness TPU Camera Canopy (30°)",
+      "1x ND Filter Retention Lip",
+      "2x M3 Mounting Screws"
+    ],
+    specs: [
+      { label: "Material", val: "Shore 95A Polyurethane TPU" },
+      { label: "Tilt Angle", val: "Fixed 30 Degrees" },
+      { label: "Compatibility", val: "GoPro Hero 9, 10, 11, 12" },
+      { label: "ND Filter Slot", val: "Telesin & TBS ND filter compatible" },
+      { label: "Weight", val: "22g" }
+    ]
   }
 ];
 
@@ -1149,11 +1451,21 @@ export async function getDroneAccessories() {
 
   const cloudList = await readFirestoreCollection('DroneAccessories');
   if (Array.isArray(cloudList) && cloudList.length > 0) {
-    localStorage.setItem(localKey, JSON.stringify(cloudList));
-    return cloudList;
+    const normalized = cloudList.map((item) => ({
+      ...item,
+      images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/fpv_racing_drone.jpg']
+    }));
+    localStorage.setItem(localKey, JSON.stringify(normalized));
+    return normalized;
   }
 
-  if (localList && localList.length > 0) return localList;
+  if (localList && localList.length > 0) {
+    const normalized = localList.map((item) => ({
+      ...item,
+      images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/fpv_racing_drone.jpg']
+    }));
+    return normalized;
+  }
 
   localStorage.setItem(localKey, JSON.stringify(INITIAL_DRONE_ACCESSORIES));
   INITIAL_DRONE_ACCESSORIES.forEach((item) => writeFirestoreDoc('DroneAccessories', item.id, item));
@@ -1162,7 +1474,16 @@ export async function getDroneAccessories() {
 
 export async function saveDroneAccessory(item) {
   const id = item.id || `acc-${Date.now()}`;
-  const cleanItem = { ...item, id, updatedAt: new Date().toISOString() };
+  const images = Array.isArray(item.images) && item.images.length > 0
+    ? item.images
+    : [item.image || '/images/fpv_racing_drone.jpg'];
+  const cleanItem = {
+    ...item,
+    id,
+    image: images[0] || item.image || '/images/fpv_racing_drone.jpg',
+    images,
+    updatedAt: new Date().toISOString()
+  };
   await writeFirestoreDoc('DroneAccessories', id, cleanItem);
 
   const current = await getDroneAccessories();
@@ -1185,46 +1506,160 @@ export const INITIAL_ROBOTICS_KITS = [
     id: "kit-4wd-chassis",
     name: "4WD Smart Robot Car Chassis with Speed Encoders",
     kitType: "Chassis & Base",
+    brand: "NaviDron Robotics Edu",
     price: 1299,
     quantity: 25,
     image: "/images/college_project_drone.jpg",
-    desc: "Dual-layer heavy acrylic chassis platform with 4 DC motors, rubber grip wheels, battery box, and optocoupler speed discs."
+    images: [
+      "/images/college_project_drone.jpg",
+      "/images/fpv_racing_drone.jpg",
+      "/images/hero_drone_bg.jpg"
+    ],
+    desc: "Dual-layer heavy acrylic chassis platform with 4 high-torque DC gear motors, all-terrain rubber grip wheels, 4x AA battery box, and optocoupler speed encoder discs for velocity feedback.",
+    boxIncludes: [
+      "2x Laser-Cut Solid Clear Acrylic Car Chassis Plates",
+      "4x 1:48 High Torque TT DC Gear Motors",
+      "4x High-Grip Rubber Wheels (65mm Diameter)",
+      "4x 20-Slot Precision Speed Encoder Discs",
+      "8x Acrylic Motor Mounting Fasteners",
+      "1x 4x AA Battery Enclosure with Switch",
+      "1x Complete Brass Standoff & Screw Set"
+    ],
+    specs: [
+      { label: "Voltage Range", val: "3V–6V DC" },
+      { label: "Gear Reduction Ratio", val: "1:48 Speed Reduction" },
+      { label: "Chassis Dimensions", val: "255 × 150 × 60 mm" },
+      { label: "Wheel Diameter", val: "65mm (Wide Rubber Tread)" },
+      { label: "Max Load Capacity", val: "1.2 kg Payload" },
+      { label: "Weight", val: "480g Total Assembly" }
+    ]
   },
   {
     id: "kit-esp32-ai",
     name: "ESP32-CAM AI Surveillance & Robot Controller Kit",
     kitType: "Microcontrollers & IoT",
+    brand: "Espressif Systems × NaviDron",
     price: 1899,
     quantity: 35,
     image: "/images/college_project_drone.jpg",
-    desc: "ESP32 dual-core Wi-Fi/Bluetooth board with 2MP OV2640 camera module, expansion shield, and motor driver for video streaming rovers."
+    images: [
+      "/images/college_project_drone.jpg",
+      "/images/hero_drone_bg.jpg",
+      "/images/toy_drone_basic.jpg"
+    ],
+    desc: "ESP32 dual-core 240MHz Wi-Fi/Bluetooth board with 2MP OV2640 camera module, micro-SD slot, dual L298N motor driver expansion shield, and code library for streaming live rover video.",
+    boxIncludes: [
+      "1x ESP32-CAM AI Development Board",
+      "1x OV2640 2-Megapixel High Definition Camera Module",
+      "1x FT232RL USB to TTL Serial Downloader Module",
+      "1x Dual Motor Driver Robot Expansion Shield",
+      "1x 2.4GHz High Gain 3dBi External SMA Antenna",
+      "20x Female-to-Female Jumper Wires",
+      "1x Arduino IDE Video Rover Sample Code Library"
+    ],
+    specs: [
+      { label: "Processor", val: "Xtensa 32-bit LX6 Dual-Core @ 240MHz" },
+      { label: "RAM / ROM", val: "520KB SRAM + External 4MB PSRAM" },
+      { label: "Wireless", val: "Wi-Fi 802.11 b/g/n + Bluetooth 4.2 BR/EDR" },
+      { label: "Camera Sensor", val: "OV2640 UXGA (1600x1200) @ 15fps" },
+      { label: "Flash Output", val: "Ultra-Bright Onboard Flash LED" },
+      { label: "Operating Voltage", val: "5V DC (Micro USB or Vin)" }
+    ]
   },
   {
     id: "kit-arduino-starter",
     name: "Arduino Uno R3 Ultimate Robotics Starter Kit",
     kitType: "Learning Kits",
+    brand: "Arduino Official Partner / NaviDron",
     price: 2499,
     quantity: 40,
     image: "/images/college_project_drone.jpg",
-    desc: "Genuine ATmega328P Arduino Uno with 30+ sensors, servo motors, ultrasonic obstacle avoidance sensor, LCD display, and breadboard."
+    images: [
+      "/images/college_project_drone.jpg",
+      "/images/hero_drone_bg.jpg",
+      "/images/fpv_racing_drone.jpg"
+    ],
+    desc: "Genuine ATmega328P Arduino Uno with 30+ precision sensors, SG90 servo motor, ultrasonic HC-SR04 obstacle avoidance sensor, 16x2 I2C backlit LCD, breadboard, and 120-page full color project guide.",
+    boxIncludes: [
+      "1x Arduino Uno R3 Microcontroller Board with USB Cable",
+      "1x HC-SR04 Ultrasonic Distance Sensor + Mounting Bracket",
+      "1x SG90 9g Micro Servo Motor with Control Horns",
+      "1x 1602 LCD Display with Pre-Soldered I2C Backpack",
+      "1x 830-Point Solderless Transparent Breadboard",
+      "65x Male-to-Male Multi-Length Jumper Wires",
+      "1x Infrared Remote Controller & Receiver Sensor",
+      "1x Active Buzzer, 5x Tactile Switches, 30x Precision Resistors",
+      "1x High-Impact Compartment Organizer Storage Case"
+    ],
+    specs: [
+      { label: "Main Chip", val: "Microchip ATmega328P (16MHz Crystal)" },
+      { label: "Digital I/O Pins", val: "14 (6 PWM outputs)" },
+      { label: "Analog Inputs", val: "6 × 10-bit ADC Channels" },
+      { label: "Flash Memory", val: "32 KB (0.5 KB bootloader)" },
+      { label: "Operating Voltage", val: "5V (Recommended 7–12V input)" },
+      { label: "Certification", val: "RoHS, CE Certified Genuine Quality" }
+    ]
   },
   {
     id: "kit-mecanum-wheels",
     name: "Omnidirectional Mecanum Wheel 4-Motor Drive Kit",
     kitType: "Motors & Wheels",
+    brand: "NaviDron Robotics Lab",
     price: 3499,
     quantity: 15,
     image: "/images/college_project_drone.jpg",
-    desc: "Set of four 80mm heavy-load Mecanum wheels with TT gear motors for 360-degree all-direction motion robotics."
+    images: [
+      "/images/college_project_drone.jpg",
+      "/images/hero_drone_bg.jpg",
+      "/images/toy_drone_basic.jpg"
+    ],
+    desc: "Set of four 80mm heavy-load Mecanum wheels with TT gear motors and steel coupler adapters for 360-degree all-direction motion robotics (sideways strafing, diagonal drifting, spinning).",
+    boxIncludes: [
+      "2x 80mm Left-Hand Mecanum Wheels (45° Rollers)",
+      "2x 80mm Right-Hand Mecanum Wheels (45° Rollers)",
+      "4x All-Metal Gear TT DC Motors (1:90 High Torque)",
+      "4x 4mm Brass Motor Hex Coupler Hubs",
+      "1x Hex Allen Wrench & Standoff Hardware Kit"
+    ],
+    specs: [
+      { label: "Wheel Diameter", val: "80mm / Thickness 40mm" },
+      { label: "Roller Construction", val: "9 TPU Rubber Grip Rollers per wheel" },
+      { label: "Movement Vector", val: "Forward, Reverse, Lateral 90°, Diagonal" },
+      { label: "Payload Capacity", val: "Up to 5.0 kg distributed load" },
+      { label: "Motor Voltage", val: "6V–12V DC" },
+      { label: "Total Kit Weight", val: "540g" }
+    ]
   },
   {
     id: "kit-metal-servo",
     name: "High Torque Metal Gear Servo MG996R (Pack of 2)",
     kitType: "Motors",
+    brand: "TowerPro × NaviDron",
     price: 449,
     quantity: 60,
     image: "/images/college_project_drone.jpg",
-    desc: "11kg-cm stall torque metal gear high precision servos for robotic arms, steering knuckles, and UAV steerable landing gears."
+    images: [
+      "/images/college_project_drone.jpg",
+      "/images/fpv_racing_drone.jpg",
+      "/images/hero_drone_bg.jpg"
+    ],
+    desc: "11kg-cm stall torque full metal gear high-precision servos for robotic arms, steering knuckles, pan-tilt camera gimbals, and UAV steerable landing gears.",
+    boxIncludes: [
+      "2x MG996R Metal Gear Digital Servos",
+      "2x Double-Arm Heavy Duty Servo Horns",
+      "2x Four-Arm Cross Servo Horns",
+      "2x Round Aluminum-Reinforced Horns",
+      "8x Rubber Vibration Damper Bushings & Eyelets",
+      "8x Steel Mounting Screws"
+    ],
+    specs: [
+      { label: "Stall Torque", val: "11.0 kg-cm @ 6.0V (9.4 kg-cm @ 4.8V)" },
+      { label: "Operating Speed", val: "0.14 sec / 60 degrees @ 6.0V" },
+      { label: "Gear Type", val: "Full All-Metal Hardened Brass & Steel" },
+      { label: "Rotation Angle", val: "180 Degrees Precision PWM" },
+      { label: "Operating Voltage", val: "4.8V–7.2V DC" },
+      { label: "Weight", val: "55g each" }
+    ]
   }
 ];
 
@@ -1238,11 +1673,21 @@ export async function getRoboticsKits() {
 
   const cloudList = await readFirestoreCollection('Robotics_Kits');
   if (Array.isArray(cloudList) && cloudList.length > 0) {
-    localStorage.setItem(localKey, JSON.stringify(cloudList));
-    return cloudList;
+    const normalized = cloudList.map((item) => ({
+      ...item,
+      images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/college_project_drone.jpg']
+    }));
+    localStorage.setItem(localKey, JSON.stringify(normalized));
+    return normalized;
   }
 
-  if (localList && localList.length > 0) return localList;
+  if (localList && localList.length > 0) {
+    const normalized = localList.map((item) => ({
+      ...item,
+      images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/college_project_drone.jpg']
+    }));
+    return normalized;
+  }
 
   localStorage.setItem(localKey, JSON.stringify(INITIAL_ROBOTICS_KITS));
   INITIAL_ROBOTICS_KITS.forEach((item) => writeFirestoreDoc('Robotics_Kits', item.id, item));
@@ -1251,7 +1696,16 @@ export async function getRoboticsKits() {
 
 export async function saveRoboticsKit(item) {
   const id = item.id || `kit-${Date.now()}`;
-  const cleanItem = { ...item, id, updatedAt: new Date().toISOString() };
+  const images = Array.isArray(item.images) && item.images.length > 0
+    ? item.images
+    : [item.image || '/images/college_project_drone.jpg'];
+  const cleanItem = {
+    ...item,
+    id,
+    image: images[0] || item.image || '/images/college_project_drone.jpg',
+    images,
+    updatedAt: new Date().toISOString()
+  };
   await writeFirestoreDoc('Robotics_Kits', id, cleanItem);
 
   const current = await getRoboticsKits();
@@ -1274,45 +1728,141 @@ export const INITIAL_UAV_PREBUILT = [
     id: "uav-apex-5",
     name: "Apex 5\" Freestyle FPV Drone (BNF / Ready To Fly)",
     type: "FPV Drone",
+    brand: "NaviDron AeroLab India",
     price: 14999,
     quantity: 6,
     image: "/images/fpv_racing_drone.jpg",
-    desc: "Ready to fly 6S freestyle drone with 2207 brushless motors, tuned Betaflight 4.5, ELRS 2.4G receiver, and carbon crash cage.",
-    flightTime: "8 mins",
-    range: "3.5 km"
+    images: [
+      "/images/fpv_racing_drone.jpg",
+      "/images/hero_drone_bg.jpg",
+      "/images/college_project_drone.jpg"
+    ],
+    desc: "Ready to fly 6S freestyle drone with 2207 brushless motors, tuned Betaflight 4.5 flight control, ELRS 2.4G diversity receiver, and full T700 carbon fiber crash cage.",
+    flightTime: "8 mins (Freestyle) / 12 mins (Cruising)",
+    range: "3.5 km",
+    maxSpeed: "140+ km/h",
+    weight: "385g (dry) / 595g (AUW with 6S battery)",
+    components: [
+      { part: "Airframe", detail: "Apex 5\" T700 Full 3K Carbon Fiber (5.5mm Chamfered Arms)" },
+      { part: "Flight Controller", detail: "SpeedyBee F405 V4 Bluetooth Wireless Configurable" },
+      { part: "ESC", detail: "55A 4-in-1 BLHeli_S DShot600 with TVS Protection" },
+      { part: "Motors", detail: "4x T-Motor F60 PRO V 2207 1950KV 6S Motors" },
+      { part: "Propellers", detail: "HQProp Ethix S5 5.1x4.0 Tri-Blade Polycarbonate" },
+      { part: "FPV Camera", detail: "Caddx Ratel 2 1200TVL Low-Light HDR Micro Camera" },
+      { part: "Video Transmitter", detail: "800mW 5.8GHz Switchable SmartAudio VTX with RHCP Antenna" },
+      { part: "Receiver", detail: "RadioMaster ExpressLRS 2.4GHz High Refresh Diversity RX" },
+      { part: "Battery Connection", detail: "XT60 Female with 35V 1000uF Low-ESR Filter" }
+    ],
+    availableAddons: [
+      { id: "gps", name: "M10 Precision GPS + Return-To-Home Rescue Compass", price: 1499 },
+      { id: "telemetry", name: "Long-Range Telemetry Link (915MHz TBS Crossfire / ELRS)", price: 1899 },
+      { id: "dji_o3", name: "Digital HD Upgrade (DJI O3 Air Unit 4K 60FPS Video)", price: 12499 },
+      { id: "battery", name: "Extra CNHL 6S 1300mAh 120C High-Discharge LiPo Battery", price: 2499 },
+      { id: "action_mount", name: "TPU GoPro Hero 10/11/12 Shockproof 30° Mount", price: 499 },
+      { id: "radar", name: "Autonomous Obstacle Avoidance Dual LiDAR System", price: 6999 }
+    ]
   },
   {
     id: "uav-skysurfer-rc",
     name: "SkySurfer V2 1400mm RC Scale Pusher Airplane",
     type: "RC Plane",
+    brand: "NaviDron AeroLab India",
     price: 9999,
     quantity: 8,
-    image: "/images/rc_plane_glider.jpg",
-    desc: "EPO foam pusher propeller glider airplane with 4-channel radio receiver, carbon spar reinforcement, and easy hand-launch capability.",
-    flightTime: "25 mins",
-    range: "2.0 km"
+    image: "/images/rc_plane_hobby.jpg",
+    images: [
+      "/images/rc_plane_hobby.jpg",
+      "/images/fpv_racing_drone.jpg",
+      "/images/hero_drone_bg.jpg"
+    ],
+    desc: "Crash-resistant EPO foam pusher propeller glider airplane with 4-channel radio receiver, carbon spar wing reinforcement, and ultra-forgiving hand-launch gliding flight characteristics.",
+    flightTime: "25 mins (Cruising) / 40 mins (Thermal Gliding)",
+    range: "2.0 km",
+    maxSpeed: "75 km/h",
+    weight: "650g AUW",
+    components: [
+      { part: "Airframe", detail: "Molded High-Density EPO Foam with Carbon Spars" },
+      { part: "Wingspan", detail: "1400mm (55 inch) Detachable 2-Piece Wing" },
+      { part: "Motor", detail: "2212 1400KV Outrunner Brushless Motor" },
+      { part: "ESC", detail: "30A Brushless ESC with 5V 2A BEC" },
+      { part: "Servos", detail: "4x 9g Micro Metal-Gear Servos (Ailerons, Elevator, Rudder)" },
+      { part: "Propeller", detail: "6040 Pusher Propeller (protected from belly landings)" },
+      { part: "Receiver", detail: "FlySky / ELRS 6-Channel PWM Radio Receiver" },
+      { part: "Battery Required", detail: "3S 2200mAh 25C–35C LiPo (XT60)" }
+    ],
+    availableAddons: [
+      { id: "gps", name: "Byme-A Flight Stabilizer + Auto-Leveling Gyro", price: 1299 },
+      { id: "telemetry", name: "Long-Range Telemetry Link (915MHz TBS Crossfire / ELRS)", price: 1899 },
+      { id: "fpv_cockpit", name: "FPV Cockpit Pan-Tilt Camera Kit with 600mW VTX", price: 2999 },
+      { id: "battery", name: "Extra 3S 2200mAh 35C Flight LiPo Battery", price: 1699 }
+    ]
   },
   {
     id: "uav-micro-toothpick",
     name: "Micro Toothpick 3\" BNF FPV Quadcopter",
     type: "Toy Drone",
+    brand: "NaviDron AeroLab India",
     price: 8999,
     quantity: 12,
     image: "/images/fpv_racing_drone.jpg",
-    desc: "Ultra-lightweight 85g racing drone for backyard cruising and tight spaces. Highly durable carbon unibody plate.",
-    flightTime: "5 mins",
-    range: "1.0 km"
+    images: [
+      "/images/fpv_racing_drone.jpg",
+      "/images/toy_drone_basic.jpg",
+      "/images/hero_drone_bg.jpg"
+    ],
+    desc: "Ultra-lightweight sub-100g racing drone for backyard cruising, park tree-weaving, and tight spaces. Highly durable 2.5mm carbon unibody plate.",
+    flightTime: "5–7 mins",
+    range: "1.0 km",
+    maxSpeed: "90 km/h",
+    weight: "85g (dry) / 128g (AUW with 3S LiPo)",
+    components: [
+      { part: "Frame", detail: "3-inch Unibody T700 Carbon Fiber (2.5mm)" },
+      { part: "AIO Board", detail: "F411 20A 1-2S/2-3S All-In-One Flight Controller + ESC" },
+      { part: "Motors", detail: "4x 1204 5000KV Ultra-Lightweight Brushless Motors" },
+      { part: "Propellers", detail: "Gemfan 3018 Dual-Blade High-Efficiency Props" },
+      { part: "Camera & VTX", detail: "Caddx Ant Nano 1200TVL + 400mW 5.8GHz VTX" },
+      { part: "Receiver", detail: "Built-in SPI ExpressLRS 2.4GHz Ceramic Antenna" }
+    ],
+    availableAddons: [
+      { id: "batteries_pack", name: "Pack of 3x GNB 3S 450mAh 80C High-Discharge LiPo", price: 1999 },
+      { id: "props_pack", name: "Spare Set of 8x Gemfan 3018 Props (Assorted Colors)", price: 449 },
+      { id: "canopy", name: "HD Thumb Pro Action Cam TPU Canopy", price: 349 }
+    ]
   },
   {
     id: "uav-kisan-16l",
     name: "Kisan-16L Hexacopter Smart Agricultural UAV",
     type: "Agri Drone",
+    brand: "Nexfly AgriRobotics India",
     price: 120000,
     quantity: 3,
     image: "/images/agricultural_drone.jpg",
-    desc: "Autonomous RTK GPS waypoint navigation, 16L spray tank, dual centrifugal spray nozzles, and terrain-follow radar.",
-    flightTime: "20 mins",
-    range: "5.0 km"
+    images: [
+      "/images/agricultural_drone.jpg",
+      "/images/agricultural_drone_field_1791059225277.jpg",
+      "/images/college_project_drone.jpg"
+    ],
+    desc: "Autonomous RTK GPS waypoint navigation, 16-liter heavy-duty spray tank, dual centrifugal spray nozzles, terrain-following radar, and live telemetry for precision farming.",
+    flightTime: "20 mins (full 16L load) / 35 mins (empty return)",
+    range: "5.0 km",
+    maxSpeed: "12 m/s spray speed",
+    weight: "18.5kg (dry) / 38kg (Max Takeoff Weight MTOW)",
+    components: [
+      { part: "Airframe", detail: "Foldable Umbrella Hexacopter Carbon Fiber & Aviation Aluminum" },
+      { part: "Tank Capacity", detail: "16 Liters Quick-Release Chemical Tank with Level Sensor" },
+      { part: "Propulsion", detail: "6x Heavy-Duty 8120 100KV Waterproof FOC Brushless Motors" },
+      { part: "ESC", detail: "80A 12S FOC Sinusoidal Waterproof ESCs" },
+      { part: "Propellers", detail: "30-inch High-Strength Foldable Carbon-Nylon Blades" },
+      { part: "Flight Controller", detail: "Industrial JIYI K++ V2 with Dual RTK Redundancy" },
+      { part: "Radar", detail: "Front Obstacle Avoidance + Bottom Millimeter-Wave Terrain Radar" },
+      { part: "Spray System", detail: "Centrifugal Rotary Droplet Nozzles (50–200μm droplet size)" }
+    ],
+    availableAddons: [
+      { id: "rtk_base", name: "Centimeter-Level Portable RTK Base Station", price: 28500 },
+      { id: "battery_12s", name: "Smart 12S 22,000mAh Semi-Solid State Flight Battery", price: 32000 },
+      { id: "charger", name: "3000W Ultra-Fast Dual-Channel Intelligent Balance Charger", price: 21500 },
+      { id: "granule_spreader", name: "Solid Fertilizer & Seed Spreader Attachment (20L)", price: 14999 }
+    ]
   }
 ];
 
@@ -1326,11 +1876,21 @@ export async function getUAVPreBuilt() {
 
   const cloudList = await readFirestoreCollection('UAV_PreBuilt');
   if (Array.isArray(cloudList) && cloudList.length > 0) {
-    localStorage.setItem(localKey, JSON.stringify(cloudList));
-    return cloudList;
+    const normalized = cloudList.map((item) => ({
+      ...item,
+      images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/fpv_racing_drone.jpg']
+    }));
+    localStorage.setItem(localKey, JSON.stringify(normalized));
+    return normalized;
   }
 
-  if (localList && localList.length > 0) return localList;
+  if (localList && localList.length > 0) {
+    const normalized = localList.map((item) => ({
+      ...item,
+      images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/fpv_racing_drone.jpg']
+    }));
+    return normalized;
+  }
 
   localStorage.setItem(localKey, JSON.stringify(INITIAL_UAV_PREBUILT));
   INITIAL_UAV_PREBUILT.forEach((item) => writeFirestoreDoc('UAV_PreBuilt', item.id, item));
@@ -1339,7 +1899,16 @@ export async function getUAVPreBuilt() {
 
 export async function saveUAVPreBuilt(item) {
   const id = item.id || `uav-${Date.now()}`;
-  const cleanItem = { ...item, id, updatedAt: new Date().toISOString() };
+  const images = Array.isArray(item.images) && item.images.length > 0
+    ? item.images
+    : [item.image || '/images/fpv_racing_drone.jpg'];
+  const cleanItem = {
+    ...item,
+    id,
+    image: images[0] || item.image || '/images/fpv_racing_drone.jpg',
+    images,
+    updatedAt: new Date().toISOString()
+  };
   await writeFirestoreDoc('UAV_PreBuilt', id, cleanItem);
 
   const current = await getUAVPreBuilt();

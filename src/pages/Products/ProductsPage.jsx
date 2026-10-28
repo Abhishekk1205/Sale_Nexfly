@@ -1,8 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { ShoppingCart, Star, Search, Wrench, Cpu, Printer, Sparkles, Check, Layers } from 'lucide-react';
+import { useSearchParams, Link } from 'react-router-dom';
+import {
+  ShoppingCart,
+  Star,
+  Search,
+  Wrench,
+  Cpu,
+  Printer,
+  Sparkles,
+  Check,
+  Layers,
+  ExternalLink,
+  Eye,
+  Package,
+  Tag
+} from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { getDroneAccessories, getRoboticsKits } from '../../services/firebase';
+import ImageSlider from '../../components/ImageSlider/ImageSlider';
 
 export default function ProductsPage({ onOpenQuote, onAddToCart }) {
   const [searchParams] = useSearchParams();
@@ -54,7 +69,8 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
 
     const matchesSearch =
       (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.desc || '').toLowerCase().includes(searchTerm.toLowerCase());
+      (p.desc || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.brand || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesCategory && matchesSearch;
   });
@@ -68,14 +84,19 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
       ? item.price
       : parseInt(String(item.price).replace(/[^0-9]/g, ''), 10) || 0;
 
+    const images = Array.isArray(item.images) && item.images.length > 0
+      ? item.images
+      : [item.image || '/images/fpv_racing_drone.jpg'];
+
     if (onAddToCart) {
       onAddToCart({
         id: item.id,
         name: item.name,
         category: item.category || (item.isKit ? 'Robotics Kit' : 'Drone Component'),
+        brand: item.brand || 'NaviDron Robotics',
         price: numPrice,
         quantity: 1,
-        image: item.image || '/images/fpv_racing_drone.jpg'
+        image: images[0]
       });
     } else if (onOpenQuote) {
       onOpenQuote();
@@ -83,7 +104,7 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
   };
 
   return (
-    <div style={{ paddingTop: '74px' }}>
+    <div style={{ paddingTop: '74px', backgroundColor: '#ffffff' }}>
       {/* Header Banner */}
       <div
         style={{
@@ -102,18 +123,18 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
           <h1 style={{ fontFamily: 'var(--font-head)', fontSize: 'clamp(2.2rem,5vw,3.8rem)', fontWeight: 900, marginBottom: '1rem' }}>
             Drone Parts, Electronics & <span style={{ color: 'var(--neon)' }}>Robotics Kits</span>
           </h1>
-          <p style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,.8)', maxWidth: '650px', lineHeight: '1.7' }}>
-            High-thrust brushless motors, 6S ESC stacks, DJI O3 digital HD units, robot car chassis, Arduino/ESP32 kits, and impact-absorbing 3D mounts. Controlled & priced directly from our Operations Hub.
+          <p style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,.85)', maxWidth: '680px', lineHeight: '1.7' }}>
+            High-output brushless motors, carbon fiber airframes, wireless SpeedyBee stacks, and complete Arduino & ESP32-CAM robotics development kits. Tap any component to see brand details, quantity, and what's in the box!
           </p>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <section style={{ padding: '2.5rem 2rem 1.5rem', background: 'var(--off-white)' }}>
+      {/* Category Pills & Search Navigator */}
+      <section style={{ background: 'var(--off-white)', padding: '2rem 2rem 1.5rem', borderBottom: '1px solid #e2e8f0' }}>
         <div className="section-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
-          <div className="uav-tabs" style={{ margin: 0 }}>
+          <div className="uav-tabs" style={{ margin: 0, flexWrap: 'wrap' }}>
             <button className={`uav-tab ${category === 'all' ? 'active' : ''}`} onClick={() => setCategory('all')}>
-              All Items ({products.length})
+              All Products ({products.length})
             </button>
             <button className={`uav-tab ${category === 'parts' ? 'active' : ''}`} onClick={() => setCategory('parts')}>
               <Wrench size={14} style={{ marginRight: '4px' }} /> Drone Parts
@@ -133,7 +154,7 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
             <Search size={18} style={{ position: 'absolute', top: '12px', left: '14px', color: '#888' }} />
             <input
               type="text"
-              placeholder="Search components or kits..."
+              placeholder="Search components, brand or kits..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
@@ -151,11 +172,11 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
       </section>
 
       {/* Product Catalog Grid */}
-      <section style={{ background: '#fff' }}>
+      <section style={{ background: '#ffffff', padding: '3rem 2rem 5rem' }}>
         <div className="section-inner">
           {loading ? (
             <div style={{ textAlign: 'center', padding: '4rem 1rem', color: '#666' }}>
-              <p>Loading live components from database...</p>
+              <p>Loading live components from warehouse...</p>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '4rem 1rem', color: '#666' }}>
@@ -171,35 +192,178 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
                 const numPrice = typeof p.price === 'number'
                   ? p.price
                   : parseInt(String(p.price).replace(/[^0-9]/g, ''), 10) || 0;
+
+                const images = Array.isArray(p.images) && p.images.length > 0
+                  ? p.images
+                  : [p.image || '/images/fpv_racing_drone.jpg'];
+
+                const stockCount = typeof p.quantity === 'number' ? p.quantity : 30;
+
                 return (
-                  <div key={p.id} className="card">
+                  <div
+                    key={p.id}
+                    className="card"
+                    style={{
+                      background: '#ffffff',
+                      borderRadius: '16px',
+                      border: '1.5px solid #e2e8f0',
+                      boxShadow: '0 8px 24px rgba(10,15,46,0.06)',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      transition: 'transform 0.25s ease, box-shadow 0.25s ease'
+                    }}
+                  >
+                    {/* Multi-Photo Sliding Carousel Header */}
                     <div style={{ position: 'relative' }}>
-                      <img src={p.image} alt={p.name} className="card-img" />
-                      <span className="badge badge-new" style={{ position: 'absolute', top: '10px', left: '10px' }}>
+                      <ImageSlider
+                        images={images}
+                        alt={p.name}
+                        aspectRatio="4/3"
+                        showThumbnails={false}
+                        compact={true}
+                      />
+
+                      {/* Badges on Top */}
+                      <span
+                        className="badge badge-new"
+                        style={{
+                          position: 'absolute',
+                          top: '10px',
+                          left: '10px',
+                          zIndex: 4,
+                          fontSize: '0.68rem',
+                          padding: '3px 8px'
+                        }}
+                      >
                         {p.isKit ? 'ROBOTICS KIT' : 'DRONE PART'}
                       </span>
-                      {p.quantity !== undefined && (
-                        <span style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.7)', color: '#10b981', fontSize: '0.72rem', padding: '2px 8px', borderRadius: '50px', fontWeight: 700 }}>
-                          {p.quantity > 0 ? `${p.quantity} in stock` : 'Out of Stock'}
-                        </span>
-                      )}
+
+                      {/* Open in New Window Quick Action */}
+                      <a
+                        href={`/products/${p.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Open product details in new window"
+                        style={{
+                          position: 'absolute',
+                          top: '10px',
+                          right: '10px',
+                          zIndex: 4,
+                          backgroundColor: 'rgba(255,255,255,0.92)',
+                          color: '#0a0f2e',
+                          border: '1px solid rgba(0,0,0,0.08)',
+                          borderRadius: '50%',
+                          width: '30px',
+                          height: '30px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                          textDecoration: 'none'
+                        }}
+                      >
+                        <ExternalLink size={14} />
+                      </a>
                     </div>
-                    <div className="card-body">
-                      <div className="card-tag" style={{ color: p.isKit ? '#10b981' : 'var(--neon)' }}>
-                        {p.category || (p.isKit ? 'Robotics Kit' : 'Drone Component')}
+
+                    {/* Card Body */}
+                    <div className="card-body" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                        <span className="card-tag" style={{ color: p.isKit ? '#10b981' : 'var(--neon)', margin: 0 }}>
+                          {p.category || (p.isKit ? 'Robotics Kit' : 'Drone Component')}
+                        </span>
+
+                        {/* Stock Quantity */}
+                        <span
+                          style={{
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            color: stockCount > 5 ? '#065f46' : '#991b1b',
+                            backgroundColor: stockCount > 5 ? '#d1fae5' : '#fee2e2',
+                            padding: '2px 7px',
+                            borderRadius: '4px'
+                          }}
+                        >
+                          {stockCount} in stock
+                        </span>
                       </div>
-                      <h4 className="card-title" style={{ fontSize: '.95rem' }}>{p.name}</h4>
-                      <p className="card-text">{p.desc}</p>
-                      <div className="card-price" style={{ color: 'var(--navy)' }}>
+
+                      {/* Brand Label */}
+                      <div style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <Tag size={12} color="#00c8ff" /> Brand: <strong style={{ color: '#0a0f2e' }}>{p.brand || 'NaviDron'}</strong>
+                      </div>
+
+                      <Link
+                        to={`/products/${p.id}`}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      >
+                        <h4
+                          className="card-title"
+                          style={{
+                            fontSize: '0.98rem',
+                            fontWeight: 800,
+                            color: '#0a0f2e',
+                            lineHeight: 1.35,
+                            marginBottom: '0.5rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {p.name}
+                        </h4>
+                      </Link>
+
+                      <p className="card-text" style={{ fontSize: '0.82rem', color: '#64748b', lineHeight: 1.5, flex: 1, marginBottom: '0.85rem' }}>
+                        {p.desc}
+                      </p>
+
+                      <div className="card-price" style={{ color: '#0a0f2e', fontSize: '1.35rem', fontWeight: 900, marginBottom: '0.85rem' }}>
                         ₹{numPrice.toLocaleString('en-IN')}
                       </div>
-                      <button
-                        onClick={() => handleBuy(p)}
-                        className="btn btn-primary"
-                        style={{ width: '100%', marginTop: '.75rem', padding: '.65rem 1rem', fontSize: '.84rem' }}
-                      >
-                        <ShoppingCart size={14} /> Add to Flight Cart
-                      </button>
+
+                      {/* Dual Action Buttons: View Details and Add to Cart */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                        <Link
+                          to={`/products/${p.id}`}
+                          style={{
+                            padding: '0.65rem 0.4rem',
+                            borderRadius: '8px',
+                            border: '1.5px solid #00c8ff',
+                            backgroundColor: 'rgba(0,200,255,0.06)',
+                            color: '#0077b6',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.3rem',
+                            textDecoration: 'none',
+                            textAlign: 'center'
+                          }}
+                        >
+                          <Eye size={14} /> View Details
+                        </Link>
+
+                        <button
+                          onClick={() => handleBuy(p)}
+                          style={{
+                            padding: '0.65rem 0.4rem',
+                            borderRadius: '8px',
+                            border: 'none',
+                            backgroundColor: '#0a0f2e',
+                            color: '#ffffff',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.3rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <ShoppingCart size={14} /> Add to Cart
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
