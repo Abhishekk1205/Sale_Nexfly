@@ -1264,6 +1264,9 @@ export async function get3DStudioItems() {
         : (item.material || 'FDM Tough PLA / TPU'),
       layerHeight: '0.2mm Ultra-Fine Detail (0.4mm Nozzle)',
       infill: '25% Strength',
+      quantity: typeof item.quantity === 'number'
+        ? item.quantity
+        : (item.quantity !== undefined ? (parseInt(String(item.quantity), 10) || 0) : 25),
       images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/anime_figure_3d.jpg']
     };
   };

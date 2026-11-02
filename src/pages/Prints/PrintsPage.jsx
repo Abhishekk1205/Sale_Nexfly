@@ -48,6 +48,11 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
   }, [searchParams]);
 
   const handleAddToCartItem = (item, chosenSize = null) => {
+    const isItemOutOfStock = typeof item.quantity === 'number'
+      ? item.quantity <= 0
+      : (item.quantity !== undefined ? parseInt(String(item.quantity), 10) <= 0 : false);
+    if (isItemOutOfStock) return;
+
     try {
       confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
     } catch (e) {}
@@ -79,6 +84,10 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
     const numPrice = typeof item.price === 'number'
       ? item.price
       : parseInt(String(item.price).replace(/[^0-9]/g, ''), 10) || 0;
+
+    const isOutOfStock = typeof item.quantity === 'number'
+      ? item.quantity <= 0
+      : (item.quantity !== undefined ? parseInt(String(item.quantity), 10) <= 0 : false);
 
     const images = Array.isArray(item.images) && item.images.length > 0
       ? item.images
@@ -113,10 +122,25 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
 
           {/* Badges on Top */}
           <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 4, display: 'flex', gap: '5px' }}>
-            {item.badge && (
-              <span className="badge badge-hot" style={{ fontSize: '0.68rem', padding: '3px 8px' }}>
-                {item.badge}
+            {isOutOfStock ? (
+              <span
+                style={{
+                  fontSize: '0.68rem',
+                  padding: '3px 8px',
+                  fontWeight: 800,
+                  backgroundColor: '#ef4444',
+                  color: '#ffffff',
+                  borderRadius: '20px'
+                }}
+              >
+                OUT OF STOCK
               </span>
+            ) : (
+              item.badge && (
+                <span className="badge badge-hot" style={{ fontSize: '0.68rem', padding: '3px 8px' }}>
+                  {item.badge}
+                </span>
+              )
             )}
           </div>
 
@@ -237,28 +261,50 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
               <Eye size={14} /> View Details
             </Link>
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAddToCartItem(item);
-              }}
-              style={{
-                padding: '0.65rem 0.4rem',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: '#0a0f2e',
-                color: '#ffffff',
-                fontWeight: 700,
-                fontSize: '0.8rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.3rem',
-                cursor: 'pointer'
-              }}
-            >
-              <ShoppingCart size={14} /> Add to Cart
-            </button>
+            {isOutOfStock ? (
+              <button
+                type="button"
+                disabled
+                style={{
+                  padding: '0.65rem 0.4rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: '#fee2e2',
+                  color: '#dc2626',
+                  fontWeight: 800,
+                  fontSize: '0.78rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'not-allowed'
+                }}
+              >
+                Out of Stock
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCartItem(item);
+                }}
+                style={{
+                  padding: '0.65rem 0.4rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: '#0a0f2e',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.8rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.3rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <ShoppingCart size={14} /> Add to Cart
+              </button>
+            )}
           </div>
         </div>
       </div>

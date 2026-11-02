@@ -2818,7 +2818,7 @@ export default function AdminPortal() {
                   <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ff00aa', marginBottom: '0.65rem' }}>
                     🖨️ FDM 3D Printing & Filament Specs (All 25% Density)
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '0.65rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.65rem', marginBottom: '0.65rem' }}>
                     <div className="admin-input-group">
                       <label style={{ fontSize: '0.75rem' }}>Core Infill / Density</label>
                       <input
@@ -2827,16 +2827,6 @@ export default function AdminPortal() {
                         className="admin-input-field"
                         style={{ opacity: 0.8 }}
                         value="25% Strength"
-                      />
-                    </div>
-                    <div className="admin-input-group">
-                      <label style={{ fontSize: '0.75rem' }}>Estimated Print Time</label>
-                      <input
-                        type="text"
-                        className="admin-input-field"
-                        value={editProductForm.printTime}
-                        onChange={(e) => setEditProductForm((prev) => ({ ...prev, printTime: e.target.value }))}
-                        placeholder="e.g. 6h 30m"
                       />
                     </div>
                   </div>

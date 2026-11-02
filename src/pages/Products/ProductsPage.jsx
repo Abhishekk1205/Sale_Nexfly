@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
   ShoppingCart,
   Star,
@@ -21,6 +21,7 @@ import ImageSlider from '../../components/ImageSlider/ImageSlider';
 
 export default function ProductsPage({ onOpenQuote, onAddToCart }) {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialCategory = searchParams.get('category') || 'all';
   const [category, setCategory] = useState(initialCategory);
   const [searchTerm, setSearchTerm] = useState('');
@@ -76,6 +77,8 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
   });
 
   const handleBuy = (item) => {
+    if (typeof item.quantity === 'number' && item.quantity <= 0) return;
+    if (item.quantity !== undefined && parseInt(String(item.quantity), 10) <= 0) return;
     try {
       confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
     } catch (e) {}
@@ -282,13 +285,13 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
                           style={{
                             fontSize: '0.72rem',
                             fontWeight: 700,
-                            color: stockCount > 5 ? '#065f46' : '#991b1b',
-                            backgroundColor: stockCount > 5 ? '#d1fae5' : '#fee2e2',
+                            color: stockCount <= 0 ? '#ffffff' : (stockCount > 5 ? '#065f46' : '#991b1b'),
+                            backgroundColor: stockCount <= 0 ? '#ef4444' : (stockCount > 5 ? '#d1fae5' : '#fee2e2'),
                             padding: '2px 7px',
                             borderRadius: '4px'
                           }}
                         >
-                          {stockCount} in stock
+                          {stockCount <= 0 ? 'Out of Stock' : `${stockCount} in stock`}
                         </span>
                       </div>
 
@@ -349,28 +352,50 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
                           <Eye size={14} /> View Details
                         </Link>
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleBuy(p);
-                          }}
-                          style={{
-                            padding: '0.65rem 0.4rem',
-                            borderRadius: '8px',
-                            border: 'none',
-                            backgroundColor: '#0a0f2e',
-                            color: '#ffffff',
-                            fontWeight: 700,
-                            fontSize: '0.8rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.3rem',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <ShoppingCart size={14} /> Add to Cart
-                        </button>
+                        {stockCount <= 0 ? (
+                          <button
+                            type="button"
+                            disabled
+                            style={{
+                              padding: '0.65rem 0.4rem',
+                              borderRadius: '8px',
+                              border: 'none',
+                              backgroundColor: '#fee2e2',
+                              color: '#dc2626',
+                              fontWeight: 800,
+                              fontSize: '0.78rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'not-allowed'
+                            }}
+                          >
+                            Out of Stock
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleBuy(p);
+                            }}
+                            style={{
+                              padding: '0.65rem 0.4rem',
+                              borderRadius: '8px',
+                              border: 'none',
+                              backgroundColor: '#0a0f2e',
+                              color: '#ffffff',
+                              fontWeight: 700,
+                              fontSize: '0.8rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.3rem',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <ShoppingCart size={14} /> Add to Cart
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

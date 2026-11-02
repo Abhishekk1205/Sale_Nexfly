@@ -150,6 +150,11 @@ export default function UAVDetailPage({ onAddToCart, onOpenQuote }) {
   const unitPrice = basePrice + addonsTotal;
   const grandTotal = unitPrice * quantity;
 
+  const stockCount = typeof drone.quantity === 'number'
+    ? drone.quantity
+    : (drone.quantity !== undefined ? (parseInt(String(drone.quantity), 10) || 0) : 8);
+  const isOutOfStock = stockCount <= 0;
+
   const images = Array.isArray(drone.images) && drone.images.length > 0
     ? drone.images
     : [drone.image || '/images/fpv_racing_drone.jpg'];
@@ -173,6 +178,7 @@ export default function UAVDetailPage({ onAddToCart, onOpenQuote }) {
   };
 
   const handleAddToCart = () => {
+    if (isOutOfStock) return;
     try {
       confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
     } catch (_) {}
@@ -355,21 +361,36 @@ export default function UAVDetailPage({ onAddToCart, onOpenQuote }) {
                 {drone.type || 'FPV Aircraft'}
               </span>
 
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  color: '#065f46',
-                  backgroundColor: '#d1fae5',
-                  padding: '4px 10px',
-                  borderRadius: '6px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-              >
-                <CheckCircle2 size={13} /> BNF / Ready-To-Fly Bench Tested
-              </span>
+              {isOutOfStock ? (
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    color: '#ffffff',
+                    backgroundColor: '#ef4444',
+                    padding: '4px 10px',
+                    borderRadius: '6px'
+                  }}
+                >
+                  Out of Stock
+                </span>
+              ) : (
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    color: '#065f46',
+                    backgroundColor: '#d1fae5',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <CheckCircle2 size={13} /> In Stock ({stockCount} available)
+                </span>
+              )}
             </div>
 
             <h1
@@ -589,96 +610,115 @@ export default function UAVDetailPage({ onAddToCart, onOpenQuote }) {
 
               {/* Quantity Selector */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569' }}>Qty:</span>
-                <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid #cbd5e1', borderRadius: '8px', backgroundColor: '#ffffff', overflow: 'hidden' }}>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    style={{ width: '34px', height: '34px', backgroundColor: '#ffffff', color: '#0a0f2e', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer' }}
-                  >
-                    -
-                  </button>
-                  <span style={{ width: '38px', textAlign: 'center', fontWeight: 800, fontSize: '0.95rem' }}>
-                    {quantity}
+                {isOutOfStock ? (
+                  <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#dc2626', backgroundColor: '#fee2e2', padding: '4px 10px', borderRadius: '6px' }}>
+                    0 Available (Out of Stock)
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => q + 1)}
-                    style={{ width: '34px', height: '34px', backgroundColor: '#ffffff', color: '#0a0f2e', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer' }}
-                  >
-                    +
-                  </button>
-                </div>
+                ) : (
+                  <>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569' }}>Qty:</span>
+                    <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid #cbd5e1', borderRadius: '8px', backgroundColor: '#ffffff', overflow: 'hidden' }}>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        style={{ width: '34px', height: '34px', backgroundColor: '#ffffff', color: '#0a0f2e', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer' }}
+                      >
+                        -
+                      </button>
+                      <span style={{ width: '38px', textAlign: 'center', fontWeight: 800, fontSize: '0.95rem' }}>
+                        {quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.min(stockCount, q + 1))}
+                        style={{ width: '34px', height: '34px', backgroundColor: '#ffffff', color: '#0a0f2e', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer' }}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
             {/* ACTION BUTTONS: Add to Cart and Buy Option */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                style={{
-                  padding: '1.05rem',
-                  borderRadius: '12px',
-                  backgroundColor: '#ffffff',
-                  border: '2px solid #00c8ff',
-                  color: '#0077b6',
-                  fontFamily: 'var(--font-head)',
-                  fontSize: '0.95rem',
-                  fontWeight: 800,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 4px 15px rgba(0,200,255,0.15)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(0,200,255,0.08)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#ffffff';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                <ShoppingCart size={18} /> Add to Flight Cart
-              </button>
+            {isOutOfStock ? (
+              <div style={{ background: '#fef2f2', border: '1.5px solid #fecaca', borderRadius: '12px', padding: '1rem 1.25rem', textAlign: 'center' }}>
+                <div style={{ color: '#dc2626', fontWeight: 900, fontSize: '1.05rem', marginBottom: '0.25rem' }}>
+                  ⚠️ Currently Out of Stock
+                </div>
+                <div style={{ color: '#7f1d1d', fontSize: '0.82rem' }}>
+                  This UAV airframe is currently out of stock. Contact our flight lab for next batch allocation.
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  style={{
+                    padding: '1.05rem',
+                    borderRadius: '12px',
+                    backgroundColor: '#ffffff',
+                    border: '2px solid #00c8ff',
+                    color: '#0077b6',
+                    fontFamily: 'var(--font-head)',
+                    fontSize: '0.95rem',
+                    fontWeight: 800,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 15px rgba(0,200,255,0.15)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0,200,255,0.08)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ffffff';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <ShoppingCart size={18} /> Add to Flight Cart
+                </button>
 
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                style={{
-                  padding: '1.05rem',
-                  borderRadius: '12px',
-                  backgroundColor: '#00c8ff',
-                  backgroundImage: 'linear-gradient(135deg, #00c8ff 0%, #0066ff 100%)',
-                  border: 'none',
-                  color: '#ffffff',
-                  fontFamily: 'var(--font-head)',
-                  fontSize: '0.95rem',
-                  fontWeight: 800,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                  boxShadow: '0 6px 20px rgba(0,102,255,0.35)',
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,102,255,0.5)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,102,255,0.35)';
-                }}
-              >
-                <Zap size={18} /> Buy Now (Instant Checkout)
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  style={{
+                    padding: '1.05rem',
+                    borderRadius: '12px',
+                    backgroundColor: '#00c8ff',
+                    backgroundImage: 'linear-gradient(135deg, #00c8ff 0%, #0066ff 100%)',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontFamily: 'var(--font-head)',
+                    fontSize: '0.95rem',
+                    fontWeight: 800,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 6px 20px rgba(0,102,255,0.35)',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,102,255,0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,102,255,0.35)';
+                  }}
+                >
+                  <Zap size={18} /> Buy Now (Instant Checkout)
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

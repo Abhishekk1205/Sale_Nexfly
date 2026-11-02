@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { uavCategories } from '../../data/uavData';
 import {
   Rocket,
@@ -20,6 +20,7 @@ import ImageSlider from '../../components/ImageSlider/ImageSlider';
 
 export default function UAVPage({ onOpenQuote, onAddToCart }) {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialTab = searchParams.get('tab') || 'fpv';
   const [activeTab, setActiveTab] = useState(initialTab);
 
@@ -139,6 +140,10 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
                   "/images/college_project_drone.jpg"
                 ];
 
+                const isOutOfStock = typeof mod.quantity === 'number'
+                  ? mod.quantity <= 0
+                  : (mod.quantity !== undefined ? parseInt(String(mod.quantity), 10) <= 0 : false);
+
                 return (
                   <div
                     key={i}
@@ -168,17 +173,20 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
 
                       {/* Badge */}
                       <span
-                        className="badge badge-new"
+                        className={isOutOfStock ? "badge" : "badge badge-new"}
                         style={{
                           position: 'absolute',
                           top: '10px',
                           left: '10px',
                           zIndex: 4,
                           fontSize: '0.68rem',
-                          padding: '3px 8px'
+                          padding: '3px 8px',
+                          fontWeight: 800,
+                          backgroundColor: isOutOfStock ? '#ef4444' : undefined,
+                          color: isOutOfStock ? '#ffffff' : undefined
                         }}
                       >
-                        CONFIG #{i + 1}
+                        {isOutOfStock ? 'OUT OF STOCK' : `CONFIG #${i + 1}`}
                       </span>
 
                       {/* Open in New Window Quick Action */}
@@ -285,40 +293,62 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
                           <Eye size={14} /> View Details & Add-ons
                         </Link>
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const numPrice = parseInt(String(mod.price).replace(/[^0-9]/g, ''), 10) || 14999;
-                            if (onAddToCart) {
-                              onAddToCart({
-                                id: modId,
-                                name: mod.name,
-                                category: selectedCategory.title,
-                                price: numPrice,
-                                quantity: 1,
-                                image: images[0]
-                              });
-                            } else {
-                              onOpenQuote();
-                            }
-                          }}
-                          style={{
-                            padding: '0.65rem 0.4rem',
-                            borderRadius: '8px',
-                            border: 'none',
-                            backgroundColor: '#0a0f2e',
-                            color: '#ffffff',
-                            fontWeight: 700,
-                            fontSize: '0.8rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.3rem',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <ShoppingCart size={14} /> Add to Cart
-                        </button>
+                        {isOutOfStock ? (
+                          <button
+                            type="button"
+                            disabled
+                            style={{
+                              padding: '0.65rem 0.4rem',
+                              borderRadius: '8px',
+                              border: 'none',
+                              backgroundColor: '#fee2e2',
+                              color: '#dc2626',
+                              fontWeight: 800,
+                              fontSize: '0.78rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'not-allowed'
+                            }}
+                          >
+                            Out of Stock
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const numPrice = parseInt(String(mod.price).replace(/[^0-9]/g, ''), 10) || 14999;
+                              if (onAddToCart) {
+                                onAddToCart({
+                                  id: modId,
+                                  name: mod.name,
+                                  category: selectedCategory.title,
+                                  price: numPrice,
+                                  quantity: 1,
+                                  image: images[0]
+                                });
+                              } else {
+                                onOpenQuote();
+                              }
+                            }}
+                            style={{
+                              padding: '0.65rem 0.4rem',
+                              borderRadius: '8px',
+                              border: 'none',
+                              backgroundColor: '#0a0f2e',
+                              color: '#ffffff',
+                              fontWeight: 700,
+                              fontSize: '0.8rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.3rem',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <ShoppingCart size={14} /> Add to Cart
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
