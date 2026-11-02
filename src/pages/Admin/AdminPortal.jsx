@@ -131,11 +131,14 @@ export default function AdminPortal() {
     category: '',
     brand: '',
     price: '',
+    price6Inch: '',
+    price8Inch: '',
+    price10Inch: '',
     quantity: '',
     desc: '',
     size: '',
     material: '',
-    infill: '',
+    infill: '25% Strength',
     printTime: '',
     speed: '',
     flightTime: '',
@@ -147,16 +150,29 @@ export default function AdminPortal() {
 
   const handleOpenEditProduct = (item, type) => {
     setEditingProductTarget({ item, type });
+    const p8 = typeof item.price8Inch === 'number' && item.price8Inch > 0
+      ? item.price8Inch
+      : (typeof item.price === 'number' ? item.price : parseInt(String(item.price || '899').replace(/[^0-9]/g, ''), 10) || 899);
+    const p6 = typeof item.price6Inch === 'number' && item.price6Inch > 0
+      ? item.price6Inch
+      : (item.sizeOptions?.find((s) => s.size.includes('6'))?.price || Math.max(299, p8 - 250));
+    const p10 = typeof item.price10Inch === 'number' && item.price10Inch > 0
+      ? item.price10Inch
+      : (item.sizeOptions?.find((s) => s.size.includes('10'))?.price || (p8 + 450));
+
     setEditProductForm({
       name: item.name || '',
       category: item.category || '',
       brand: item.brand || '',
-      price: item.price || 0,
+      price: type === '3dstudio' ? p8 : (item.price || 0),
+      price6Inch: p6,
+      price8Inch: p8,
+      price10Inch: p10,
       quantity: typeof item.quantity === 'number' ? item.quantity : 20,
       desc: item.desc || '',
       size: item.size || '8 inch',
       material: item.material || 'FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)',
-      infill: item.infill || '20% (Default) - Configurable to 100%',
+      infill: '25% Strength',
       printTime: item.printTime || '6h 30m',
       speed: item.speed || '',
       flightTime: item.flightTime || '',
@@ -177,17 +193,30 @@ export default function AdminPortal() {
       ? editProductForm.quantity
       : parseInt(String(editProductForm.quantity).replace(/[^0-9]/g, ''), 10) || 0;
 
+    const p6 = parseInt(String(editProductForm.price6Inch).replace(/[^0-9]/g, ''), 10) || Math.max(299, numPrice - 250);
+    const p8 = parseInt(String(editProductForm.price8Inch).replace(/[^0-9]/g, ''), 10) || numPrice;
+    const p10 = parseInt(String(editProductForm.price10Inch).replace(/[^0-9]/g, ''), 10) || (numPrice + 450);
+
     const updatedItem = {
       ...item,
       name: editProductForm.name,
       category: editProductForm.category,
       brand: editProductForm.brand,
-      price: numPrice,
+      price: type === '3dstudio' ? p8 : numPrice,
+      price6Inch: p6,
+      price8Inch: p8,
+      price10Inch: p10,
+      sizes: ["6 inch", "8 inch", "10 inch"],
+      sizeOptions: type === '3dstudio' ? [
+        { size: "6 inch (150mm)", price: p6, printTime: "3h 45m", weight: "120g" },
+        { size: "8 inch (200mm)", price: p8, printTime: "6h 30m", weight: "240g" },
+        { size: "10 inch (250mm)", price: p10, printTime: "11h 15m", weight: "420g" }
+      ] : item.sizeOptions,
       quantity: numQty,
       desc: editProductForm.desc,
-      size: editProductForm.size,
+      size: editProductForm.size || '8 inch',
       material: editProductForm.material,
-      infill: editProductForm.infill,
+      infill: '25% Strength',
       printTime: editProductForm.printTime,
       speed: editProductForm.speed,
       flightTime: editProductForm.flightTime,
@@ -407,8 +436,34 @@ export default function AdminPortal() {
   const handleSave3DItemInline = async (item) => {
     setActionLoading(true);
     try {
-      await save3DStudioItem(item);
-      showToast(`💾 Saved "${item.name}" (Price: ₹${item.price}, Stock: ${item.quantity})`);
+      const p8 = typeof item.price8Inch === 'number' && item.price8Inch > 0
+        ? item.price8Inch
+        : (typeof item.price === 'number' ? item.price : 899);
+      const p6 = typeof item.price6Inch === 'number' && item.price6Inch > 0
+        ? item.price6Inch
+        : Math.max(299, p8 - 250);
+      const p10 = typeof item.price10Inch === 'number' && item.price10Inch > 0
+        ? item.price10Inch
+        : (p8 + 450);
+
+      const updated = {
+        ...item,
+        price: p8,
+        price6Inch: p6,
+        price8Inch: p8,
+        price10Inch: p10,
+        sizes: ["6 inch", "8 inch", "10 inch"],
+        sizeOptions: [
+          { size: "6 inch (150mm)", price: p6, printTime: "3h 45m", weight: "120g" },
+          { size: "8 inch (200mm)", price: p8, printTime: "6h 30m", weight: "240g" },
+          { size: "10 inch (250mm)", price: p10, printTime: "11h 15m", weight: "420g" }
+        ],
+        infill: "25% Strength"
+      };
+
+      await save3DStudioItem(updated);
+      setThreeDItems((prev) => prev.map((i) => (i.id === item.id ? updated : i)));
+      showToast(`💾 Saved 3D Figure "${updated.name}" (6": ₹${p6}, 8": ₹${p8}, 10": ₹${p10}, Stock: ${updated.quantity})`);
     } catch (err) {
       showToast(`❌ Error: ${err.message}`);
     } finally {
@@ -528,9 +583,23 @@ export default function AdminPortal() {
 
     try {
       if (modalType === '3dstudio') {
+        const p8 = priceVal || 899;
+        const p6 = Math.max(299, p8 - 250);
+        const p10 = p8 + 450;
         const created = await save3DStudioItem({
           ...cleanedPayload,
-          id: `3d-${Date.now()}`
+          id: `3d-${Date.now()}`,
+          price: p8,
+          price6Inch: p6,
+          price8Inch: p8,
+          price10Inch: p10,
+          sizes: ["6 inch", "8 inch", "10 inch"],
+          sizeOptions: [
+            { size: "6 inch (150mm)", price: p6, printTime: "3h 45m", weight: "120g" },
+            { size: "8 inch (200mm)", price: p8, printTime: "6h 30m", weight: "240g" },
+            { size: "10 inch (250mm)", price: p10, printTime: "11h 15m", weight: "420g" }
+          ],
+          infill: "25% Strength"
         });
         setThreeDItems((prev) => [created, ...prev]);
         showToast(`🎉 Added "${created.name}" to 3DStudio catalog with ${finalImages.length} photos!`);
@@ -1653,49 +1722,84 @@ export default function AdminPortal() {
                           </button>
                         </div>
 
-                        {/* Inline price & stock editing */}
-                        <div className="admin-inline-inputs">
-                          <div className="admin-input-group">
-                            <label>Price (₹)</label>
-                            <input
-                              type="number"
-                              className="admin-input-field"
-                              value={item.price}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value, 10) || 0;
-                                setThreeDItems((prev) =>
-                                  prev.map((i) => (i.id === item.id ? { ...i, price: val } : i))
-                                );
-                              }}
-                            />
+                        {/* Inline price & stock editing with independent 6", 8", 10" sizes */}
+                        <div style={{ background: 'rgba(0, 200, 255, 0.05)', border: '1px solid rgba(0, 200, 255, 0.2)', borderRadius: '8px', padding: '0.65rem', margin: '0.5rem 0' }}>
+                          <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#00c8ff', marginBottom: '0.35rem' }}>
+                            💰 Prices by Size (25% Density):
                           </div>
-                          <div className="admin-input-group">
-                            <label>Stock / Qty</label>
-                            <input
-                              type="number"
-                              className="admin-input-field"
-                              value={item.quantity}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value, 10) || 0;
-                                setThreeDItems((prev) =>
-                                  prev.map((i) => (i.id === item.id ? { ...i, quantity: val } : i))
-                                );
-                              }}
-                            />
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px', marginBottom: '0.45rem' }}>
+                            <div>
+                              <label style={{ fontSize: '0.68rem', color: '#94a3b8' }}>6" (₹)</label>
+                              <input
+                                type="number"
+                                className="admin-input-field"
+                                style={{ padding: '0.35rem', fontSize: '0.8rem' }}
+                                value={item.price6Inch ?? item.sizeOptions?.find((s) => s.size.includes('6'))?.price ?? Math.max(299, (item.price || 899) - 200)}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10) || 0;
+                                  setThreeDItems((prev) =>
+                                    prev.map((i) => (i.id === item.id ? { ...i, price6Inch: val } : i))
+                                  );
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: '0.68rem', color: '#00c8ff', fontWeight: 700 }}>8" (₹)</label>
+                              <input
+                                type="number"
+                                className="admin-input-field"
+                                style={{ padding: '0.35rem', fontSize: '0.8rem' }}
+                                value={item.price8Inch ?? item.price ?? 899}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10) || 0;
+                                  setThreeDItems((prev) =>
+                                    prev.map((i) => (i.id === item.id ? { ...i, price8Inch: val, price: val } : i))
+                                  );
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: '0.68rem', color: '#94a3b8' }}>10" (₹)</label>
+                              <input
+                                type="number"
+                                className="admin-input-field"
+                                style={{ padding: '0.35rem', fontSize: '0.8rem' }}
+                                value={item.price10Inch ?? item.sizeOptions?.find((s) => s.size.includes('10'))?.price ?? ((item.price || 899) + 400)}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10) || 0;
+                                  setThreeDItems((prev) =>
+                                    prev.map((i) => (i.id === item.id ? { ...i, price10Inch: val } : i))
+                                  );
+                                }}
+                              />
+                            </div>
                           </div>
-                          <div className="admin-input-group">
-                            <label>Size</label>
-                            <input
-                              type="text"
-                              className="admin-input-field"
-                              value={item.size || '8 inch'}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setThreeDItems((prev) =>
-                                  prev.map((i) => (i.id === item.id ? { ...i, size: val } : i))
-                                );
-                              }}
-                            />
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
+                            <div>
+                              <label style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Stock / Qty</label>
+                              <input
+                                type="number"
+                                className="admin-input-field"
+                                style={{ padding: '0.35rem', fontSize: '0.8rem' }}
+                                value={item.quantity}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10) || 0;
+                                  setThreeDItems((prev) =>
+                                    prev.map((i) => (i.id === item.id ? { ...i, quantity: val } : i))
+                                  );
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Density</label>
+                              <input
+                                type="text"
+                                disabled
+                                className="admin-input-field"
+                                style={{ padding: '0.35rem', fontSize: '0.8rem', opacity: 0.7 }}
+                                value="25% Strength"
+                              />
+                            </div>
                           </div>
                         </div>
 
@@ -2138,8 +2242,7 @@ export default function AdminPortal() {
                   >
                     <option value="6 inch">6 inch (Compact)</option>
                     <option value="8 inch">8 inch (Standard)</option>
-                    <option value="12 inch">12 inch (Deluxe Masterpiece)</option>
-                    <option value="Custom Scale">Custom Scale</option>
+                    <option value="10 inch">10 inch (Large Scale)</option>
                   </select>
                 </div>
               )}
@@ -2621,29 +2724,80 @@ export default function AdminPortal() {
                 </div>
               </div>
 
-              {/* Price & Quantity */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.9rem' }}>
-                <div className="admin-input-group">
-                  <label>Price (₹) *</label>
-                  <input
-                    type="number"
-                    required
-                    className="admin-input-field"
-                    value={editProductForm.price}
-                    onChange={(e) => setEditProductForm((prev) => ({ ...prev, price: e.target.value }))}
-                  />
+              {/* Price & Quantity (Separate prices for 6", 8", 10" sizes for 3D Studio) */}
+              {editingProductTarget.type === '3dstudio' ? (
+                <div style={{ background: 'rgba(0, 200, 255, 0.06)', border: '1.5px solid rgba(0, 200, 255, 0.25)', borderRadius: '10px', padding: '0.85rem', marginBottom: '0.9rem' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--neon)', marginBottom: '0.55rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+                    <span>💰 Separate Prices per Model Size (25% Density):</span>
+                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>All with 25% Strength Infill</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.65rem', marginBottom: '0.65rem' }}>
+                    <div className="admin-input-group">
+                      <label style={{ fontSize: '0.75rem', color: '#38bdf8' }}>6 inch (150mm) ₹ *</label>
+                      <input
+                        type="number"
+                        required
+                        className="admin-input-field"
+                        value={editProductForm.price6Inch}
+                        onChange={(e) => setEditProductForm((prev) => ({ ...prev, price6Inch: e.target.value }))}
+                      />
+                    </div>
+                    <div className="admin-input-group">
+                      <label style={{ fontSize: '0.75rem', color: '#38bdf8' }}>8 inch (200mm) ₹ *</label>
+                      <input
+                        type="number"
+                        required
+                        className="admin-input-field"
+                        value={editProductForm.price8Inch}
+                        onChange={(e) => setEditProductForm((prev) => ({ ...prev, price8Inch: e.target.value, price: e.target.value }))}
+                      />
+                    </div>
+                    <div className="admin-input-group">
+                      <label style={{ fontSize: '0.75rem', color: '#38bdf8' }}>10 inch (250mm) ₹ *</label>
+                      <input
+                        type="number"
+                        required
+                        className="admin-input-field"
+                        value={editProductForm.price10Inch}
+                        onChange={(e) => setEditProductForm((prev) => ({ ...prev, price10Inch: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="admin-input-group">
+                    <label style={{ fontSize: '0.75rem' }}>Stock / In-Stock Units *</label>
+                    <input
+                      type="number"
+                      required
+                      className="admin-input-field"
+                      value={editProductForm.quantity}
+                      onChange={(e) => setEditProductForm((prev) => ({ ...prev, quantity: e.target.value }))}
+                    />
+                  </div>
                 </div>
-                <div className="admin-input-group">
-                  <label>Stock / In-Stock Units *</label>
-                  <input
-                    type="number"
-                    required
-                    className="admin-input-field"
-                    value={editProductForm.quantity}
-                    onChange={(e) => setEditProductForm((prev) => ({ ...prev, quantity: e.target.value }))}
-                  />
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.9rem' }}>
+                  <div className="admin-input-group">
+                    <label>Price (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      className="admin-input-field"
+                      value={editProductForm.price}
+                      onChange={(e) => setEditProductForm((prev) => ({ ...prev, price: e.target.value }))}
+                    />
+                  </div>
+                  <div className="admin-input-group">
+                    <label>Stock / In-Stock Units *</label>
+                    <input
+                      type="number"
+                      required
+                      className="admin-input-field"
+                      value={editProductForm.quantity}
+                      onChange={(e) => setEditProductForm((prev) => ({ ...prev, quantity: e.target.value }))}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Description */}
               <div className="admin-input-group" style={{ marginBottom: '0.9rem' }}>
@@ -2662,17 +2816,17 @@ export default function AdminPortal() {
               {editingProductTarget.type === '3dstudio' && (
                 <div style={{ background: 'rgba(255,0,170,0.06)', border: '1px solid rgba(255,0,170,0.2)', padding: '0.85rem', borderRadius: '8px', marginBottom: '0.9rem' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ff00aa', marginBottom: '0.65rem' }}>
-                    🖨️ FDM 3D Printing & Filament Specs
+                    🖨️ FDM 3D Printing & Filament Specs (All 25% Density)
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '0.65rem' }}>
                     <div className="admin-input-group">
-                      <label style={{ fontSize: '0.75rem' }}>Default Scale / Dimensions</label>
+                      <label style={{ fontSize: '0.75rem' }}>Core Infill / Density</label>
                       <input
                         type="text"
+                        disabled
                         className="admin-input-field"
-                        value={editProductForm.size}
-                        onChange={(e) => setEditProductForm((prev) => ({ ...prev, size: e.target.value }))}
-                        placeholder="e.g. 8 inch (20 cm)"
+                        style={{ opacity: 0.8 }}
+                        value="25% Strength"
                       />
                     </div>
                     <div className="admin-input-group">
@@ -2682,7 +2836,7 @@ export default function AdminPortal() {
                         className="admin-input-field"
                         value={editProductForm.printTime}
                         onChange={(e) => setEditProductForm((prev) => ({ ...prev, printTime: e.target.value }))}
-                        placeholder="e.g. 5h 30m"
+                        placeholder="e.g. 6h 30m"
                       />
                     </div>
                   </div>

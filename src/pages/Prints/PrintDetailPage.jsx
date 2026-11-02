@@ -32,52 +32,12 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedSizeIndex, setSelectedSizeIndex] = useState(1); // default 8 inch
-  const [selectedStrengthIndex, setSelectedStrengthIndex] = useState(0); // default 20%
   const [selectedMaterial, setSelectedMaterial] = useState('PLA'); // 'PLA' (Hard Plastic) or 'TPU' (Soft & Flexible)
   const [showCustomPhotoSection, setShowCustomPhotoSection] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [uploadedPhotoPreview, setUploadedPhotoPreview] = useState(null);
   const [engravingText, setEngravingText] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
-
-  const STRENGTH_OPTIONS = [
-    {
-      label: '20% Strength',
-      infill: '20%',
-      badge: 'DEFAULT',
-      desc: 'Standard infill — ideal for display figurines & detailed aesthetic models',
-      priceOffset: 0,
-      weightMultiplier: 1.0,
-      timeMultiplier: 1.0
-    },
-    {
-      label: '40% Strength',
-      infill: '40%',
-      badge: 'REINFORCED',
-      desc: 'Enhanced internal grid — increased drop resistance and handling firmness',
-      priceOffset: 99,
-      weightMultiplier: 1.25,
-      timeMultiplier: 1.2
-    },
-    {
-      label: '60% Strength',
-      infill: '60%',
-      badge: 'HEAVY DUTY',
-      desc: 'High-density infill — suitable for functional parts and durable action toys',
-      priceOffset: 199,
-      weightMultiplier: 1.55,
-      timeMultiplier: 1.45
-    },
-    {
-      label: '100% Strength',
-      infill: '100%',
-      badge: 'SOLID FDM CORE',
-      desc: '100% Solid thermoplastic — maximum industrial structural density and rigidity',
-      priceOffset: 349,
-      weightMultiplier: 2.1,
-      timeMultiplier: 1.85
-    }
-  ];
 
   const MATERIAL_OPTIONS = [
     {
@@ -146,23 +106,33 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
     ? item.price
     : parseInt(String(item.price).replace(/[^0-9]/g, ''), 10) || 899;
 
-  const sizeOptions = item.sizeOptions || [
-    { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 45m", weight: "120g" },
-    { size: "8 inch (200mm)", priceOffset: 350, printTime: "6h 30m", weight: "240g" },
-    { size: "10 inch (250mm)", priceOffset: 750, printTime: "11h 15m", weight: "420g" },
-    { size: "12 inch (300mm)", priceOffset: 1300, printTime: "18h 40m", weight: "710g" }
+  const p8 = typeof item.price8Inch === 'number' && item.price8Inch > 0
+    ? item.price8Inch
+    : (item.sizeOptions?.find((s) => s.size.includes('8'))?.price || basePrice);
+
+  const p6 = typeof item.price6Inch === 'number' && item.price6Inch > 0
+    ? item.price6Inch
+    : (item.sizeOptions?.find((s) => s.size.includes('6'))?.price || Math.max(299, p8 - 250));
+
+  const p10 = typeof item.price10Inch === 'number' && item.price10Inch > 0
+    ? item.price10Inch
+    : (item.sizeOptions?.find((s) => s.size.includes('10'))?.price || (p8 + 450));
+
+  const sizeOptions = [
+    { size: "6 inch (150mm)", price: p6, printTime: "3h 45m", weight: "120g" },
+    { size: "8 inch (200mm)", price: p8, printTime: "6h 30m", weight: "240g" },
+    { size: "10 inch (250mm)", price: p10, printTime: "11h 15m", weight: "420g" }
   ];
 
-  const currentOption = sizeOptions[selectedSizeIndex] || sizeOptions[0];
-  const currentStrength = STRENGTH_OPTIONS[selectedStrengthIndex] || STRENGTH_OPTIONS[0];
+  const currentOption = sizeOptions[selectedSizeIndex] || sizeOptions[1] || sizeOptions[0];
   const currentMaterial = MATERIAL_OPTIONS.find((m) => m.id === selectedMaterial) || MATERIAL_OPTIONS[0];
 
-  const unitPrice = basePrice + (currentOption.priceOffset || 0) + (currentStrength.priceOffset || 0) + (currentMaterial.priceOffset || 0);
+  const unitPrice = currentOption.price + (currentMaterial.priceOffset || 0);
   const totalPrice = unitPrice * quantity;
 
   // Calculate dynamic weight & print time
   const baseWeightNum = parseInt(String(currentOption.weight || '240g').replace(/[^0-9]/g, ''), 10) || 240;
-  const calculatedWeight = Math.round(baseWeightNum * currentStrength.weightMultiplier);
+  const calculatedWeight = baseWeightNum;
 
   const images = Array.isArray(item.images) && item.images.length > 0
     ? item.images
@@ -184,13 +154,13 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
 
     if (onAddToCart) {
       onAddToCart({
-        id: `${item.id}-${currentOption.size.replace(/[^a-zA-Z0-9]/g, '')}-${currentStrength.infill}-${selectedMaterial}`,
+        id: `${item.id}-${currentOption.size.replace(/[^a-zA-Z0-9]/g, '')}-25strength-${selectedMaterial}`,
         name: item.name,
         category: item.category || '3D Studio',
         brand: item.brand || 'P_Brothers × NaviDron 3D',
         size: currentOption.size,
-        strength: currentStrength.label,
-        infill: currentStrength.infill,
+        strength: '25% Strength',
+        infill: '25%',
         material: currentMaterial.name,
         materialType: selectedMaterial,
         printTime: currentOption.printTime,
@@ -412,7 +382,7 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
                 </span>
               </div>
 
-              {/* Size Buttons Grid */}
+              {/* Size Buttons Grid (Clean sizes without price increments) */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.65rem', marginBottom: '1.25rem' }}>
                 {sizeOptions.map((opt, idx) => {
                   const isSelected = idx === selectedSizeIndex;
@@ -422,90 +392,65 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
                       type="button"
                       onClick={() => setSelectedSizeIndex(idx)}
                       style={{
-                        padding: '0.75rem 0.5rem',
+                        padding: '0.9rem 0.6rem',
                         borderRadius: '10px',
                         border: isSelected ? '2px solid #00c8ff' : '1.5px solid #cbd5e1',
                         backgroundColor: isSelected ? 'rgba(0, 200, 255, 0.08)' : '#ffffff',
                         color: isSelected ? '#0077b6' : '#334155',
-                        fontWeight: 700,
+                        fontWeight: 800,
                         textAlign: 'center',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                         boxShadow: isSelected ? '0 0 12px rgba(0,200,255,0.25)' : 'none'
                       }}
                     >
-                      <div style={{ fontSize: '0.88rem', fontWeight: 800 }}>{opt.size}</div>
-                      <div style={{ fontSize: '0.72rem', color: isSelected ? '#0284c7' : '#64748b', marginTop: '2px' }}>
-                        {opt.priceOffset === 0 ? 'Base Scale' : `+₹${opt.priceOffset}`}
-                      </div>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 800 }}>{opt.size}</div>
                     </button>
                   );
                 })}
               </div>
 
-              {/* 2. INFILL / STRENGTH % SELECTION */}
-              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1.1rem', marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
-                  <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0a0f2e', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <Shield size={16} color="#0284c7" /> 2. Core Infill / Strength % (20% Default):
-                  </label>
-                  <span style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>
-                    Higher strength = denser solid plastic
+              {/* Casual 25% Strength Indicator */}
+              <div
+                style={{
+                  borderTop: '1px solid #f1f5f9',
+                  paddingTop: '0.9rem',
+                  marginBottom: '1.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Shield size={16} color="#0284c7" />
+                  <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0a0f2e' }}>
+                    Density:
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '0.8rem',
+                      fontWeight: 800,
+                      backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                      color: '#0284c7',
+                      padding: '2px 9px',
+                      borderRadius: '6px'
+                    }}
+                  >
+                    25% Strength
                   </span>
                 </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.6rem' }}>
-                  {STRENGTH_OPTIONS.map((st, idx) => {
-                    const isSelected = idx === selectedStrengthIndex;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setSelectedStrengthIndex(idx)}
-                        style={{
-                          padding: '0.75rem 0.6rem',
-                          borderRadius: '10px',
-                          border: isSelected ? '2px solid #0284c7' : '1.5px solid #cbd5e1',
-                          backgroundColor: isSelected ? 'rgba(2, 132, 199, 0.08)' : '#ffffff',
-                          color: isSelected ? '#0369a1' : '#334155',
-                          textAlign: 'left',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          boxShadow: isSelected ? '0 0 12px rgba(2,132,199,0.25)' : 'none'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '0.88rem', fontWeight: 800 }}>{st.label}</span>
-                          <span
-                            style={{
-                              fontSize: '0.65rem',
-                              fontWeight: 800,
-                              padding: '1px 5px',
-                              borderRadius: '4px',
-                              backgroundColor: isSelected ? '#0284c7' : '#e2e8f0',
-                              color: isSelected ? '#ffffff' : '#64748b'
-                            }}
-                          >
-                            {st.badge}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: '0.72rem', color: isSelected ? '#0284c7' : '#64748b', marginTop: '3px' }}>
-                          {st.priceOffset === 0 ? 'Standard (+₹0)' : `+₹${st.priceOffset}`}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.5rem', fontStyle: 'italic' }}>
-                  * {currentStrength.desc}
-                </div>
+                <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                  Casual solid core infill — optimal durability & finish
+                </span>
               </div>
 
-              {/* 3. MATERIAL SELECTION: PLA (Hard Plastic) vs TPU (Soft Flexible) */}
+              {/* 2. MATERIAL SELECTION: PLA (Hard Plastic) vs TPU (Soft Flexible) */}
               <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1.1rem', marginBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
                   <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0a0f2e', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <Layers size={16} color="#10b981" /> 3. 3D Filament Material:
+                    <Layers size={16} color="#10b981" /> 2. 3D Filament Material:
                   </label>
                   <span style={{ fontSize: '0.76rem', color: '#10b981', fontWeight: 700 }}>
                     PLA (Hard) vs TPU (Soft)
@@ -716,7 +661,7 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '0.65rem 1rem', borderBottom: '1px solid #f1f5f9' }}>
                 <span style={{ color: '#64748b' }}>Core Infill / Strength:</span>
-                <span style={{ fontWeight: 700, color: '#0077b6' }}>{currentStrength.label} ({currentStrength.infill})</span>
+                <span style={{ fontWeight: 700, color: '#0077b6' }}>25% Strength Solid Core</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '0.65rem 1rem' }}>
                 <span style={{ color: '#64748b' }}>Post-Processing:</span>

@@ -923,14 +923,16 @@ export const INITIAL_3D_STUDIO = [
     category: "Anime",
     brand: "P_Brothers × NaviDron 3D",
     price: 949,
+    price6Inch: 699,
+    price8Inch: 949,
+    price10Inch: 1399,
     quantity: 25,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch"],
     sizeOptions: [
-      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 45m", weight: "120g" },
-      { size: "8 inch (200mm)", priceOffset: 350, printTime: "6h 30m", weight: "240g" },
-      { size: "10 inch (250mm)", priceOffset: 750, printTime: "11h 15m", weight: "420g" },
-      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "18h 40m", weight: "710g" }
+      { size: "6 inch (150mm)", price: 699, printTime: "3h 45m", weight: "120g" },
+      { size: "8 inch (200mm)", price: 949, printTime: "6h 30m", weight: "240g" },
+      { size: "10 inch (250mm)", price: 1399, printTime: "11h 15m", weight: "420g" }
     ],
     image: "/images/anime_figure_3d.jpg",
     images: [
@@ -941,7 +943,7 @@ export const INITIAL_3D_STUDIO = [
     printTime: "6h 30m",
     material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "20% (Default) - Configurable to 100%",
+    infill: "25% Strength",
     desc: "Whimsical Gear 5 cloud-ring sculpt with joyful laughing expression from One Piece Wano arc. FDM precision printed in tough PLA hard plastic.",
     badge: "TRENDING"
   },
@@ -951,14 +953,16 @@ export const INITIAL_3D_STUDIO = [
     category: "Anime",
     brand: "P_Brothers × NaviDron 3D",
     price: 849,
+    price6Inch: 599,
+    price8Inch: 849,
+    price10Inch: 1299,
     quantity: 20,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch"],
     sizeOptions: [
-      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 20m", weight: "115g" },
-      { size: "8 inch (200mm)", priceOffset: 350, printTime: "6h 15m", weight: "230g" },
-      { size: "10 inch (250mm)", priceOffset: 750, printTime: "10h 50m", weight: "410g" },
-      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "17h 50m", weight: "690g" }
+      { size: "6 inch (150mm)", price: 599, printTime: "3h 20m", weight: "115g" },
+      { size: "8 inch (200mm)", price: 849, printTime: "6h 15m", weight: "230g" },
+      { size: "10 inch (250mm)", price: 1299, printTime: "10h 50m", weight: "410g" }
     ],
     image: "/images/anime_figure_3d.jpg",
     images: [
@@ -969,7 +973,7 @@ export const INITIAL_3D_STUDIO = [
     printTime: "6h 15m",
     material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "20% (Default) - Configurable to 100%",
+    infill: "25% Strength",
     desc: "Iconic Dragon Ball Z protagonist with translucent golden energy wave aura piece and battle-damaged gi texture.",
     badge: "ANIME HERO"
   },
@@ -979,14 +983,16 @@ export const INITIAL_3D_STUDIO = [
     category: "Anime",
     brand: "P_Brothers × NaviDron 3D",
     price: 799,
+    price6Inch: 549,
+    price8Inch: 799,
+    price10Inch: 1199,
     quantity: 30,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch"],
     sizeOptions: [
-      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 10m", weight: "110g" },
-      { size: "8 inch (200mm)", priceOffset: 350, printTime: "5h 50m", weight: "220g" },
-      { size: "10 inch (250mm)", priceOffset: 750, printTime: "10h 20m", weight: "390g" },
-      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "16h 30m", weight: "660g" }
+      { size: "6 inch (150mm)", price: 549, printTime: "3h 10m", weight: "110g" },
+      { size: "8 inch (200mm)", price: 799, printTime: "5h 50m", weight: "220g" },
+      { size: "10 inch (250mm)", price: 1199, printTime: "10h 20m", weight: "390g" }
     ],
     image: "/images/anime_figure_3d.jpg",
     images: [
@@ -997,7 +1003,7 @@ export const INITIAL_3D_STUDIO = [
     printTime: "5h 50m",
     material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "20% (Default) - Configurable to 100%",
+    infill: "25% Strength",
     desc: "Toad sage cloak, orange eye markings, and translucent wind spiral Rasenshuriken hovering on custom stone stand.",
     badge: "CLASSIC"
   },
@@ -1007,14 +1013,16 @@ export const INITIAL_3D_STUDIO = [
     category: "Anime",
     brand: "P_Brothers × NaviDron 3D",
     price: 849,
+    price6Inch: 599,
+    price8Inch: 849,
+    price10Inch: 1299,
     quantity: 18,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch"],
     sizeOptions: [
-      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 30m", weight: "125g" },
-      { size: "8 inch (200mm)", priceOffset: 350, printTime: "6h 40m", weight: "245g" },
-      { size: "10 inch (250mm)", priceOffset: 750, printTime: "11h 30m", weight: "430g" },
-      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "18h 15m", weight: "720g" }
+      { size: "6 inch (150mm)", price: 599, printTime: "3h 30m", weight: "125g" },
+      { size: "8 inch (200mm)", price: 849, printTime: "6h 40m", weight: "245g" },
+      { size: "10 inch (250mm)", price: 1299, printTime: "11h 30m", weight: "430g" }
     ],
     image: "/images/anime_figure_3d.jpg",
     images: [
@@ -1025,7 +1033,7 @@ export const INITIAL_3D_STUDIO = [
     printTime: "6h 40m",
     material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "20% (Default) - Configurable to 100%",
+    infill: "25% Strength",
     desc: "Demon Slayer sun-breathing spiral flame dragon wrapped around the Nichirin black blade with dynamic haori folds.",
     badge: "ANIME HERO"
   },
@@ -1035,14 +1043,16 @@ export const INITIAL_3D_STUDIO = [
     category: "Game Characters",
     brand: "Rockstar Fan Art × NaviDron",
     price: 999,
+    price6Inch: 749,
+    price8Inch: 999,
+    price10Inch: 1449,
     quantity: 40,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch"],
     sizeOptions: [
-      { size: "6 inch (150mm)", priceOffset: 0, printTime: "4h 00m", weight: "135g" },
-      { size: "8 inch (200mm)", priceOffset: 350, printTime: "7h 15m", weight: "260g" },
-      { size: "10 inch (250mm)", priceOffset: 750, printTime: "12h 45m", weight: "460g" },
-      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "20h 10m", weight: "780g" }
+      { size: "6 inch (150mm)", price: 749, printTime: "4h 00m", weight: "135g" },
+      { size: "8 inch (200mm)", price: 999, printTime: "7h 15m", weight: "260g" },
+      { size: "10 inch (250mm)", price: 1449, printTime: "12h 45m", weight: "460g" }
     ],
     image: "/images/gta6_merchandise_banner_1791059157486.jpg",
     images: [
@@ -1053,7 +1063,7 @@ export const INITIAL_3D_STUDIO = [
     printTime: "7h 15m",
     material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "20% (Default) - Configurable to 100%",
+    infill: "25% Strength",
     desc: "Ultra high-resolution 3D print of Jason from GTA 6. Dual pistols, Miami tactical outfit, and custom Vice City street display base.",
     badge: "LIMITED DROP"
   },
@@ -1063,14 +1073,16 @@ export const INITIAL_3D_STUDIO = [
     category: "Game Characters",
     brand: "Rockstar Fan Art × NaviDron",
     price: 999,
+    price6Inch: 749,
+    price8Inch: 999,
+    price10Inch: 1449,
     quantity: 35,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch"],
     sizeOptions: [
-      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 50m", weight: "130g" },
-      { size: "8 inch (200mm)", priceOffset: 350, printTime: "7h 00m", weight: "250g" },
-      { size: "10 inch (250mm)", priceOffset: 750, printTime: "12h 20m", weight: "450g" },
-      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "19h 45m", weight: "760g" }
+      { size: "6 inch (150mm)", price: 749, printTime: "3h 50m", weight: "130g" },
+      { size: "8 inch (200mm)", price: 999, printTime: "7h 00m", weight: "250g" },
+      { size: "10 inch (250mm)", price: 1449, printTime: "12h 20m", weight: "450g" }
     ],
     image: "/images/gta6_merchandise_banner_1791059157486.jpg",
     images: [
@@ -1081,7 +1093,7 @@ export const INITIAL_3D_STUDIO = [
     printTime: "7h 00m",
     material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "20% (Default) - Configurable to 100%",
+    infill: "25% Strength",
     desc: "The iconic first female lead of the GTA franchise. Detailed hair sculpt, bandana, and realistic Miami palm street aesthetic.",
     badge: "BESTSELLER"
   },
@@ -1091,14 +1103,16 @@ export const INITIAL_3D_STUDIO = [
     category: "Game Characters",
     brand: "Riot Fan Art × NaviDron",
     price: 799,
+    price6Inch: 549,
+    price8Inch: 799,
+    price10Inch: 1199,
     quantity: 22,
     size: "6 inch",
-    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch"],
     sizeOptions: [
-      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 15m", weight: "115g" },
-      { size: "8 inch (200mm)", priceOffset: 350, printTime: "6h 00m", weight: "225g" },
-      { size: "10 inch (250mm)", priceOffset: 750, printTime: "10h 30m", weight: "400g" },
-      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "16h 50m", weight: "670g" }
+      { size: "6 inch (150mm)", price: 549, printTime: "3h 15m", weight: "115g" },
+      { size: "8 inch (200mm)", price: 799, printTime: "6h 00m", weight: "225g" },
+      { size: "10 inch (250mm)", price: 1199, printTime: "10h 30m", weight: "400g" }
     ],
     image: "/images/valorant_action_figures_1791059182363.jpg",
     images: [
@@ -1109,7 +1123,7 @@ export const INITIAL_3D_STUDIO = [
     printTime: "3h 15m",
     material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "20% (Default) - Configurable to 100%",
+    infill: "25% Strength",
     desc: "Wind assassin Jett captured mid-air holding signature kunai daggers on a transparent acrylic flight stand with wind swirls.",
     badge: "HOT"
   },
@@ -1119,14 +1133,16 @@ export const INITIAL_3D_STUDIO = [
     category: "Game Characters",
     brand: "Riot Fan Art × NaviDron",
     price: 799,
+    price6Inch: 549,
+    price8Inch: 799,
+    price10Inch: 1199,
     quantity: 15,
     size: "6 inch",
-    sizes: ["6 inch", "8 inch", "10 inch", "12 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch"],
     sizeOptions: [
-      { size: "6 inch (150mm)", priceOffset: 0, printTime: "3h 15m", weight: "115g" },
-      { size: "8 inch (200mm)", priceOffset: 350, printTime: "6h 00m", weight: "225g" },
-      { size: "10 inch (250mm)", priceOffset: 750, printTime: "10h 30m", weight: "400g" },
-      { size: "12 inch (300mm)", priceOffset: 1300, printTime: "16h 50m", weight: "670g" }
+      { size: "6 inch (150mm)", price: 549, printTime: "3h 15m", weight: "115g" },
+      { size: "8 inch (200mm)", price: 799, printTime: "6h 00m", weight: "225g" },
+      { size: "10 inch (250mm)", price: 1199, printTime: "10h 30m", weight: "400g" }
     ],
     image: "/images/action_figure_valorant.jpg",
     images: [
@@ -1137,7 +1153,7 @@ export const INITIAL_3D_STUDIO = [
     printTime: "3h 15m",
     material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "20% (Default) - Configurable to 100%",
+    infill: "25% Strength",
     desc: "Duelist Reyna glowing in radiant purple finish with ethereal eye ability accent and Soul Orb hovering by her side.",
     badge: "POPULAR"
   },
@@ -1147,14 +1163,16 @@ export const INITIAL_3D_STUDIO = [
     category: "Personal Character",
     brand: "NaviDron Bespoke Sculpting Labs",
     price: 1499,
+    price6Inch: 1099,
+    price8Inch: 1499,
+    price10Inch: 2099,
     quantity: 999,
     size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch", "12 inch", "Custom Scale"],
+    sizes: ["6 inch", "8 inch", "10 inch"],
     sizeOptions: [
-      { size: "6 inch (150mm)", priceOffset: 0, printTime: "5h 30m", weight: "140g" },
-      { size: "8 inch (200mm)", priceOffset: 450, printTime: "8h 45m", weight: "270g" },
-      { size: "10 inch (250mm)", priceOffset: 950, printTime: "14h 20m", weight: "490g" },
-      { size: "12 inch (300mm)", priceOffset: 1600, printTime: "22h 00m", weight: "820g" }
+      { size: "6 inch (150mm)", price: 1099, printTime: "5h 30m", weight: "140g" },
+      { size: "8 inch (200mm)", price: 1499, printTime: "8h 45m", weight: "270g" },
+      { size: "10 inch (250mm)", price: 2099, printTime: "14h 20m", weight: "490g" }
     ],
     image: "/images/3d_print_lithophane.jpg",
     images: [
@@ -1165,7 +1183,7 @@ export const INITIAL_3D_STUDIO = [
     printTime: "8h 45m",
     material: "FDM High-Precision PLA (Hard Plastic) + Wooden Display Plaque",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "20% (Default) - Configurable to 100%",
+    infill: "25% Strength",
     desc: "Upload or send your photo. Our digital sculptors convert facial features, posture, and clothing into a lifelike miniature 3D statue with custom name engraving.",
     badge: "CUSTOM PHOTO"
   },
@@ -1175,14 +1193,16 @@ export const INITIAL_3D_STUDIO = [
     category: "Personal Character",
     brand: "NaviDron Bespoke Sculpting Labs",
     price: 499,
+    price6Inch: 499,
+    price8Inch: 799,
+    price10Inch: 1199,
     quantity: 999,
     size: "6 inch",
-    sizes: ["4 inch", "6 inch", "8 inch", "10 inch"],
+    sizes: ["6 inch", "8 inch", "10 inch"],
     sizeOptions: [
-      { size: "4 inch (100mm)", priceOffset: 0, printTime: "2h 30m", weight: "65g" },
-      { size: "6 inch (150mm)", priceOffset: 250, printTime: "4h 45m", weight: "130g" },
-      { size: "8 inch (200mm)", priceOffset: 550, printTime: "8h 15m", weight: "250g" },
-      { size: "10 inch (250mm)", priceOffset: 950, printTime: "13h 00m", weight: "430g" }
+      { size: "6 inch (150mm)", price: 499, printTime: "4h 45m", weight: "130g" },
+      { size: "8 inch (200mm)", price: 799, printTime: "8h 15m", weight: "250g" },
+      { size: "10 inch (250mm)", price: 1199, printTime: "13h 00m", weight: "430g" }
     ],
     image: "/images/lithophane_3d_print_1791059239454.jpg",
     images: [
@@ -1193,7 +1213,7 @@ export const INITIAL_3D_STUDIO = [
     printTime: "4h 45m",
     material: "FDM Translucent PLA (Hard Plastic) Optical Lithophane",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "100% Solid Optical Infill",
+    infill: "25% Strength",
     desc: "Turn your personal memory photo into a luminous curved 3D lithophane with integrated USB warm LED backlight stand.",
     badge: "ILLUMINATED"
   }
@@ -1207,17 +1227,46 @@ export async function get3DStudioItems() {
     try { localList = JSON.parse(cached); } catch (e) {}
   }
 
-  const cleanFDMItem = (item) => ({
-    ...item,
-    material: item.material?.includes('SLA') || item.material?.includes('Resin')
-      ? 'FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)'
-      : (item.material || 'FDM Tough PLA / TPU'),
-    layerHeight: '0.2mm Ultra-Fine Detail (0.4mm Nozzle)',
-    infill: item.infill?.includes('Resin')
-      ? '20% (Default) - Configurable to 100%'
-      : (item.infill || '20% (Default) - Configurable to 100%'),
-    images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/anime_figure_3d.jpg']
-  });
+  const cleanFDMItem = (item) => {
+    const rawPrice = typeof item.price === 'number'
+      ? item.price
+      : parseInt(String(item.price || '899').replace(/[^0-9]/g, ''), 10) || 899;
+
+    const p8 = typeof item.price8Inch === 'number' && item.price8Inch > 0
+      ? item.price8Inch
+      : (item.sizeOptions?.find(s => s.size.includes('8'))?.price || rawPrice);
+
+    const p6 = typeof item.price6Inch === 'number' && item.price6Inch > 0
+      ? item.price6Inch
+      : (item.sizeOptions?.find(s => s.size.includes('6'))?.price || Math.max(299, p8 - 250));
+
+    const p10 = typeof item.price10Inch === 'number' && item.price10Inch > 0
+      ? item.price10Inch
+      : (item.sizeOptions?.find(s => s.size.includes('10'))?.price || (p8 + 450));
+
+    const sizeOptions = [
+      { size: "6 inch (150mm)", price: p6, printTime: "3h 45m", weight: "120g" },
+      { size: "8 inch (200mm)", price: p8, printTime: "6h 30m", weight: "240g" },
+      { size: "10 inch (250mm)", price: p10, printTime: "11h 15m", weight: "420g" }
+    ];
+
+    return {
+      ...item,
+      price: p8,
+      price6Inch: p6,
+      price8Inch: p8,
+      price10Inch: p10,
+      size: item.size && (item.size.includes('6') || item.size.includes('8') || item.size.includes('10')) ? item.size : '8 inch',
+      sizes: ["6 inch", "8 inch", "10 inch"],
+      sizeOptions,
+      material: item.material?.includes('SLA') || item.material?.includes('Resin')
+        ? 'FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)'
+        : (item.material || 'FDM Tough PLA / TPU'),
+      layerHeight: '0.2mm Ultra-Fine Detail (0.4mm Nozzle)',
+      infill: '25% Strength',
+      images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/anime_figure_3d.jpg']
+    };
+  };
 
   const cloudList = await readFirestoreCollection('3DStudio');
   if (Array.isArray(cloudList) && cloudList.length > 0) {
