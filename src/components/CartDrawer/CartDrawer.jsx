@@ -57,7 +57,15 @@ export default function CartDrawer({
         id: it.id,
         name: it.name,
         category: it.category || 'Store Item',
+        brand: it.brand || null,
         size: it.size || null,
+        material: it.material || null,
+        strength: it.strength || it.infill || null,
+        infill: it.infill || it.strength || null,
+        printTime: it.printTime || null,
+        customEngraving: it.customEngraving || null,
+        uploadedPhoto: it.uploadedPhoto || it.customPhoto || null,
+        selectedAddOns: it.selectedAddOns || null,
         price: typeof it.price === 'number' ? it.price : parseInt(String(it.price).replace(/[^0-9]/g, ''), 10) || 0,
         quantity: it.quantity || 1,
         image: it.image || '/images/fpv_racing_drone.jpg'
@@ -173,9 +181,24 @@ export default function CartDrawer({
                     />
                     <div className="cart-item-info">
                       <div className="cart-item-title">{item.name}</div>
-                      <div className="cart-item-meta">
+                      <div className="cart-item-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', margin: '3px 0' }}>
                         {item.category && <span className="cart-meta-pill">{item.category}</span>}
                         {item.size && <span className="cart-meta-pill">Size: {item.size}</span>}
+                        {item.material && (
+                          <span className="cart-meta-pill" style={{ color: '#047857', background: '#d1fae5', border: '1px solid #a7f3d0' }}>
+                            {item.material}
+                          </span>
+                        )}
+                        {item.strength && (
+                          <span className="cart-meta-pill" style={{ color: '#0369a1', background: '#e0f2fe', border: '1px solid #bae6fd' }}>
+                            {item.strength}
+                          </span>
+                        )}
+                        {item.uploadedPhoto && (
+                          <span className="cart-meta-pill" style={{ color: '#b45309', background: '#fef3c7', border: '1px solid #fde68a' }}>
+                            📷 Photo Attached
+                          </span>
+                        )}
                       </div>
                       <div className="cart-item-price">
                         ₹{(numPrice * (item.quantity || 1)).toLocaleString('en-IN')}

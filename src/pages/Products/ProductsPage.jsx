@@ -203,6 +203,7 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
                   <div
                     key={p.id}
                     className="card"
+                    onClick={() => navigate(`/products/${p.id}`)}
                     style={{
                       background: '#ffffff',
                       borderRadius: '16px',
@@ -211,6 +212,7 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
                       overflow: 'hidden',
                       display: 'flex',
                       flexDirection: 'column',
+                      cursor: 'pointer',
                       transition: 'transform 0.25s ease, box-shadow 0.25s ease'
                     }}
                   >
@@ -245,6 +247,7 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
                         target="_blank"
                         rel="noreferrer"
                         title="Open product details in new window"
+                        onClick={(e) => e.stopPropagation()}
                         style={{
                           position: 'absolute',
                           top: '10px',
@@ -296,6 +299,7 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
 
                       <Link
                         to={`/products/${p.id}`}
+                        onClick={(e) => e.stopPropagation()}
                         style={{ textDecoration: 'none', color: 'inherit' }}
                       >
                         <h4
@@ -325,6 +329,7 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                         <Link
                           to={`/products/${p.id}`}
+                          onClick={(e) => e.stopPropagation()}
                           style={{
                             padding: '0.65rem 0.4rem',
                             borderRadius: '8px',
@@ -345,7 +350,10 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
                         </Link>
 
                         <button
-                          onClick={() => handleBuy(p)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBuy(p);
+                          }}
                           style={{
                             padding: '0.65rem 0.4rem',
                             borderRadius: '8px',

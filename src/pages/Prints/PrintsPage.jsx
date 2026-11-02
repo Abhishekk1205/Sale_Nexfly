@@ -88,6 +88,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
       <div
         key={item.id}
         className="card"
+        onClick={() => navigate(`/prints/${item.id}`)}
         style={{
           background: '#ffffff',
           borderRadius: '16px',
@@ -96,6 +97,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
+          cursor: 'pointer',
           transition: 'transform 0.25s ease, box-shadow 0.25s ease'
         }}
       >
@@ -124,6 +126,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
             target="_blank"
             rel="noreferrer"
             title="Open product details in new window"
+            onClick={(e) => e.stopPropagation()}
             style={{
               position: 'absolute',
               top: '10px',
@@ -159,6 +162,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
 
           <Link
             to={`/prints/${item.id}`}
+            onClick={(e) => e.stopPropagation()}
             style={{ textDecoration: 'none', color: 'inherit' }}
           >
             <h4
@@ -196,7 +200,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
             }}
           >
             <span><Ruler size={12} color="#00c8ff" style={{ display: 'inline', marginRight: '3px' }} /> Scale: <strong>{item.size || '8 inch'}</strong></span>
-            <span>Resin: <strong>{item.layerHeight || '0.08mm'}</strong></span>
+            <span>FDM: <strong>0.2mm (PLA / TPU)</strong></span>
           </div>
 
           {/* Price & Actions */}
@@ -205,7 +209,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
               ₹{numPrice.toLocaleString('en-IN')}
             </div>
             <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 700 }}>
-              ✓ Dynamic Sizes Available
+              ✓ Strength 20%-100% Options
             </span>
           </div>
 
@@ -213,6 +217,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
             <Link
               to={`/prints/${item.id}`}
+              onClick={(e) => e.stopPropagation()}
               style={{
                 padding: '0.65rem 0.4rem',
                 borderRadius: '8px',
@@ -233,7 +238,10 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
             </Link>
 
             <button
-              onClick={() => handleAddToCartItem(item)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToCartItem(item);
+              }}
               style={{
                 padding: '0.65rem 0.4rem',
                 borderRadius: '8px',

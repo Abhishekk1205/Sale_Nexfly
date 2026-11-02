@@ -32,7 +32,9 @@ import {
   LogOut,
   AlertTriangle,
   User,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Edit3,
+  Download
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import ImageSlider from '../../components/ImageSlider/ImageSlider';
@@ -120,6 +122,101 @@ export default function AdminPortal() {
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [editingPhotoTarget, setEditingPhotoTarget] = useState(null); // { item, type, images: [] }
   const [editPhotoInput, setEditPhotoInput] = useState('');
+
+  // Modal state for editing existing product details (Name, Desc, Category, Price, Stock, Brand, Specs)
+  const [editProductModalOpen, setEditProductModalOpen] = useState(false);
+  const [editingProductTarget, setEditingProductTarget] = useState(null); // { item, type }
+  const [editProductForm, setEditProductForm] = useState({
+    name: '',
+    category: '',
+    brand: '',
+    price: '',
+    quantity: '',
+    desc: '',
+    size: '',
+    material: '',
+    infill: '',
+    printTime: '',
+    speed: '',
+    flightTime: '',
+    range: ''
+  });
+
+  // Lightbox for reviewing customer uploaded photos & packaging pics
+  const [enlargedOrderPhoto, setEnlargedOrderPhoto] = useState(null);
+
+  const handleOpenEditProduct = (item, type) => {
+    setEditingProductTarget({ item, type });
+    setEditProductForm({
+      name: item.name || '',
+      category: item.category || '',
+      brand: item.brand || '',
+      price: item.price || 0,
+      quantity: typeof item.quantity === 'number' ? item.quantity : 20,
+      desc: item.desc || '',
+      size: item.size || '8 inch',
+      material: item.material || 'FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)',
+      infill: item.infill || '20% (Default) - Configurable to 100%',
+      printTime: item.printTime || '6h 30m',
+      speed: item.speed || '',
+      flightTime: item.flightTime || '',
+      range: item.range || ''
+    });
+    setEditProductModalOpen(true);
+  };
+
+  const handleSaveProductDetails = async (e) => {
+    if (e) e.preventDefault();
+    if (!editingProductTarget) return;
+    const { item, type } = editingProductTarget;
+
+    const numPrice = typeof editProductForm.price === 'number'
+      ? editProductForm.price
+      : parseInt(String(editProductForm.price).replace(/[^0-9]/g, ''), 10) || 0;
+    const numQty = typeof editProductForm.quantity === 'number'
+      ? editProductForm.quantity
+      : parseInt(String(editProductForm.quantity).replace(/[^0-9]/g, ''), 10) || 0;
+
+    const updatedItem = {
+      ...item,
+      name: editProductForm.name,
+      category: editProductForm.category,
+      brand: editProductForm.brand,
+      price: numPrice,
+      quantity: numQty,
+      desc: editProductForm.desc,
+      size: editProductForm.size,
+      material: editProductForm.material,
+      infill: editProductForm.infill,
+      printTime: editProductForm.printTime,
+      speed: editProductForm.speed,
+      flightTime: editProductForm.flightTime,
+      range: editProductForm.range
+    };
+
+    setActionLoading(true);
+    try {
+      if (type === '3dstudio') {
+        await save3DStudioItem(updatedItem);
+        setThreeDItems((prev) => prev.map((i) => (i.id === item.id ? updatedItem : i)));
+      } else if (type === 'drone') {
+        await saveDroneAccessory(updatedItem);
+        setDroneParts((prev) => prev.map((i) => (i.id === item.id ? updatedItem : i)));
+      } else if (type === 'robotics') {
+        await saveRoboticsKit(updatedItem);
+        setRoboticsKits((prev) => prev.map((i) => (i.id === item.id ? updatedItem : i)));
+      } else if (type === 'uav') {
+        await saveUAVPreBuilt(updatedItem);
+        setUavPreBuilt((prev) => prev.map((i) => (i.id === item.id ? updatedItem : i)));
+      }
+      showToast(`💾 Successfully updated details for "${updatedItem.name}"!`);
+      setEditProductModalOpen(false);
+    } catch (err) {
+      showToast(`❌ Error updating product: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleOpenPhotoManager = (item, type) => {
     const images = Array.isArray(item.images) && item.images.length > 0
@@ -966,20 +1063,152 @@ export default function AdminPortal() {
                             </div>
                           </div>
 
-                          {/* Items Breakdown */}
-                          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px' }}>
-                            <div className="admin-order-section-lbl">Ordered Items ({ord.items?.length || 0})</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                              {(ord.items || []).map((it, idx) => (
-                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#e2e8f0' }}>
-                                  <span>
-                                    {it.quantity || 1}x <strong>{it.name}</strong> {it.size ? `(Size: ${it.size})` : ''}
-                                  </span>
-                                  <span style={{ color: 'var(--neon)', fontWeight: 700 }}>
-                                    ₹{((it.price || 0) * (it.quantity || 1)).toLocaleString('en-IN')}
-                                  </span>
-                                </div>
-                              ))}
+                          {/* Items Breakdown with Product Pictures & User Uploaded Photos */}
+                          <div style={{ background: 'rgba(0,0,0,0.25)', padding: '0.9rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div className="admin-order-section-lbl" style={{ marginBottom: '0.65rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span>📦 Packaging & Products Manifest ({ord.items?.length || 0} items)</span>
+                              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Inspect photos & specs before packing</span>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                              {(ord.items || []).map((it, idx) => {
+                                const itImage = it.image || '/images/fpv_racing_drone.jpg';
+                                const userUploadedPhoto = it.uploadedPhoto || it.customPhoto || it.customImage;
+                                return (
+                                  <div
+                                    key={idx}
+                                    style={{
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      gap: '0.65rem',
+                                      padding: '0.75rem',
+                                      background: 'rgba(255,255,255,0.03)',
+                                      borderRadius: '8px',
+                                      border: '1px solid rgba(255,255,255,0.08)'
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+                                      {/* Product Image Thumbnail */}
+                                      <div
+                                        style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: '1.5px solid rgba(255,255,255,0.2)', flexShrink: 0, cursor: 'pointer', background: '#0a0f2e' }}
+                                        onClick={() => setEnlargedOrderPhoto({ url: itImage, title: it.name, subtitle: `Catalog Product Image &bull; Order #${ord.id}` })}
+                                        title="Click to view enlarged"
+                                      >
+                                        <img
+                                          src={itImage}
+                                          alt={it.name}
+                                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                          onError={(e) => { e.target.src = '/images/fpv_racing_drone.jpg'; }}
+                                        />
+                                        <span style={{ position: 'absolute', bottom: 0, right: 0, background: 'rgba(0,0,0,0.8)', color: '#fff', fontSize: '9px', fontWeight: 800, padding: '1px 4px', borderRadius: '4px 0 0 0' }}>
+                                          {it.quantity || 1}x
+                                        </span>
+                                      </div>
+
+                                      {/* Item Details & Specs */}
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                          <div style={{ fontWeight: 800, color: '#fff', fontSize: '0.9rem' }}>
+                                            {it.name}
+                                          </div>
+                                          <span style={{ color: 'var(--neon)', fontWeight: 800, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                                            ₹{((it.price || 0) * (it.quantity || 1)).toLocaleString('en-IN')}
+                                          </span>
+                                        </div>
+
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.35rem' }}>
+                                          {it.category && (
+                                            <span style={{ fontSize: '0.7rem', padding: '1px 6px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', color: '#cbd5e1' }}>
+                                              {it.category}
+                                            </span>
+                                          )}
+                                          {it.size && (
+                                            <span style={{ fontSize: '0.7rem', padding: '1px 6px', background: 'rgba(0,200,255,0.15)', borderRadius: '4px', color: 'var(--neon)', fontWeight: 700 }}>
+                                              Scale: {it.size}
+                                            </span>
+                                          )}
+                                          {it.material && (
+                                            <span style={{ fontSize: '0.7rem', padding: '1px 6px', background: 'rgba(16,185,129,0.15)', borderRadius: '4px', color: '#10b981', fontWeight: 700 }}>
+                                              Material: {it.material}
+                                            </span>
+                                          )}
+                                          {(it.strength || it.infill) && (
+                                            <span style={{ fontSize: '0.7rem', padding: '1px 6px', background: 'rgba(56,189,248,0.15)', borderRadius: '4px', color: '#38bdf8', fontWeight: 700 }}>
+                                              Strength: {it.strength || it.infill}
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        {it.customEngraving && (
+                                          <div style={{ fontSize: '0.74rem', color: '#f59e0b', marginTop: '0.3rem' }}>
+                                            🏷️ Custom Engraving: &ldquo;<strong>{it.customEngraving}</strong>&rdquo;
+                                          </div>
+                                        )}
+
+                                        {it.selectedAddOns && Array.isArray(it.selectedAddOns) && it.selectedAddOns.length > 0 && (
+                                          <div style={{ fontSize: '0.74rem', color: '#a78bfa', marginTop: '0.25rem' }}>
+                                            ⚡ UAV Installed Add-ons: {it.selectedAddOns.join(', ')}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Prominent Customer Uploaded Photo for Custom Portrait / 3D Lithophane */}
+                                    {userUploadedPhoto && (
+                                      <div
+                                        style={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '0.85rem',
+                                          background: 'rgba(245, 158, 11, 0.1)',
+                                          border: '1.5px solid rgba(245, 158, 11, 0.45)',
+                                          borderRadius: '8px',
+                                          padding: '0.65rem 0.85rem'
+                                        }}
+                                      >
+                                        <div
+                                          style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden', border: '2px solid #f59e0b', flexShrink: 0, cursor: 'pointer' }}
+                                          onClick={() => setEnlargedOrderPhoto({ url: userUploadedPhoto, title: `Customer Uploaded Photo for ${it.name}`, subtitle: `Order #${ord.id} &bull; ${ord.customer?.name || 'Customer'}` })}
+                                          title="Click to view full image"
+                                        >
+                                          <img
+                                            src={userUploadedPhoto}
+                                            alt="Customer Upload"
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                          />
+                                        </div>
+
+                                        <div style={{ flex: 1 }}>
+                                          <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            📷 CUSTOMER ATTACHED PHOTO FOR 3D LITHOPHANE / SCULPT
+                                          </div>
+                                          <p style={{ margin: '0.15rem 0 0.45rem', fontSize: '0.73rem', color: '#cbd5e1' }}>
+                                            Customer provided this personal image for custom 3D printing. Use it to print model & confirm before dispatch packaging.
+                                          </p>
+                                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                            <button
+                                              type="button"
+                                              onClick={() => setEnlargedOrderPhoto({ url: userUploadedPhoto, title: `Customer Uploaded Photo for ${it.name}`, subtitle: `Order #${ord.id} &bull; ${ord.customer?.name || 'Customer'}` })}
+                                              style={{ background: '#f59e0b', color: '#000', border: 'none', padding: '3px 9px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                                            >
+                                              View Full Photo
+                                            </button>
+                                            <a
+                                              href={userUploadedPhoto}
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              download={`order-${ord.id}-user-photo.png`}
+                                              style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '3px 9px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600, textDecoration: 'none' }}
+                                            >
+                                              Download Image
+                                            </a>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
@@ -1082,26 +1311,43 @@ export default function AdminPortal() {
                         <div className="admin-prod-title">{item.name}</div>
                         <div className="admin-prod-desc">{item.desc}</div>
 
-                        {/* Button to Update / Manage Photos */}
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          style={{
-                            width: '100%',
-                            margin: '0.65rem 0',
-                            padding: '0.45rem',
-                            fontSize: '0.78rem',
-                            borderColor: 'var(--neon)',
-                            color: 'var(--neon)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '5px'
-                          }}
-                          onClick={() => handleOpenPhotoManager(item, 'drone')}
-                        >
-                          <ImageIcon size={14} /> Update / Manage Photos ({(item.images || [item.image]).length})
-                        </button>
+                        {/* Action buttons: Edit Details and Update Photos */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', margin: '0.65rem 0' }}>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            style={{
+                              padding: '0.45rem',
+                              fontSize: '0.78rem',
+                              borderColor: 'var(--neon)',
+                              color: 'var(--neon)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px'
+                            }}
+                            onClick={() => handleOpenEditProduct(item, 'drone')}
+                          >
+                            <Edit3 size={13} /> Edit Details
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            style={{
+                              padding: '0.45rem',
+                              fontSize: '0.78rem',
+                              borderColor: 'rgba(255,255,255,0.2)',
+                              color: '#cbd5e1',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px'
+                            }}
+                            onClick={() => handleOpenPhotoManager(item, 'drone')}
+                          >
+                            <ImageIcon size={13} /> Photos ({(item.images || [item.image]).length})
+                          </button>
+                        </div>
 
                         {/* Inline editable price & quantity */}
                         <div className="admin-inline-inputs">
@@ -1193,26 +1439,43 @@ export default function AdminPortal() {
                         <div className="admin-prod-title">{item.name}</div>
                         <div className="admin-prod-desc">{item.desc}</div>
 
-                        {/* Button to Update / Manage Photos */}
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          style={{
-                            width: '100%',
-                            margin: '0.65rem 0',
-                            padding: '0.45rem',
-                            fontSize: '0.78rem',
-                            borderColor: '#10b981',
-                            color: '#10b981',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '5px'
-                          }}
-                          onClick={() => handleOpenPhotoManager(item, 'robotics')}
-                        >
-                          <ImageIcon size={14} /> Update / Manage Photos ({(item.images || [item.image]).length})
-                        </button>
+                        {/* Action buttons: Edit Details and Update Photos */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', margin: '0.65rem 0' }}>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            style={{
+                              padding: '0.45rem',
+                              fontSize: '0.78rem',
+                              borderColor: '#10b981',
+                              color: '#10b981',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px'
+                            }}
+                            onClick={() => handleOpenEditProduct(item, 'robotics')}
+                          >
+                            <Edit3 size={13} /> Edit Details
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            style={{
+                              padding: '0.45rem',
+                              fontSize: '0.78rem',
+                              borderColor: 'rgba(255,255,255,0.2)',
+                              color: '#cbd5e1',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px'
+                            }}
+                            onClick={() => handleOpenPhotoManager(item, 'robotics')}
+                          >
+                            <ImageIcon size={13} /> Photos ({(item.images || [item.image]).length})
+                          </button>
+                        </div>
 
                         {/* Inline editable price & quantity */}
                         <div className="admin-inline-inputs">
@@ -1352,26 +1615,43 @@ export default function AdminPortal() {
                         <div className="admin-prod-title">{item.name}</div>
                         <div className="admin-prod-desc">{item.desc}</div>
 
-                        {/* Button to Update / Manage Photos */}
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          style={{
-                            width: '100%',
-                            margin: '0.65rem 0',
-                            padding: '0.45rem',
-                            fontSize: '0.78rem',
-                            borderColor: '#ff00aa',
-                            color: '#ff00aa',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '5px'
-                          }}
-                          onClick={() => handleOpenPhotoManager(item, '3dstudio')}
-                        >
-                          <ImageIcon size={14} /> Update / Manage Photos ({(item.images || [item.image]).length})
-                        </button>
+                        {/* Action buttons: Edit Details and Update Photos */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', margin: '0.65rem 0' }}>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            style={{
+                              padding: '0.45rem',
+                              fontSize: '0.78rem',
+                              borderColor: '#ff00aa',
+                              color: '#ff00aa',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px'
+                            }}
+                            onClick={() => handleOpenEditProduct(item, '3dstudio')}
+                          >
+                            <Edit3 size={13} /> Edit Details
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            style={{
+                              padding: '0.45rem',
+                              fontSize: '0.78rem',
+                              borderColor: 'rgba(255,255,255,0.2)',
+                              color: '#cbd5e1',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px'
+                            }}
+                            onClick={() => handleOpenPhotoManager(item, '3dstudio')}
+                          >
+                            <ImageIcon size={13} /> Photos ({(item.images || [item.image]).length})
+                          </button>
+                        </div>
 
                         {/* Inline price & stock editing */}
                         <div className="admin-inline-inputs">
@@ -1542,26 +1822,43 @@ export default function AdminPortal() {
                           ⏱ Flight Time: {item.flightTime || '10 mins'} | 📡 Range: {item.range || '2 km'}
                         </div>
 
-                        {/* Button to Update / Manage Photos */}
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          style={{
-                            width: '100%',
-                            margin: '0.65rem 0',
-                            padding: '0.45rem',
-                            fontSize: '0.78rem',
-                            borderColor: 'var(--neon)',
-                            color: 'var(--neon)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '5px'
-                          }}
-                          onClick={() => handleOpenPhotoManager(item, 'uav')}
-                        >
-                          <ImageIcon size={14} /> Update / Manage Photos ({(item.images || [item.image]).length})
-                        </button>
+                        {/* Action buttons: Edit Details and Update Photos */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', margin: '0.65rem 0' }}>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            style={{
+                              padding: '0.45rem',
+                              fontSize: '0.78rem',
+                              borderColor: 'var(--neon)',
+                              color: 'var(--neon)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px'
+                            }}
+                            onClick={() => handleOpenEditProduct(item, 'uav')}
+                          >
+                            <Edit3 size={13} /> Edit Details
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            style={{
+                              padding: '0.45rem',
+                              fontSize: '0.78rem',
+                              borderColor: 'rgba(255,255,255,0.2)',
+                              color: '#cbd5e1',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px'
+                            }}
+                            onClick={() => handleOpenPhotoManager(item, 'uav')}
+                          >
+                            <ImageIcon size={13} /> Photos ({(item.images || [item.image]).length})
+                          </button>
+                        </div>
 
                         <div className="admin-inline-inputs">
                           <div className="admin-input-group">
@@ -2252,6 +2549,282 @@ export default function AdminPortal() {
                   {actionLoading ? 'Saving Changes...' : `Save Photos (${editingPhotoTarget.images.length})`}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: EDIT PRODUCT DETAILS & DESCRIPTION ────────── */}
+      {editProductModalOpen && editingProductTarget && (
+        <div className="admin-modal-overlay" onClick={() => setEditProductModalOpen(false)}>
+          <div
+            className="admin-modal-card"
+            style={{ maxWidth: '640px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="admin-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <Edit3 size={20} className="neon-text" />
+                <div>
+                  <h3 style={{ margin: 0, color: '#fff', fontSize: '1.2rem' }}>
+                    Edit Product Details & Description
+                  </h3>
+                  <p style={{ margin: '0.15rem 0 0', fontSize: '0.78rem', color: '#94a3b8' }}>
+                    Updating: <strong style={{ color: '#fff' }}>{editingProductTarget.item?.name}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="admin-modal-close"
+                onClick={() => setEditProductModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProductDetails} className="admin-modal-body">
+              {/* Product Name */}
+              <div className="admin-input-group" style={{ marginBottom: '0.9rem' }}>
+                <label>Product Name *</label>
+                <input
+                  type="text"
+                  required
+                  className="admin-input-field"
+                  value={editProductForm.name}
+                  onChange={(e) => setEditProductForm((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g. Gojo Satoru 3D Figure"
+                />
+              </div>
+
+              {/* Category & Brand */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.9rem' }}>
+                <div className="admin-input-group">
+                  <label>Category / Type</label>
+                  <input
+                    type="text"
+                    className="admin-input-field"
+                    value={editProductForm.category}
+                    onChange={(e) => setEditProductForm((prev) => ({ ...prev, category: e.target.value }))}
+                    placeholder="e.g. Anime, Frame, ESC, Drone"
+                  />
+                </div>
+                <div className="admin-input-group">
+                  <label>Brand / Manufacturer</label>
+                  <input
+                    type="text"
+                    className="admin-input-field"
+                    value={editProductForm.brand}
+                    onChange={(e) => setEditProductForm((prev) => ({ ...prev, brand: e.target.value }))}
+                    placeholder="e.g. NexFly Studio, T-Motor"
+                  />
+                </div>
+              </div>
+
+              {/* Price & Quantity */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.9rem' }}>
+                <div className="admin-input-group">
+                  <label>Price (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    className="admin-input-field"
+                    value={editProductForm.price}
+                    onChange={(e) => setEditProductForm((prev) => ({ ...prev, price: e.target.value }))}
+                  />
+                </div>
+                <div className="admin-input-group">
+                  <label>Stock / In-Stock Units *</label>
+                  <input
+                    type="number"
+                    required
+                    className="admin-input-field"
+                    value={editProductForm.quantity}
+                    onChange={(e) => setEditProductForm((prev) => ({ ...prev, quantity: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="admin-input-group" style={{ marginBottom: '0.9rem' }}>
+                <label>Comprehensive Product Description</label>
+                <textarea
+                  rows={4}
+                  className="admin-input-field"
+                  style={{ resize: 'vertical', lineHeight: 1.5 }}
+                  value={editProductForm.desc}
+                  onChange={(e) => setEditProductForm((prev) => ({ ...prev, desc: e.target.value }))}
+                  placeholder="Provide rich details about material quality, craftsmanship, technical specifications, and compatibility..."
+                />
+              </div>
+
+              {/* Dynamic Specifics for 3D Studio Items */}
+              {editingProductTarget.type === '3dstudio' && (
+                <div style={{ background: 'rgba(255,0,170,0.06)', border: '1px solid rgba(255,0,170,0.2)', padding: '0.85rem', borderRadius: '8px', marginBottom: '0.9rem' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ff00aa', marginBottom: '0.65rem' }}>
+                    🖨️ FDM 3D Printing & Filament Specs
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '0.65rem' }}>
+                    <div className="admin-input-group">
+                      <label style={{ fontSize: '0.75rem' }}>Default Scale / Dimensions</label>
+                      <input
+                        type="text"
+                        className="admin-input-field"
+                        value={editProductForm.size}
+                        onChange={(e) => setEditProductForm((prev) => ({ ...prev, size: e.target.value }))}
+                        placeholder="e.g. 8 inch (20 cm)"
+                      />
+                    </div>
+                    <div className="admin-input-group">
+                      <label style={{ fontSize: '0.75rem' }}>Estimated Print Time</label>
+                      <input
+                        type="text"
+                        className="admin-input-field"
+                        value={editProductForm.printTime}
+                        onChange={(e) => setEditProductForm((prev) => ({ ...prev, printTime: e.target.value }))}
+                        placeholder="e.g. 5h 30m"
+                      />
+                    </div>
+                  </div>
+                  <div className="admin-input-group">
+                    <label style={{ fontSize: '0.75rem' }}>Filament Materials (FDM)</label>
+                    <input
+                      type="text"
+                      className="admin-input-field"
+                      value={editProductForm.material}
+                      onChange={(e) => setEditProductForm((prev) => ({ ...prev, material: e.target.value }))}
+                      placeholder="e.g. FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Dynamic Specifics for UAVs */}
+              {editingProductTarget.type === 'uav' && (
+                <div style={{ background: 'rgba(0,200,255,0.06)', border: '1px solid rgba(0,200,255,0.2)', padding: '0.85rem', borderRadius: '8px', marginBottom: '0.9rem' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--neon)', marginBottom: '0.65rem' }}>
+                    ✈️ UAV Flight Performance Specifications
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
+                    <div className="admin-input-group">
+                      <label style={{ fontSize: '0.75rem' }}>Flight Time</label>
+                      <input
+                        type="text"
+                        className="admin-input-field"
+                        value={editProductForm.flightTime}
+                        onChange={(e) => setEditProductForm((prev) => ({ ...prev, flightTime: e.target.value }))}
+                        placeholder="e.g. 18 mins"
+                      />
+                    </div>
+                    <div className="admin-input-group">
+                      <label style={{ fontSize: '0.75rem' }}>Radio / Video Range</label>
+                      <input
+                        type="text"
+                        className="admin-input-field"
+                        value={editProductForm.range}
+                        onChange={(e) => setEditProductForm((prev) => ({ ...prev, range: e.target.value }))}
+                        placeholder="e.g. 3.5 km"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.85rem' }}>
+                <button
+                  type="button"
+                  className="modal-btn-cancel"
+                  onClick={() => setEditProductModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="modal-btn-save"
+                  disabled={actionLoading}
+                  style={{ background: 'var(--neon)', color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}
+                >
+                  <Save size={14} />
+                  {actionLoading ? 'Saving...' : 'Save Product Updates'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── LIGHTBOX: CUSTOMER UPLOADED PHOTO & PACKAGING PICS ────────── */}
+      {enlargedOrderPhoto && (
+        <div
+          className="admin-modal-overlay"
+          style={{ zIndex: 99999, background: 'rgba(3, 7, 24, 0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setEnlargedOrderPhoto(null)}
+        >
+          <div
+            style={{
+              position: 'relative',
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              background: '#0a0f2e',
+              border: '1.5px solid var(--neon)',
+              borderRadius: '14px',
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.8)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <div>
+                <h4 style={{ margin: 0, color: '#fff', fontSize: '1.05rem', fontWeight: 800 }}>
+                  {enlargedOrderPhoto.title || 'Order Image'}
+                </h4>
+                <div
+                  style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}
+                  dangerouslySetInnerHTML={{ __html: enlargedOrderPhoto.subtitle || '' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <a
+                  href={enlargedOrderPhoto.url}
+                  download="order_attachment.png"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-primary"
+                  style={{ padding: '0.4rem 0.75rem', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <Download size={14} /> Download
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setEnlargedOrderPhoto(null)}
+                  style={{
+                    background: 'rgba(255,255,255,0.1)',
+                    border: 'none',
+                    color: '#fff',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div style={{ maxWidth: '85vw', maxHeight: '72vh', overflow: 'hidden', display: 'flex', justifyContent: 'center', borderRadius: '8px', background: '#000' }}>
+              <img
+                src={enlargedOrderPhoto.url}
+                alt={enlargedOrderPhoto.title || 'Enlarged'}
+                style={{ maxWidth: '100%', maxHeight: '72vh', objectFit: 'contain' }}
+              />
             </div>
           </div>
         </div>

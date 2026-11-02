@@ -939,10 +939,10 @@ export const INITIAL_3D_STUDIO = [
       "/images/valorant_action_figures_1791059182363.jpg"
     ],
     printTime: "6h 30m",
-    material: "SLA UV-Tough Photopolymer Resin (8K Detail)",
-    layerHeight: "0.08mm Ultra-Precision",
-    infill: "100% Solid Resin Core",
-    desc: "Whimsical Gear 5 cloud-ring sculpt with joyful laughing expression from One Piece Wano arc. Meticulously cured, hand-sanded, and coated in matte UV-resistant sealant.",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "20% (Default) - Configurable to 100%",
+    desc: "Whimsical Gear 5 cloud-ring sculpt with joyful laughing expression from One Piece Wano arc. FDM precision printed in tough PLA hard plastic.",
     badge: "TRENDING"
   },
   {
@@ -967,9 +967,9 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "6h 15m",
-    material: "SLA UV-Tough Photopolymer Resin (8K Detail)",
-    layerHeight: "0.08mm Ultra-Precision",
-    infill: "100% Solid Resin Core",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "20% (Default) - Configurable to 100%",
     desc: "Iconic Dragon Ball Z protagonist with translucent golden energy wave aura piece and battle-damaged gi texture.",
     badge: "ANIME HERO"
   },
@@ -995,9 +995,9 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "5h 50m",
-    material: "SLA UV-Tough Photopolymer Resin",
-    layerHeight: "0.08mm Ultra-Precision",
-    infill: "100% Solid Resin Core",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "20% (Default) - Configurable to 100%",
     desc: "Toad sage cloak, orange eye markings, and translucent wind spiral Rasenshuriken hovering on custom stone stand.",
     badge: "CLASSIC"
   },
@@ -1023,11 +1023,11 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "6h 40m",
-    material: "SLA UV-Tough Photopolymer Resin + Amber Translucent Resin",
-    layerHeight: "0.08mm Ultra-Precision",
-    infill: "100% Solid Resin Core",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "20% (Default) - Configurable to 100%",
     desc: "Demon Slayer sun-breathing spiral flame dragon wrapped around the Nichirin black blade with dynamic haori folds.",
-    badge: "FLAME RESIN"
+    badge: "ANIME HERO"
   },
   {
     id: "3d-gta-jason",
@@ -1051,9 +1051,9 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "7h 15m",
-    material: "SLA UV-Tough Photopolymer Resin",
-    layerHeight: "0.08mm Ultra-Precision",
-    infill: "100% Solid Resin Core",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "20% (Default) - Configurable to 100%",
     desc: "Ultra high-resolution 3D print of Jason from GTA 6. Dual pistols, Miami tactical outfit, and custom Vice City street display base.",
     badge: "LIMITED DROP"
   },
@@ -1079,9 +1079,9 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "7h 00m",
-    material: "SLA UV-Tough Photopolymer Resin",
-    layerHeight: "0.08mm Ultra-Precision",
-    infill: "100% Solid Resin Core",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "20% (Default) - Configurable to 100%",
     desc: "The iconic first female lead of the GTA franchise. Detailed hair sculpt, bandana, and realistic Miami palm street aesthetic.",
     badge: "BESTSELLER"
   },
@@ -1107,9 +1107,9 @@ export const INITIAL_3D_STUDIO = [
       "/images/anime_figure_3d.jpg"
     ],
     printTime: "3h 15m",
-    material: "SLA UV-Tough Photopolymer Resin",
-    layerHeight: "0.08mm Ultra-Precision",
-    infill: "100% Solid Resin Core",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "20% (Default) - Configurable to 100%",
     desc: "Wind assassin Jett captured mid-air holding signature kunai daggers on a transparent acrylic flight stand with wind swirls.",
     badge: "HOT"
   },
@@ -1135,10 +1135,10 @@ export const INITIAL_3D_STUDIO = [
       "/images/anime_figure_3d.jpg"
     ],
     printTime: "3h 15m",
-    material: "SLA UV-Tough Photopolymer Resin",
-    layerHeight: "0.08mm Ultra-Precision",
-    infill: "100% Solid Resin Core",
-    desc: "Duelist Reyna glowing in radiant purple resin with ethereal eye ability accent and Soul Orb hovering by her side.",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "20% (Default) - Configurable to 100%",
+    desc: "Duelist Reyna glowing in radiant purple finish with ethereal eye ability accent and Soul Orb hovering by her side.",
     badge: "POPULAR"
   },
   {
@@ -1163,9 +1163,9 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "8h 45m",
-    material: "Dual-Layer 8K SLA Resin + Personalized Wooden Display Plaque",
-    layerHeight: "0.05mm Micro-Detail Precision",
-    infill: "100% Solid Resin Core",
+    material: "FDM High-Precision PLA (Hard Plastic) + Wooden Display Plaque",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "20% (Default) - Configurable to 100%",
     desc: "Upload or send your photo. Our digital sculptors convert facial features, posture, and clothing into a lifelike miniature 3D statue with custom name engraving.",
     badge: "CUSTOM PHOTO"
   },
@@ -1191,8 +1191,8 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "4h 45m",
-    material: "High-Density Translucent PLA+ / Cured Resin",
-    layerHeight: "0.08mm Optical Density Shift",
+    material: "FDM Translucent PLA (Hard Plastic) Optical Lithophane",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
     infill: "100% Solid Optical Infill",
     desc: "Turn your personal memory photo into a luminous curved 3D lithophane with integrated USB warm LED backlight stand.",
     badge: "ILLUMINATED"
@@ -1207,27 +1207,33 @@ export async function get3DStudioItems() {
     try { localList = JSON.parse(cached); } catch (e) {}
   }
 
+  const cleanFDMItem = (item) => ({
+    ...item,
+    material: item.material?.includes('SLA') || item.material?.includes('Resin')
+      ? 'FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)'
+      : (item.material || 'FDM Tough PLA / TPU'),
+    layerHeight: '0.2mm Ultra-Fine Detail (0.4mm Nozzle)',
+    infill: item.infill?.includes('Resin')
+      ? '20% (Default) - Configurable to 100%'
+      : (item.infill || '20% (Default) - Configurable to 100%'),
+    images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/anime_figure_3d.jpg']
+  });
+
   const cloudList = await readFirestoreCollection('3DStudio');
   if (Array.isArray(cloudList) && cloudList.length > 0) {
-    const normalized = cloudList.map((item) => ({
-      ...item,
-      images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/anime_figure_3d.jpg']
-    }));
+    const normalized = cloudList.map(cleanFDMItem);
     localStorage.setItem(localKey, JSON.stringify(normalized));
     return normalized;
   }
 
   if (localList && localList.length > 0) {
-    const normalized = localList.map((item) => ({
-      ...item,
-      images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/anime_figure_3d.jpg']
-    }));
+    const normalized = localList.map(cleanFDMItem);
+    localStorage.setItem(localKey, JSON.stringify(normalized));
     return normalized;
   }
 
   // Initialize with rich preloaded catalog
   localStorage.setItem(localKey, JSON.stringify(INITIAL_3D_STUDIO));
-  // Background seed to Firestore
   INITIAL_3D_STUDIO.forEach((item) => writeFirestoreDoc('3DStudio', item.id, item));
   return INITIAL_3D_STUDIO;
 }

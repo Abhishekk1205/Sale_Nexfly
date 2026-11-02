@@ -143,6 +143,7 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
                   <div
                     key={i}
                     className="card"
+                    onClick={() => navigate(`/uav/${modId}`)}
                     style={{
                       background: '#ffffff',
                       borderRadius: '16px',
@@ -151,6 +152,7 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
                       overflow: 'hidden',
                       display: 'flex',
                       flexDirection: 'column',
+                      cursor: 'pointer',
                       transition: 'transform 0.25s ease, box-shadow 0.25s ease'
                     }}
                   >
@@ -185,6 +187,7 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
                         target="_blank"
                         rel="noreferrer"
                         title="Open drone details in new window"
+                        onClick={(e) => e.stopPropagation()}
                         style={{
                           position: 'absolute',
                           top: '10px',
@@ -214,6 +217,7 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
 
                       <Link
                         to={`/uav/${modId}`}
+                        onClick={(e) => e.stopPropagation()}
                         style={{ textDecoration: 'none', color: 'inherit' }}
                       >
                         <h4
@@ -261,6 +265,7 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                         <Link
                           to={`/uav/${modId}`}
+                          onClick={(e) => e.stopPropagation()}
                           style={{
                             padding: '0.65rem 0.4rem',
                             borderRadius: '8px',
@@ -281,7 +286,8 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
                         </Link>
 
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             const numPrice = parseInt(String(mod.price).replace(/[^0-9]/g, ''), 10) || 14999;
                             if (onAddToCart) {
                               onAddToCart({
