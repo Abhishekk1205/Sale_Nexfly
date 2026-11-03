@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Menu, X, Flame, Sparkles, Send, User, ShoppingCart } from 'lucide-react';
+import { Menu, X, Flame, Sparkles, Send, User, ShoppingCart } from 'lucide-react';
 
 const getFirstName = (u) => {
   if (!u) return 'Pilot';
@@ -78,48 +78,20 @@ export default function Navbar({ onOpenAuth, onOpenQuote, user, onLogout, cartCo
 
             <li className="nav-item">
               <Link to="/uav" className={`nav-link ${isActive('/uav') ? 'active' : ''}`}>
-                UAV <ChevronDown className="chevron" />
+                UAV
               </Link>
-              <div className="dropdown">
-                <Link to="/uav?tab=fpv">⚡ FPV Racing Drones</Link>
-                <Link to="/uav?tab=agri">🌾 Agricultural Drones</Link>
-                <Link to="/uav?tab=toy">🎯 Toy Drones</Link>
-                <Link to="/uav?tab=college">🎓 College Project Drones</Link>
-                <Link to="/uav?tab=rcplane">✈️ RC Planes</Link>
-                <button
-                  type="button"
-                  onClick={onOpenQuote}
-                  style={{ color: 'var(--neon)', fontWeight: 700 }}
-                >
-                  🛠️ Custom Order Request
-                </button>
-              </div>
             </li>
 
             <li className="nav-item">
               <Link to="/products" className={`nav-link ${isActive('/products') ? 'active' : ''}`}>
-                Products <ChevronDown className="chevron" />
+                Products
               </Link>
-              <div className="dropdown">
-                <Link to="/products?category=parts">🔧 Drone Motors & Frames</Link>
-                <Link to="/products?category=electronics">⚡ ESCs & Flight Controllers</Link>
-                <Link to="/products?category=3d-parts">🖨️ 3D Printed Drone Parts</Link>
-                <Link to="/products">📦 View All Drone Components</Link>
-              </div>
             </li>
 
             <li className="nav-item">
               <Link to="/prints" className={`nav-link ${isActive('/prints') ? 'active' : ''}`}>
-                3Dstudio <ChevronDown className="chevron" />
+                3Dstudio
               </Link>
-              <div className="dropdown">
-                <Link to="/prints?filter=gta6">🎮 GTA 6 Vice City Figures</Link>
-                <Link to="/prints?filter=tshirts">👕 GTA 6 & P_Brothers T-Shirts</Link>
-                <Link to="/prints?filter=valorant">⚡ Valorant Collection</Link>
-                <Link to="/prints?filter=anime">🌸 Anime Heroes</Link>
-                <Link to="/prints?filter=lithophane">🖼️ Custom Lithophanes</Link>
-                <Link to="/prints?filter=gifts">🎁 3D Gift Packs</Link>
-              </div>
             </li>
 
             <li className="nav-item">
