@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { pBrothersData } from '../../data/pBrothersData';
 import { printsData } from '../../data/printsData';
 import { Flame, Sparkles, ShoppingCart, Play, CheckCircle2 } from 'lucide-react';

@@ -92,6 +92,10 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
       ? item.quantity <= 0
       : (item.quantity !== undefined ? parseInt(String(item.quantity), 10) <= 0 : false);
 
+    const stockCount = typeof item.quantity === 'number'
+      ? item.quantity
+      : (item.quantity !== undefined ? parseInt(String(item.quantity), 10) || 0 : 25);
+
     const images = Array.isArray(item.images) && item.images.length > 0
       ? item.images
       : [item.image || '/images/anime_figure_3d.jpg'];
