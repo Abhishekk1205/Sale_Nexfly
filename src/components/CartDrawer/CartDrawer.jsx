@@ -182,6 +182,11 @@ export default function CartDrawer({
                     <div className="cart-item-info">
                       <div className="cart-item-title">{item.name}</div>
                       <div className="cart-item-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', margin: '3px 0' }}>
+                        {(item.productId || item.id) && (
+                          <span className="cart-meta-pill" style={{ fontFamily: 'monospace', fontWeight: 600, color: '#0369a1', background: '#e0f2fe', border: '1px solid #bae6fd' }}>
+                            ID: {item.productId || item.id}
+                          </span>
+                        )}
                         {item.category && <span className="cart-meta-pill">{item.category}</span>}
                         {item.size && <span className="cart-meta-pill">Size: {item.size}</span>}
                         {item.material && (

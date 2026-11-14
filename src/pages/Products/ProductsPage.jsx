@@ -71,7 +71,8 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
     const matchesSearch =
       (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (p.desc || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.brand || '').toLowerCase().includes(searchTerm.toLowerCase());
+      (p.brand || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.productId || p.id || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesCategory && matchesSearch;
   });
@@ -153,11 +154,11 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
             </button>
           </div>
 
-          <div style={{ position: 'relative', width: '300px' }}>
+          <div style={{ position: 'relative', width: '320px' }}>
             <Search size={18} style={{ position: 'absolute', top: '12px', left: '14px', color: '#888' }} />
             <input
               type="text"
-              placeholder="Search components, brand or kits..."
+              placeholder="Search by Product ID, component, brand..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
@@ -275,6 +276,28 @@ export default function ProductsPage({ onOpenQuote, onAddToCart }) {
 
                     {/* Card Body - Clean & Compact */}
                     <div className="card-body" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      {/* Category & Product ID */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', gap: '4px' }}>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          {p.category || (p.isKit ? 'Robotics Kit' : 'Component')}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            fontFamily: 'monospace',
+                            color: '#0369a1',
+                            backgroundColor: '#e0f2fe',
+                            border: '1px solid #bae6fd',
+                            padding: '1px 6px',
+                            borderRadius: '4px'
+                          }}
+                          title="Product ID / SKU"
+                        >
+                          ID: {p.productId || p.id}
+                        </span>
+                      </div>
+
                       {/* Name & Stock Quantity */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.4rem' }}>
                         <Link

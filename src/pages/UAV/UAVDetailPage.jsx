@@ -190,6 +190,7 @@ export default function UAVDetailPage({ onAddToCart, onOpenQuote }) {
     if (onAddToCart) {
       onAddToCart({
         id: `${drone.id}-${selectedAddons.sort().join('-') || 'stock'}`,
+        productId: drone.productId || drone.id,
         name: drone.name,
         category: drone.type || 'UAV Drone',
         price: unitPrice,
@@ -359,6 +360,27 @@ export default function UAVDetailPage({ onAddToCart, onOpenQuote }) {
                 }}
               >
                 {drone.type || 'FPV Aircraft'}
+              </span>
+
+              {/* PRODUCT ID BADGE */}
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  fontFamily: 'monospace',
+                  color: '#0369a1',
+                  backgroundColor: '#e0f2fe',
+                  border: '1px solid #bae6fd',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Product ID / SKU"
+              >
+                <span>Product ID:</span>
+                <strong>{drone.productId || drone.id}</strong>
               </span>
 
               {isOutOfStock ? (

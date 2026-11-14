@@ -135,6 +135,7 @@ export default function ProductDetailPage({ onAddToCart, onOpenQuote }) {
     if (onAddToCart) {
       onAddToCart({
         id: product.id,
+        productId: product.productId || product.id,
         name: product.name,
         category: product.category || (product.isKit ? 'Robotics Kit' : 'Drone Component'),
         brand: product.brand || 'NaviDron Robotics',
@@ -279,6 +280,27 @@ export default function ProductDetailPage({ onAddToCart, onOpenQuote }) {
                 }}
               >
                 {product.category || (product.isKit ? 'Robotics Kit' : 'Drone Component')}
+              </span>
+
+              {/* PRODUCT ID BADGE */}
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  fontFamily: 'monospace',
+                  color: '#0369a1',
+                  backgroundColor: '#e0f2fe',
+                  border: '1px solid #bae6fd',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Product ID / SKU"
+              >
+                <span>Product ID:</span>
+                <strong>{product.productId || product.id}</strong>
               </span>
 
               {/* STOCK QUANTITY BADGE */}

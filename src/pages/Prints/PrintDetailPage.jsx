@@ -177,6 +177,7 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
     if (onAddToCart) {
       onAddToCart({
         id: `${item.id}-${currentOption.size.replace(/[^a-zA-Z0-9]/g, '')}-25strength-${selectedMaterial}`,
+        productId: item.productId || item.id,
         name: item.name,
         category: item.category || '3D Studio',
         brand: item.brand || 'P_Brothers × NaviDron 3D',
@@ -340,6 +341,27 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
                   {item.badge}
                 </span>
               )}
+
+              {/* PRODUCT ID BADGE */}
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  fontFamily: 'monospace',
+                  color: '#be185d',
+                  backgroundColor: '#fdf2f8',
+                  border: '1px solid #fbcfe8',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Product ID / SKU"
+              >
+                <span>Product ID:</span>
+                <strong>{item.productId || item.id}</strong>
+              </span>
 
               {isOutOfStock ? (
                 <span

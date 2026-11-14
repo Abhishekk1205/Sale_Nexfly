@@ -13,7 +13,8 @@ import {
   Eye,
   ShoppingCart,
   Compass,
-  Radio
+  Radio,
+  Search
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import ImageSlider from '../../components/ImageSlider/ImageSlider';
@@ -23,6 +24,7 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
   const navigate = useNavigate();
   const initialTab = searchParams.get('tab') || 'fpv';
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -68,10 +70,10 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
         </div>
       </div>
 
-      {/* Categories Navigator */}
-      <section style={{ padding: '3rem 2rem 1.5rem', background: 'var(--off-white)', borderBottom: '1px solid #e2e8f0' }}>
-        <div className="section-inner">
-          <div className="uav-tabs" style={{ justifyContent: 'center', marginBottom: '1rem', flexWrap: 'wrap' }}>
+      {/* Categories Navigator & Search */}
+      <section style={{ padding: '2rem 2rem 1.5rem', background: 'var(--off-white)', borderBottom: '1px solid #e2e8f0' }}>
+        <div className="section-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div className="uav-tabs" style={{ margin: 0, flexWrap: 'wrap' }}>
             {uavCategories.map((cat) => (
               <button
                 key={cat.id}
@@ -81,6 +83,25 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
                 {cat.name}
               </button>
             ))}
+          </div>
+
+          <div style={{ position: 'relative', width: '300px' }}>
+            <Search size={18} style={{ position: 'absolute', top: '12px', left: '14px', color: '#888' }} />
+            <input
+              type="text"
+              placeholder="Search by Product ID, drone name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '.65rem 1rem .65rem 2.5rem',
+                borderRadius: '50px',
+                border: '1.5px solid rgba(0,200,255,.3)',
+                background: 'white',
+                fontFamily: 'var(--font-body)',
+                fontSize: '.9rem'
+              }}
+            />
           </div>
         </div>
       </section>
@@ -132,7 +153,19 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
             </div>
 
             <div className="grid-3">
-              {selectedCategory.models.map((mod, i) => {
+              {selectedCategory.models
+                .filter((mod) => {
+                  if (!searchTerm.trim()) return true;
+                  const q = searchTerm.toLowerCase();
+                  const modId = `uav-${mod.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+                  return (
+                    (mod.name || '').toLowerCase().includes(q) ||
+                    (mod.desc || '').toLowerCase().includes(q) ||
+                    (mod.brand || '').toLowerCase().includes(q) ||
+                    (mod.productId || mod.id || modId).toLowerCase().includes(q)
+                  );
+                })
+                .map((mod, i) => {
                 const modId = `uav-${mod.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
                 const images = [
                   mod.img || selectedCategory.image,
@@ -220,6 +253,28 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
 
                     {/* Card Body - Clean & Compact */}
                     <div className="card-body" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      {/* Aircraft Category & Product ID */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', gap: '4px' }}>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#00c8ff', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          {selectedCategory.title}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            fontFamily: 'monospace',
+                            color: '#0369a1',
+                            backgroundColor: '#e0f2fe',
+                            border: '1px solid #bae6fd',
+                            padding: '1px 6px',
+                            borderRadius: '4px'
+                          }}
+                          title="Product ID / SKU"
+                        >
+                          ID: {mod.productId || mod.id || modId}
+                        </span>
+                      </div>
+
                       {/* Name & Stock Quantity */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.4rem' }}>
                         <Link
@@ -359,6 +414,7 @@ export default function UAVPage({ onOpenQuote, onAddToCart }) {
                                 if (onAddToCart) {
                                   onAddToCart({
                                     id: modId,
+                                    productId: mod.productId || mod.id || modId,
                                     name: mod.name,
                                     category: selectedCategory.title,
                                     price: numPrice,

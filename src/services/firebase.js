@@ -1252,6 +1252,8 @@ export async function get3DStudioItems() {
 
     return {
       ...item,
+      id: item.id || '',
+      productId: item.productId && String(item.productId).trim() ? String(item.productId).trim() : (item.id || ''),
       price: p8,
       price6Inch: p6,
       price8Inch: p8,
@@ -1292,12 +1294,14 @@ export async function get3DStudioItems() {
 
 export async function save3DStudioItem(item) {
   const id = item.id || `3d-${Date.now()}`;
+  const productId = item.productId && String(item.productId).trim() ? String(item.productId).trim() : id;
   const images = Array.isArray(item.images) && item.images.length > 0
     ? item.images
     : [item.image || '/images/anime_figure_3d.jpg'];
   const cleanItem = {
     ...item,
     id,
+    productId,
     image: images[0] || item.image || '/images/anime_figure_3d.jpg',
     images,
     updatedAt: new Date().toISOString()
@@ -1511,6 +1515,7 @@ export async function getDroneAccessories() {
   if (Array.isArray(cloudList) && cloudList.length > 0) {
     const normalized = cloudList.map((item) => ({
       ...item,
+      productId: item.productId && String(item.productId).trim() ? String(item.productId).trim() : (item.id || ''),
       images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/fpv_racing_drone.jpg']
     }));
     localStorage.setItem(localKey, JSON.stringify(normalized));
@@ -1520,6 +1525,7 @@ export async function getDroneAccessories() {
   if (localList && localList.length > 0) {
     const normalized = localList.map((item) => ({
       ...item,
+      productId: item.productId && String(item.productId).trim() ? String(item.productId).trim() : (item.id || ''),
       images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/fpv_racing_drone.jpg']
     }));
     return normalized;
@@ -1532,12 +1538,14 @@ export async function getDroneAccessories() {
 
 export async function saveDroneAccessory(item) {
   const id = item.id || `acc-${Date.now()}`;
+  const productId = item.productId && String(item.productId).trim() ? String(item.productId).trim() : id;
   const images = Array.isArray(item.images) && item.images.length > 0
     ? item.images
     : [item.image || '/images/fpv_racing_drone.jpg'];
   const cleanItem = {
     ...item,
     id,
+    productId,
     image: images[0] || item.image || '/images/fpv_racing_drone.jpg',
     images,
     updatedAt: new Date().toISOString()
@@ -1733,6 +1741,7 @@ export async function getRoboticsKits() {
   if (Array.isArray(cloudList) && cloudList.length > 0) {
     const normalized = cloudList.map((item) => ({
       ...item,
+      productId: item.productId && String(item.productId).trim() ? String(item.productId).trim() : (item.id || ''),
       images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/college_project_drone.jpg']
     }));
     localStorage.setItem(localKey, JSON.stringify(normalized));
@@ -1742,6 +1751,7 @@ export async function getRoboticsKits() {
   if (localList && localList.length > 0) {
     const normalized = localList.map((item) => ({
       ...item,
+      productId: item.productId && String(item.productId).trim() ? String(item.productId).trim() : (item.id || ''),
       images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/college_project_drone.jpg']
     }));
     return normalized;
@@ -1754,12 +1764,14 @@ export async function getRoboticsKits() {
 
 export async function saveRoboticsKit(item) {
   const id = item.id || `kit-${Date.now()}`;
+  const productId = item.productId && String(item.productId).trim() ? String(item.productId).trim() : id;
   const images = Array.isArray(item.images) && item.images.length > 0
     ? item.images
     : [item.image || '/images/college_project_drone.jpg'];
   const cleanItem = {
     ...item,
     id,
+    productId,
     image: images[0] || item.image || '/images/college_project_drone.jpg',
     images,
     updatedAt: new Date().toISOString()
@@ -1936,6 +1948,7 @@ export async function getUAVPreBuilt() {
   if (Array.isArray(cloudList) && cloudList.length > 0) {
     const normalized = cloudList.map((item) => ({
       ...item,
+      productId: item.productId && String(item.productId).trim() ? String(item.productId).trim() : (item.id || ''),
       images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/fpv_racing_drone.jpg']
     }));
     localStorage.setItem(localKey, JSON.stringify(normalized));
@@ -1945,6 +1958,7 @@ export async function getUAVPreBuilt() {
   if (localList && localList.length > 0) {
     const normalized = localList.map((item) => ({
       ...item,
+      productId: item.productId && String(item.productId).trim() ? String(item.productId).trim() : (item.id || ''),
       images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/fpv_racing_drone.jpg']
     }));
     return normalized;
@@ -1957,12 +1971,14 @@ export async function getUAVPreBuilt() {
 
 export async function saveUAVPreBuilt(item) {
   const id = item.id || `uav-${Date.now()}`;
+  const productId = item.productId && String(item.productId).trim() ? String(item.productId).trim() : id;
   const images = Array.isArray(item.images) && item.images.length > 0
     ? item.images
     : [item.image || '/images/fpv_racing_drone.jpg'];
   const cleanItem = {
     ...item,
     id,
+    productId,
     image: images[0] || item.image || '/images/fpv_racing_drone.jpg',
     images,
     updatedAt: new Date().toISOString()

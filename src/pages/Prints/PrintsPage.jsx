@@ -11,7 +11,8 @@ import {
   ExternalLink,
   Eye,
   Clock,
-  Ruler
+  Ruler,
+  Search
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { get3DStudioItems } from '../../services/firebase';
@@ -22,6 +23,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
   const navigate = useNavigate();
   const initialFilter = searchParams.get('filter') || 'all';
   const [activeFilter, setActiveFilter] = useState(initialFilter);
+  const [searchTerm, setSearchTerm] = useState('');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,6 +70,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
     if (onAddToCart) {
       onAddToCart({
         id: item.id,
+        productId: item.productId || item.id,
         name: item.name,
         category: item.category || '3D Studio',
         size: chosenSize || item.size || '8 inch',
@@ -175,6 +178,28 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
 
         {/* Card Body - Clean & Compact */}
         <div className="card-body" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+          {/* Category & Product ID */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', gap: '4px' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#ff00aa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {item.category || '3D Studio'}
+            </span>
+            <span
+              style={{
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                fontFamily: 'monospace',
+                color: '#be185d',
+                backgroundColor: '#fdf2f8',
+                border: '1px solid #fbcfe8',
+                padding: '1px 6px',
+                borderRadius: '4px'
+              }}
+              title="Product ID / SKU"
+            >
+              ID: {item.productId || item.id}
+            </span>
+          </div>
+
           {/* Name & Stock Quantity */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.4rem' }}>
             <Link
@@ -337,9 +362,21 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
     );
   };
 
-  const animeList = items.filter((i) => i.category === 'Anime');
-  const gamesList = items.filter((i) => i.category === 'Game Characters');
-  const personalList = items.filter((i) => i.category === 'Personal Character');
+  const matchesSearch = (item) => {
+    if (!searchTerm.trim()) return true;
+    const q = searchTerm.toLowerCase();
+    return (
+      (item.name || '').toLowerCase().includes(q) ||
+      (item.desc || '').toLowerCase().includes(q) ||
+      (item.brand || '').toLowerCase().includes(q) ||
+      (item.productId || item.id || '').toLowerCase().includes(q)
+    );
+  };
+
+  const filteredItems = items.filter(matchesSearch);
+  const animeList = filteredItems.filter((i) => i.category === 'Anime');
+  const gamesList = filteredItems.filter((i) => i.category === 'Game Characters');
+  const personalList = filteredItems.filter((i) => i.category === 'Personal Character');
 
   return (
     <div style={{ paddingTop: '74px', backgroundColor: '#ffffff' }}>
@@ -369,9 +406,9 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs & Search */}
       <section style={{ background: 'var(--off-white)', padding: '2rem 2rem 1rem' }}>
-        <div className="section-inner" style={{ display: 'flex', justifyContent: 'center' }}>
+        <div className="section-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div className="uav-tabs" style={{ margin: 0, flexWrap: 'wrap' }}>
             <button className={`uav-tab ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => setActiveFilter('all')}>
               All 3D Studio Items ({items.length})
@@ -385,6 +422,25 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
             <button className={`uav-tab ${activeFilter === 'personal' ? 'active' : ''}`} onClick={() => setActiveFilter('personal')}>
               👤 Personal Character of Image ({personalList.length})
             </button>
+          </div>
+
+          <div style={{ position: 'relative', width: '320px' }}>
+            <Search size={18} style={{ position: 'absolute', top: '12px', left: '14px', color: '#888' }} />
+            <input
+              type="text"
+              placeholder="Search by Product ID, figure name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '.65rem 1rem .65rem 2.5rem',
+                borderRadius: '50px',
+                border: '1.5px solid rgba(255,0,170,.3)',
+                background: 'white',
+                fontFamily: 'var(--font-body)',
+                fontSize: '.9rem'
+              }}
+            />
           </div>
         </div>
       </section>

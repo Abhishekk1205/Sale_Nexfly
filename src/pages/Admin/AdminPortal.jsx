@@ -164,6 +164,7 @@ export default function AdminPortal({ mode = 'main' }) {
   const [itemsSubTab, setItemsSubTab] = useState('drone'); // 'drone' | 'robotics'
   const [threeDSubTab, setThreeDSubTab] = useState('all'); // 'all' | 'Anime' | 'Game Characters' | 'Personal Character'
   const [uavSubTab, setUavSubTab] = useState('prebuilt'); // 'prebuilt' | 'custom'
+  const [productSearch, setProductSearch] = useState('');
 
   // Modal states for adding new items
   const [showAddModal, setShowAddModal] = useState(false);
@@ -171,6 +172,7 @@ export default function AdminPortal({ mode = 'main' }) {
   const [newPhotosList, setNewPhotosList] = useState([]);
   const [addPhotoInput, setAddPhotoInput] = useState('');
   const [newItemForm, setNewItemForm] = useState({
+    productId: '',
     name: '',
     category: 'Anime',
     brand: '',
@@ -195,6 +197,7 @@ export default function AdminPortal({ mode = 'main' }) {
   const [editProductModalOpen, setEditProductModalOpen] = useState(false);
   const [editingProductTarget, setEditingProductTarget] = useState(null); // { item, type }
   const [editProductForm, setEditProductForm] = useState({
+    productId: '',
     name: '',
     category: '',
     brand: '',
@@ -229,6 +232,7 @@ export default function AdminPortal({ mode = 'main' }) {
       : (item.sizeOptions?.find((s) => s.size.includes('10'))?.price || (p8 + 450));
 
     setEditProductForm({
+      productId: item.productId || item.id || '',
       name: item.name || '',
       category: item.category || '',
       brand: item.brand || '',
@@ -265,8 +269,13 @@ export default function AdminPortal({ mode = 'main' }) {
     const p8 = parseInt(String(editProductForm.price8Inch).replace(/[^0-9]/g, ''), 10) || numPrice;
     const p10 = parseInt(String(editProductForm.price10Inch).replace(/[^0-9]/g, ''), 10) || (numPrice + 450);
 
+    const updatedProductId = editProductForm.productId && editProductForm.productId.trim()
+      ? editProductForm.productId.trim()
+      : (item.productId || item.id);
+
     const updatedItem = {
       ...item,
+      productId: updatedProductId,
       name: editProductForm.name,
       category: editProductForm.category,
       brand: editProductForm.brand,
@@ -723,14 +732,19 @@ export default function AdminPortal({ mode = 'main' }) {
       images: finalImages
     };
 
+    const customProductId = newItemForm.productId && newItemForm.productId.trim() ? newItemForm.productId.trim() : null;
+
     try {
       if (modalType === '3dstudio') {
         const p8 = priceVal || 899;
         const p6 = Math.max(299, p8 - 250);
         const p10 = p8 + 450;
+        const docId = customProductId ? sanitizeKey(customProductId).toLowerCase() : `3d-${Date.now()}`;
+        const pId = customProductId || docId;
         const created = await save3DStudioItem({
           ...cleanedPayload,
-          id: `3d-${Date.now()}`,
+          id: docId,
+          productId: pId,
           price: p8,
           price6Inch: p6,
           price8Inch: p8,
@@ -744,28 +758,37 @@ export default function AdminPortal({ mode = 'main' }) {
           infill: "25% Strength"
         });
         setThreeDItems((prev) => [created, ...prev]);
-        showToast(`🎉 Added "${created.name}" to 3DStudio catalog with ${finalImages.length} photos!`);
+        showToast(`🎉 Added "${created.name}" (ID: ${pId}) to 3DStudio catalog with ${finalImages.length} photos!`);
       } else if (modalType === 'drone') {
+        const docId = customProductId ? sanitizeKey(customProductId).toLowerCase() : `part-${Date.now()}`;
+        const pId = customProductId || docId;
         const created = await saveDroneAccessory({
           ...cleanedPayload,
-          id: `part-${Date.now()}`
+          id: docId,
+          productId: pId
         });
         setDroneParts((prev) => [created, ...prev]);
-        showToast(`🎉 Added "${created.name}" to Drone Accessories catalog with ${finalImages.length} photos!`);
+        showToast(`🎉 Added "${created.name}" (ID: ${pId}) to Drone Accessories catalog with ${finalImages.length} photos!`);
       } else if (modalType === 'robotics') {
+        const docId = customProductId ? sanitizeKey(customProductId).toLowerCase() : `kit-${Date.now()}`;
+        const pId = customProductId || docId;
         const created = await saveRoboticsKit({
           ...cleanedPayload,
-          id: `kit-${Date.now()}`
+          id: docId,
+          productId: pId
         });
         setRoboticsKits((prev) => [created, ...prev]);
-        showToast(`🎉 Added "${created.name}" to Robotics Kits catalog with ${finalImages.length} photos!`);
+        showToast(`🎉 Added "${created.name}" (ID: ${pId}) to Robotics Kits catalog with ${finalImages.length} photos!`);
       } else if (modalType === 'uav') {
+        const docId = customProductId ? sanitizeKey(customProductId).toLowerCase() : `uav-${Date.now()}`;
+        const pId = customProductId || docId;
         const created = await saveUAVPreBuilt({
           ...cleanedPayload,
-          id: `uav-${Date.now()}`
+          id: docId,
+          productId: pId
         });
         setUavPreBuilt((prev) => [created, ...prev]);
-        showToast(`🎉 Added "${created.name}" to Pre-Built UAV catalog with ${finalImages.length} photos!`);
+        showToast(`🎉 Added "${created.name}" (ID: ${pId}) to Pre-Built UAV catalog with ${finalImages.length} photos!`);
       }
 
       try {
@@ -776,6 +799,7 @@ export default function AdminPortal({ mode = 'main' }) {
       setNewPhotosList([]);
       setAddPhotoInput('');
       setNewItemForm({
+        productId: '',
         name: '',
         category: 'Anime',
         brand: '',
@@ -811,7 +835,11 @@ export default function AdminPortal({ mode = 'main' }) {
       const matchId = (o.id || '').toLowerCase().includes(q);
       const matchCust = (o.customer?.name || o.customer?.email || '').toLowerCase().includes(q);
       const matchAddr = (o.deliveryAddress || '').toLowerCase().includes(q);
-      return matchId || matchCust || matchAddr;
+      const matchItems = Array.isArray(o.items) && o.items.some((it) =>
+        (it.productId || it.id || '').toLowerCase().includes(q) ||
+        (it.name || '').toLowerCase().includes(q)
+      );
+      return matchId || matchCust || matchAddr || matchItems;
     }
     return true;
   });
@@ -1530,6 +1558,11 @@ export default function AdminPortal({ mode = 'main' }) {
                                         </div>
 
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.35rem' }}>
+                                          {(it.productId || it.id) && (
+                                            <span style={{ fontSize: '0.7rem', padding: '1px 6px', background: 'rgba(0,240,255,0.1)', border: '1px solid rgba(0,240,255,0.25)', borderRadius: '4px', color: 'var(--neon)', fontFamily: 'monospace', fontWeight: 600 }}>
+                                              ID: {it.productId || it.id}
+                                            </span>
+                                          )}
                                           {it.category && (
                                             <span style={{ fontSize: '0.7rem', padding: '1px 6px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', color: '#cbd5e1' }}>
                                               {it.category}
@@ -1645,7 +1678,27 @@ export default function AdminPortal({ mode = 'main' }) {
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', minWidth: '220px' }}>
+                      <Search size={14} style={{ position: 'absolute', left: '10px', top: '10px', color: '#64748b' }} />
+                      <input
+                        type="text"
+                        placeholder="Search Product ID, Name..."
+                        value={productSearch}
+                        onChange={(e) => setProductSearch(e.target.value)}
+                        style={{
+                          padding: '0.45rem 0.75rem 0.45rem 2rem',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '0.8rem',
+                          outline: 'none',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
+
                     <div style={{ display: 'flex', background: '#1e293b', borderRadius: '8px', padding: '3px' }}>
                       <button
                         type="button"
@@ -1694,7 +1747,19 @@ export default function AdminPortal({ mode = 'main' }) {
                 {/* Drone Parts Sub-Tab */}
                 {itemsSubTab === 'drone' && (
                   <div className="admin-items-grid">
-                    {droneParts.map((item) => (
+                    {droneParts
+                      .filter((item) => {
+                        if (!productSearch.trim()) return true;
+                        const q = productSearch.toLowerCase();
+                        return (
+                          (item.productId || '').toLowerCase().includes(q) ||
+                          (item.id || '').toLowerCase().includes(q) ||
+                          (item.name || '').toLowerCase().includes(q) ||
+                          (item.category || '').toLowerCase().includes(q) ||
+                          (item.brand || '').toLowerCase().includes(q)
+                        );
+                      })
+                      .map((item) => (
                       <div key={item.id} className="admin-prod-card">
                         <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
                           <ImageSlider
@@ -1706,15 +1771,18 @@ export default function AdminPortal({ mode = 'main' }) {
                           />
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', gap: '4px' }}>
                           <span style={{ fontSize: '0.7rem', color: 'var(--neon)', fontWeight: 700, textTransform: 'uppercase' }}>
                             {item.category || 'Parts'}
+                          </span>
+                          <span style={{ fontSize: '0.72rem', background: 'rgba(0, 240, 255, 0.1)', color: 'var(--neon)', border: '1px solid rgba(0, 240, 255, 0.3)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontWeight: 700 }} title="Product ID / SKU">
+                            ID: {item.productId || item.id}
                           </span>
                           <a
                             href={`/products/${item.id}`}
                             target="_blank"
                             rel="noreferrer"
-                            style={{ fontSize: '0.72rem', color: 'var(--neon)', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none' }}
+                            style={{ fontSize: '0.72rem', color: 'var(--neon)', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none', marginLeft: 'auto' }}
                             title="Preview Customer Detail Page"
                           >
                             <ExternalLink size={12} /> Detail Page
@@ -1822,7 +1890,19 @@ export default function AdminPortal({ mode = 'main' }) {
                 {/* Robotics Kits Sub-Tab */}
                 {itemsSubTab === 'robotics' && (
                   <div className="admin-items-grid">
-                    {roboticsKits.map((item) => (
+                    {roboticsKits
+                      .filter((item) => {
+                        if (!productSearch.trim()) return true;
+                        const q = productSearch.toLowerCase();
+                        return (
+                          (item.productId || '').toLowerCase().includes(q) ||
+                          (item.id || '').toLowerCase().includes(q) ||
+                          (item.name || '').toLowerCase().includes(q) ||
+                          (item.kitType || '').toLowerCase().includes(q) ||
+                          (item.brand || '').toLowerCase().includes(q)
+                        );
+                      })
+                      .map((item) => (
                       <div key={item.id} className="admin-prod-card">
                         <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
                           <ImageSlider
@@ -1834,15 +1914,18 @@ export default function AdminPortal({ mode = 'main' }) {
                           />
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', gap: '4px' }}>
                           <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 700, textTransform: 'uppercase' }}>
                             {item.kitType || 'Kit'}
+                          </span>
+                          <span style={{ fontSize: '0.72rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontWeight: 700 }} title="Product ID / SKU">
+                            ID: {item.productId || item.id}
                           </span>
                           <a
                             href={`/products/${item.id}`}
                             target="_blank"
                             rel="noreferrer"
-                            style={{ fontSize: '0.72rem', color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none' }}
+                            style={{ fontSize: '0.72rem', color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none', marginLeft: 'auto' }}
                             title="Preview Customer Detail Page"
                           >
                             <ExternalLink size={12} /> Detail Page
@@ -1962,7 +2045,27 @@ export default function AdminPortal({ mode = 'main' }) {
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', minWidth: '220px' }}>
+                      <Search size={14} style={{ position: 'absolute', left: '10px', top: '10px', color: '#64748b' }} />
+                      <input
+                        type="text"
+                        placeholder="Search Product ID, Name..."
+                        value={productSearch}
+                        onChange={(e) => setProductSearch(e.target.value)}
+                        style={{
+                          padding: '0.45rem 0.75rem 0.45rem 2rem',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '0.8rem',
+                          outline: 'none',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
+
                     <div style={{ display: 'flex', background: '#1e293b', borderRadius: '8px', padding: '3px' }}>
                       {['all', 'Anime', 'Game Characters', 'Personal Character'].map((sub) => (
                         <button
@@ -1997,7 +2100,19 @@ export default function AdminPortal({ mode = 'main' }) {
 
                 <div className="admin-items-grid">
                   {threeDItems
-                    .filter((it) => threeDSubTab === 'all' || it.category === threeDSubTab)
+                    .filter((it) => {
+                      const matchTab = threeDSubTab === 'all' || it.category === threeDSubTab;
+                      if (!matchTab) return false;
+                      if (!productSearch.trim()) return true;
+                      const q = productSearch.toLowerCase();
+                      return (
+                        (it.productId || '').toLowerCase().includes(q) ||
+                        (it.id || '').toLowerCase().includes(q) ||
+                        (it.name || '').toLowerCase().includes(q) ||
+                        (it.category || '').toLowerCase().includes(q) ||
+                        (it.brand || '').toLowerCase().includes(q)
+                      );
+                    })
                     .map((item) => (
                       <div key={item.id} className="admin-prod-card">
                         <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
@@ -2010,15 +2125,18 @@ export default function AdminPortal({ mode = 'main' }) {
                           />
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem', gap: '4px' }}>
                           <span style={{ fontSize: '0.7rem', color: '#ff00aa', fontWeight: 700, textTransform: 'uppercase' }}>
                             {item.category || '3D Studio'}
+                          </span>
+                          <span style={{ fontSize: '0.72rem', background: 'rgba(255, 0, 170, 0.1)', color: '#ff00aa', border: '1px solid rgba(255, 0, 170, 0.3)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontWeight: 700 }} title="Product ID / SKU">
+                            ID: {item.productId || item.id}
                           </span>
                           <a
                             href={`/prints/${item.id}`}
                             target="_blank"
                             rel="noreferrer"
-                            style={{ fontSize: '0.72rem', color: '#ff00aa', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none' }}
+                            style={{ fontSize: '0.72rem', color: '#ff00aa', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none', marginLeft: 'auto' }}
                             title="Preview Customer Detail Page"
                           >
                             <ExternalLink size={12} /> Detail Page
@@ -2186,7 +2304,27 @@ export default function AdminPortal({ mode = 'main' }) {
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', minWidth: '220px' }}>
+                      <Search size={14} style={{ position: 'absolute', left: '10px', top: '10px', color: '#64748b' }} />
+                      <input
+                        type="text"
+                        placeholder="Search Product ID, Name..."
+                        value={productSearch}
+                        onChange={(e) => setProductSearch(e.target.value)}
+                        style={{
+                          padding: '0.45rem 0.75rem 0.45rem 2rem',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '0.8rem',
+                          outline: 'none',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
+
                     <div style={{ display: 'flex', background: '#1e293b', borderRadius: '8px', padding: '3px' }}>
                       <button
                         type="button"
@@ -2239,7 +2377,19 @@ export default function AdminPortal({ mode = 'main' }) {
                 {/* Prebuilt UAVs */}
                 {uavSubTab === 'prebuilt' && (
                   <div className="admin-items-grid">
-                    {uavPreBuilt.map((item) => (
+                    {uavPreBuilt
+                      .filter((item) => {
+                        if (!productSearch.trim()) return true;
+                        const q = productSearch.toLowerCase();
+                        return (
+                          (item.productId || '').toLowerCase().includes(q) ||
+                          (item.id || '').toLowerCase().includes(q) ||
+                          (item.name || '').toLowerCase().includes(q) ||
+                          (item.type || '').toLowerCase().includes(q) ||
+                          (item.brand || '').toLowerCase().includes(q)
+                        );
+                      })
+                      .map((item) => (
                       <div key={item.id} className="admin-prod-card">
                         <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
                           <ImageSlider
@@ -2251,15 +2401,18 @@ export default function AdminPortal({ mode = 'main' }) {
                           />
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', gap: '4px' }}>
                           <span style={{ fontSize: '0.7rem', color: 'var(--neon)', fontWeight: 700, textTransform: 'uppercase' }}>
                             {item.type || 'UAV'}
+                          </span>
+                          <span style={{ fontSize: '0.72rem', background: 'rgba(0, 240, 255, 0.1)', color: 'var(--neon)', border: '1px solid rgba(0, 240, 255, 0.3)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontWeight: 700 }} title="Product ID / SKU">
+                            ID: {item.productId || item.id}
                           </span>
                           <a
                             href={`/uav/${item.id}`}
                             target="_blank"
                             rel="noreferrer"
-                            style={{ fontSize: '0.72rem', color: 'var(--neon)', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none' }}
+                            style={{ fontSize: '0.72rem', color: 'var(--neon)', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none', marginLeft: 'auto' }}
                             title="Preview Customer Detail Page"
                           >
                             <ExternalLink size={12} /> Detail Page
@@ -2637,16 +2790,29 @@ export default function AdminPortal({ mode = 'main' }) {
             </div>
 
             <form onSubmit={handleAddNewSubmit} className="admin-modal-form-grid">
-              <div className="full-span">
-                <label className="form-field-label" style={{ color: '#cbd5e1' }}>Item Name *</label>
-                <input
-                  type="text"
-                  className="profile-input"
-                  value={newItemForm.name}
-                  onChange={(e) => setNewItemForm({ ...newItemForm, name: e.target.value })}
-                  placeholder=""
-                  required
-                />
+              <div className="full-span" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
+                <div>
+                  <label className="form-field-label" style={{ color: '#cbd5e1' }}>Product ID / SKU</label>
+                  <input
+                    type="text"
+                    className="profile-input"
+                    style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--neon)' }}
+                    value={newItemForm.productId}
+                    onChange={(e) => setNewItemForm({ ...newItemForm, productId: e.target.value })}
+                    placeholder="e.g. ND-PROD-01 (Auto if empty)"
+                  />
+                </div>
+                <div>
+                  <label className="form-field-label" style={{ color: '#cbd5e1' }}>Item Name *</label>
+                  <input
+                    type="text"
+                    className="profile-input"
+                    value={newItemForm.name}
+                    onChange={(e) => setNewItemForm({ ...newItemForm, name: e.target.value })}
+                    placeholder="Enter full product name"
+                    required
+                  />
+                </div>
               </div>
 
               {/* Category for 3D Studio */}
@@ -3121,17 +3287,34 @@ export default function AdminPortal({ mode = 'main' }) {
             </div>
 
             <form onSubmit={handleSaveProductDetails} className="admin-modal-body">
-              {/* Product Name */}
-              <div className="admin-input-group" style={{ marginBottom: '0.9rem' }}>
-                <label>Product Name *</label>
-                <input
-                  type="text"
-                  required
-                  className="admin-input-field"
-                  value={editProductForm.name}
-                  onChange={(e) => setEditProductForm((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="e.g. Gojo Satoru 3D Figure"
-                />
+              {/* Product ID & Product Name */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem', marginBottom: '0.9rem' }}>
+                <div className="admin-input-group">
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>Product ID / SKU *</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--neon)', fontWeight: 700 }}>Custom / Editable</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="admin-input-field"
+                    style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--neon)', letterSpacing: '0.5px' }}
+                    value={editProductForm.productId}
+                    onChange={(e) => setEditProductForm((prev) => ({ ...prev, productId: e.target.value }))}
+                    placeholder="e.g. ND-PART-2207"
+                  />
+                </div>
+                <div className="admin-input-group">
+                  <label>Product Name *</label>
+                  <input
+                    type="text"
+                    required
+                    className="admin-input-field"
+                    value={editProductForm.name}
+                    onChange={(e) => setEditProductForm((prev) => ({ ...prev, name: e.target.value }))}
+                    placeholder="e.g. Gojo Satoru 3D Figure"
+                  />
+                </div>
               </div>
 
               {/* Category & Brand */}
