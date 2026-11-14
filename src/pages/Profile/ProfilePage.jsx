@@ -8,6 +8,7 @@ import {
   Mail,
   CheckCircle,
   Clock,
+  Calendar,
   XCircle,
   Plus,
   Trash2,
@@ -111,6 +112,20 @@ export default function ProfilePage({
 
   const [orderFilter, setOrderFilter] = useState('all'); // 'all' | 'Delivered' | 'Succeeded' | 'Cancelled'
   const [orderSearch, setOrderSearch] = useState('');
+
+  const displayOrderDate = (ord) => {
+    if (ord.orderDate) return ord.orderDate;
+    const dt = ord.createdAt ? new Date(ord.createdAt) : (ord.date ? new Date(ord.date) : null);
+    if (!dt || isNaN(dt.getTime())) return ord.date || 'Recent';
+    return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const displayOrderTime = (ord) => {
+    if (ord.orderTime) return ord.orderTime;
+    const dt = ord.createdAt ? new Date(ord.createdAt) : (ord.date && ord.date.includes('T') ? new Date(ord.date) : null);
+    if (!dt || isNaN(dt.getTime())) return '';
+    return dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+  };
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -714,8 +729,12 @@ export default function ProfilePage({
                         <div className="order-card-header">
                           <div className="order-card-meta">
                             <span className="order-id-code">#{ord.id}</span>
-                            <span className="order-date-text">
-                              Placed on {new Date(ord.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            <span className="order-date-text" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+                              <Calendar size={13} color="#64748b" />
+                              <span>Placed on {displayOrderDate(ord)}</span>
+                              <span style={{ color: '#cbd5e1' }}>•</span>
+                              <Clock size={13} color="#64748b" />
+                              <span>{displayOrderTime(ord) || '12:00 PM'}</span>
                             </span>
                             <span className="order-payment-tag">{ord.paymentStatus}</span>
                           </div>

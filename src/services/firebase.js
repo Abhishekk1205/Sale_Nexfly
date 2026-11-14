@@ -853,8 +853,12 @@ export async function getAllOrders() {
   try {
     const list = await readFirestoreCollection('Order');
     if (Array.isArray(list) && list.length > 0) {
-      // Sort newest first
-      list.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+      // Sort newest first by orderTimestamp or createdAt or date
+      list.sort((a, b) => {
+        const timeA = a.orderTimestamp || (a.createdAt ? new Date(a.createdAt).getTime() : (a.date ? new Date(a.date).getTime() : 0));
+        const timeB = b.orderTimestamp || (b.createdAt ? new Date(b.createdAt).getTime() : (b.date ? new Date(b.date).getTime() : 0));
+        return timeB - timeA;
+      });
       localStorage.setItem('navidron_global_orders', JSON.stringify(list));
       return list;
     }
@@ -865,12 +869,34 @@ export async function getAllOrders() {
 
 export async function createGlobalOrder(orderData) {
   const orderId = orderData.id || `NVD-${Math.floor(10000 + Math.random() * 90000)}`;
+  const now = new Date();
+  const baseDate = orderData.createdAt ? new Date(orderData.createdAt) : now;
+  const validDate = isNaN(baseDate.getTime()) ? now : baseDate;
+
+  const orderDate = orderData.orderDate || validDate.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+  const orderTime = orderData.orderTime || validDate.toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+  const orderDateTime = orderData.orderDateTime || `${orderDate} at ${orderTime}`;
+  const orderTimestamp = orderData.orderTimestamp || validDate.getTime();
+
   const cleanOrder = {
     ...orderData,
     id: orderId,
-    createdAt: orderData.createdAt || new Date().toISOString(),
-    status: orderData.status || 'Succeeded',
-    date: orderData.date || new Date().toISOString().split('T')[0]
+    date: orderData.date || validDate.toISOString().split('T')[0],
+    orderDate,
+    orderTime,
+    orderDateTime,
+    orderTimestamp,
+    createdAt: orderData.createdAt || validDate.toISOString(),
+    status: orderData.status || 'Succeeded'
   };
 
   // 1. Save to global Order collection in Firestore
@@ -2020,10 +2046,30 @@ export async function getUAVCustomOrders() {
 
 export async function submitUAVCustomOrder(orderData) {
   const id = orderData.id || `CUSTOM-UAV-${Math.floor(10000 + Math.random() * 90000)}`;
+  const now = new Date();
+  const orderDate = orderData.orderDate || now.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+  const orderTime = orderData.orderTime || now.toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+  const orderDateTime = `${orderDate} at ${orderTime}`;
+  const orderTimestamp = now.getTime();
+
   const cleanOrder = {
     ...orderData,
     id,
-    createdAt: new Date().toISOString(),
+    date: now.toISOString().split('T')[0],
+    orderDate,
+    orderTime,
+    orderDateTime,
+    orderTimestamp,
+    createdAt: now.toISOString(),
     status: orderData.status || 'Pending Review'
   };
 

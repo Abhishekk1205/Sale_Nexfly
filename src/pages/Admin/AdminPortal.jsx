@@ -14,6 +14,7 @@ import {
   Save,
   CheckCircle2,
   Clock,
+  Calendar,
   MapPin,
   Phone,
   Mail,
@@ -844,6 +845,24 @@ export default function AdminPortal({ mode = 'main' }) {
     return true;
   });
 
+  const displayOrderDate = (o) => {
+    if (o.orderDate) return o.orderDate;
+    const dt = o.createdAt ? new Date(o.createdAt) : (o.date ? new Date(o.date) : null);
+    if (dt && !isNaN(dt.getTime())) {
+      return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    return o.date || 'Recent';
+  };
+
+  const displayOrderTime = (o) => {
+    if (o.orderTime) return o.orderTime;
+    const dt = o.createdAt ? new Date(o.createdAt) : (o.date && o.date.includes('T') ? new Date(o.date) : null);
+    if (dt && !isNaN(dt.getTime())) {
+      return dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    }
+    return '';
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="admin-lock-screen">
@@ -1435,11 +1454,15 @@ export default function AdminPortal({ mode = 'main' }) {
                       return (
                         <div key={ord.id} className="admin-order-box">
                           <div className="admin-order-header">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                               <span className="admin-order-id-badge">#{ord.id}</span>
-                              <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                                Date: {ord.date || ord.createdAt?.split('T')[0] || 'Today'}
-                              </span>
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.78rem', background: 'rgba(255, 255, 255, 0.05)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                <Calendar size={12} color="#38bdf8" />
+                                <span style={{ color: '#fff', fontWeight: 600 }}>{displayOrderDate(ord)}</span>
+                                <span style={{ color: '#64748b' }}>•</span>
+                                <Clock size={12} color="#38bdf8" />
+                                <span style={{ color: '#38bdf8', fontWeight: 600 }}>{displayOrderTime(ord) || '12:00 PM'}</span>
+                              </div>
                               {ord.type && (
                                 <span style={{ fontSize: '0.7rem', padding: '2px 7px', background: 'rgba(0,200,255,0.15)', color: 'var(--neon)', borderRadius: '4px', fontWeight: 700 }}>
                                   {ord.type}
@@ -2532,11 +2555,15 @@ export default function AdminPortal({ mode = 'main' }) {
                         {uavCustomOrders.map((ord) => (
                           <div key={ord.id} className="admin-order-box">
                             <div className="admin-order-header">
-                              <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
                                 <span className="admin-order-id-badge">#{ord.id}</span>
-                                <span style={{ marginLeft: '0.75rem', fontSize: '0.8rem', color: '#94a3b8' }}>
-                                  Custom Order Request • {ord.createdAt?.split('T')[0] || 'Recent'}
-                                </span>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.78rem', background: 'rgba(255, 255, 255, 0.05)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                  <Calendar size={12} color="#38bdf8" />
+                                  <span style={{ color: '#fff', fontWeight: 600 }}>{displayOrderDate(ord)}</span>
+                                  <span style={{ color: '#64748b' }}>•</span>
+                                  <Clock size={12} color="#38bdf8" />
+                                  <span style={{ color: '#38bdf8', fontWeight: 600 }}>{displayOrderTime(ord) || '12:00 PM'}</span>
+                                </div>
                               </div>
                               <select
                                 className="admin-status-dropdown"
@@ -2621,11 +2648,15 @@ export default function AdminPortal({ mode = 'main' }) {
                       {uavCustomOrders.map((ord) => (
                         <div key={ord.id} className="admin-order-box">
                           <div className="admin-order-header">
-                            <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
                               <span className="admin-order-id-badge">#{ord.id}</span>
-                              <span style={{ marginLeft: '0.75rem', fontSize: '0.8rem', color: '#94a3b8' }}>
-                                Custom Order Request • {ord.createdAt?.split('T')[0] || 'Recent'}
-                              </span>
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.78rem', background: 'rgba(255, 255, 255, 0.05)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                <Calendar size={12} color="#38bdf8" />
+                                <span style={{ color: '#fff', fontWeight: 600 }}>{displayOrderDate(ord)}</span>
+                                <span style={{ color: '#64748b' }}>•</span>
+                                <Clock size={12} color="#38bdf8" />
+                                <span style={{ color: '#38bdf8', fontWeight: 600 }}>{displayOrderTime(ord) || '12:00 PM'}</span>
+                              </div>
                             </div>
                             <select
                               className="admin-status-dropdown"

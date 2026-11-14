@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, MapPin, CheckCircle2 } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, MapPin, CheckCircle2, Calendar, Clock } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { createGlobalOrder, clearUserCart } from '../../services/firebase';
 
@@ -41,10 +41,29 @@ export default function CartDrawer({
       : `${customAddress.trim()}${customLandmark.trim() ? ', Landmark: ' + customLandmark.trim() : ''}` || 'A. M. Das Lane, Brahmpura, Muzaffarpur, Bihar - 842003';
 
     const randId = Math.floor(10000 + Math.random() * 90000);
+    const now = new Date();
+    const orderDate = now.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+    const orderTime = now.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+    const orderDateTime = `${orderDate} at ${orderTime}`;
+    const orderTimestamp = now.getTime();
+
     const orderPayload = {
       id: `NVD-${randId}`,
-      date: new Date().toISOString().split('T')[0],
-      createdAt: new Date().toISOString(),
+      date: now.toISOString().split('T')[0],
+      orderDate,
+      orderTime,
+      orderDateTime,
+      orderTimestamp,
+      createdAt: now.toISOString(),
       customer: {
         uid: user?.id || user?.uid || 'guest_user',
         name: user?.name || user?.fullName || 'Pilot Customer',
@@ -55,6 +74,7 @@ export default function CartDrawer({
       deliveryAddress: deliveryAddressStr,
       items: cart.map((it) => ({
         id: it.id,
+        productId: it.productId || it.id,
         name: it.name,
         category: it.category || 'Store Item',
         brand: it.brand || null,
@@ -129,10 +149,39 @@ export default function CartDrawer({
             <p style={{ color: '#475569', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
               Order <strong>#{orderSuccess.id}</strong> has been registered and linked to your profile!
             </p>
-            <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '10px', textAlign: 'left', marginBottom: '1.5rem', fontSize: '0.84rem' }}>
-              <div><strong>Recipient Address:</strong> {orderSuccess.deliveryAddress}</div>
-              <div style={{ marginTop: '0.35rem' }}><strong>Total Paid:</strong> ₹{orderSuccess.totalAmount.toLocaleString('en-IN')}</div>
-              <div style={{ marginTop: '0.35rem' }}><strong>Tracking ID:</strong> {orderSuccess.trackingNumber}</div>
+            <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', padding: '1rem', borderRadius: '12px', textAlign: 'left', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 800, color: 'var(--navy)', fontSize: '0.95rem' }}>
+                  Order #{orderSuccess.id}
+                </span>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '4px' }}>
+                  {orderSuccess.status || 'Confirmed'}
+                </span>
+              </div>
+
+              {/* Order Date & Time display */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', padding: '0.55rem 0.75rem', background: '#eff6ff', borderRadius: '8px', border: '1px solid #dbeafe', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1e40af', fontSize: '0.8rem' }}>
+                  <Calendar size={14} color="#2563eb" />
+                  <span><strong>Date:</strong> {orderSuccess.orderDate || new Date(orderSuccess.createdAt || orderSuccess.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1e40af', fontSize: '0.8rem' }}>
+                  <Clock size={14} color="#2563eb" />
+                  <span><strong>Time:</strong> {orderSuccess.orderTime || new Date(orderSuccess.createdAt || orderSuccess.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</span>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '0.4rem', color: '#334155' }}>
+                <strong>Recipient Address:</strong> {orderSuccess.deliveryAddress}
+              </div>
+              <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#334155' }}><strong>Total Paid:</strong></span>
+                <strong style={{ color: '#0f172a', fontSize: '0.95rem' }}>₹{orderSuccess.totalAmount.toLocaleString('en-IN')}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '0.8rem' }}>
+                <span><strong>Tracking ID:</strong> {orderSuccess.trackingNumber}</span>
+                <span><strong>Payment:</strong> UPI / Card Online</span>
+              </div>
             </div>
             <button
               type="button"
