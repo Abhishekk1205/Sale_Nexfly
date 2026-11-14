@@ -20,6 +20,8 @@ import ServicesPage from './pages/Services/ServicesPage';
 import ContactPage from './pages/Contact/ContactPage';
 import ProfilePage from './pages/Profile/ProfilePage';
 import AdminPortal from './pages/Admin/AdminPortal';
+import ProductsAdminPortal from './pages/Admin/ProductsAdminPortal';
+import OrdersAdminPortal from './pages/Admin/OrdersAdminPortal';
 import CartDrawer from './components/CartDrawer/CartDrawer';
 import {
   syncUserFullDataToFirebase,
@@ -222,7 +224,11 @@ export default function App() {
               />
             }
           />
-          <Route path="/admin" element={<AdminPortal />} />
+          <Route path="/admin" element={<AdminPortal mode="main" />} />
+          <Route path="/admin/products" element={<ProductsAdminPortal />} />
+          <Route path="/admin-products" element={<ProductsAdminPortal />} />
+          <Route path="/admin/orders" element={<OrdersAdminPortal />} />
+          <Route path="/admin-orders" element={<OrdersAdminPortal />} />
           <Route
             path="/sso-callback"
             element={<AuthenticateWithRedirectCallback signInForceRedirectUrl="/profile" signUpForceRedirectUrl="/profile" />}

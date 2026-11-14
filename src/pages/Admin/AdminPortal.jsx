@@ -39,9 +39,18 @@ import {
 import confetti from 'canvas-confetti';
 import ImageSlider from '../../components/ImageSlider/ImageSlider';
 
-const VALID_ADMIN_ACCOUNTS = [
-  { id: 'admin@nexfly.com', pass: 'Abhi@2076', display: 'Admin@nexfly.com' },
-  { id: 'admin1@nexfly.com', pass: 'Abhi@2076', display: 'Admin1@nexfly.com' }
+export const VALID_ADMIN_ACCOUNTS = [
+  // Super Admin - Master Access (Orders, Catalog, Profile, and exclusively Users & Logins)
+  { id: 'admin@nexfly.com', pass: 'Abhi@2076', display: 'Admin@nexfly.com', role: 'superadmin' },
+  { id: 'admin1@nexfly.com', pass: 'Abhi@2076', display: 'Admin1@nexfly.com', role: 'superadmin' },
+
+  // Products & Catalog Admin - Limited Access (3D Studio, Drone Parts, Robotics Kits, UAV & RC Planes)
+  { id: 'products@nexfly.com', pass: 'Prod@2076', display: 'Products Manager', role: 'products' },
+  { id: 'catalog@nexfly.com', pass: 'Prod@2076', display: 'Catalog Manager', role: 'products' },
+
+  // Orders & Logistics Admin - Limited Access (Customer Orders & Custom UAV Quotation Requests)
+  { id: 'orders@nexfly.com', pass: 'Order@2076', display: 'Orders Manager', role: 'orders' },
+  { id: 'logistics@nexfly.com', pass: 'Order@2076', display: 'Dispatch & Logistics', role: 'orders' }
 ];
 import {
   getAllOrders,
@@ -64,22 +73,81 @@ import {
   isFirebaseOnline
 } from '../../services/firebase';
 
-export default function AdminPortal() {
+export default function AdminPortal({ mode = 'main' }) {
+  const authKey = mode === 'products'
+    ? 'navidron_products_admin_authenticated'
+    : mode === 'orders'
+    ? 'navidron_orders_admin_authenticated'
+    : 'navidron_admin_authenticated';
+
+  const userKey = mode === 'products'
+    ? 'navidron_products_admin_user'
+    : mode === 'orders'
+    ? 'navidron_orders_admin_user'
+    : 'navidron_admin_user';
+
+  const roleKey = mode === 'products'
+    ? 'navidron_products_admin_role'
+    : mode === 'orders'
+    ? 'navidron_orders_admin_role'
+    : 'navidron_admin_role';
+
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem('navidron_admin_authenticated') === 'true';
+    // Super admin can access any panel
+    if (sessionStorage.getItem('navidron_admin_authenticated') === 'true') {
+      return true;
+    }
+    return sessionStorage.getItem(authKey) === 'true';
   });
+
   const [currentAdminUser, setCurrentAdminUser] = useState(() => {
-    return sessionStorage.getItem('navidron_admin_user') || 'Admin@nexfly.com';
+    if (sessionStorage.getItem('navidron_admin_authenticated') === 'true') {
+      return sessionStorage.getItem('navidron_admin_user') || 'Admin@nexfly.com';
+    }
+    return (
+      sessionStorage.getItem(userKey) ||
+      (mode === 'products' ? 'Products Manager' : mode === 'orders' ? 'Orders Manager' : 'Admin@nexfly.com')
+    );
   });
+
+  const [currentAdminRole, setCurrentAdminRole] = useState(() => {
+    if (sessionStorage.getItem('navidron_admin_authenticated') === 'true') {
+      return 'superadmin';
+    }
+    return (
+      sessionStorage.getItem(roleKey) ||
+      (mode === 'products' ? 'products' : mode === 'orders' ? 'orders' : 'superadmin')
+    );
+  });
+
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
 
-  const [activeTab, setActiveTab] = useState('orders'); // 'profile' | 'orders' | 'items' | '3dstudio' | 'uav' | 'users'
+  const getDefaultTab = () => {
+    if (mode === 'products') return '3dstudio';
+    if (mode === 'orders') return 'orders';
+    return 'orders';
+  };
+
+  const [activeTab, setActiveTab] = useState(getDefaultTab); // 'profile' | 'orders' | 'items' | '3dstudio' | 'uav' | 'uav_custom' | 'users'
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Tab containment guard per mode
+  useEffect(() => {
+    if (mode === 'products') {
+      if (activeTab === 'orders' || activeTab === 'users' || activeTab === 'profile' || activeTab === 'uav_custom') {
+        setActiveTab('3dstudio');
+      }
+    } else if (mode === 'orders') {
+      if (activeTab === 'items' || activeTab === '3dstudio' || activeTab === 'uav' || activeTab === 'users' || activeTab === 'profile') {
+        setActiveTab('orders');
+      }
+    }
+  }, [mode, activeTab]);
 
   // Data states
   const [orders, setOrders] = useState([]);
@@ -351,22 +419,42 @@ export default function AdminPortal() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [ords, prints, parts, kits, uavs, customs, usrs] = await Promise.all([
-        getAllOrders(),
-        get3DStudioItems(),
-        getDroneAccessories(),
-        getRoboticsKits(),
-        getUAVPreBuilt(),
-        getUAVCustomOrders(),
-        getAllUsers()
-      ]);
-      setOrders(ords);
-      setThreeDItems(prints);
-      setDroneParts(parts);
-      setRoboticsKits(kits);
-      setUavPreBuilt(uavs);
-      setUavCustomOrders(customs);
-      setUsersList(usrs);
+      if (mode === 'products') {
+        const [prints, parts, kits, uavs] = await Promise.all([
+          get3DStudioItems(),
+          getDroneAccessories(),
+          getRoboticsKits(),
+          getUAVPreBuilt()
+        ]);
+        setThreeDItems(prints || []);
+        setDroneParts(parts || []);
+        setRoboticsKits(kits || []);
+        setUavPreBuilt(uavs || []);
+      } else if (mode === 'orders') {
+        const [ords, customs] = await Promise.all([
+          getAllOrders(),
+          getUAVCustomOrders()
+        ]);
+        setOrders(ords || []);
+        setUavCustomOrders(customs || []);
+      } else {
+        const [ords, prints, parts, kits, uavs, customs, usrs] = await Promise.all([
+          getAllOrders(),
+          get3DStudioItems(),
+          getDroneAccessories(),
+          getRoboticsKits(),
+          getUAVPreBuilt(),
+          getUAVCustomOrders(),
+          getAllUsers()
+        ]);
+        setOrders(ords || []);
+        setThreeDItems(prints || []);
+        setDroneParts(parts || []);
+        setRoboticsKits(kits || []);
+        setUavPreBuilt(uavs || []);
+        setUavCustomOrders(customs || []);
+        setUsersList(usrs || []);
+      }
     } catch (err) {
       console.error('Error loading admin portal data:', err);
     } finally {
@@ -384,24 +472,72 @@ export default function AdminPortal() {
       (acc) => acc.id === cleanId && acc.pass === cleanPass
     );
 
-    if (matched) {
+    if (!matched) {
+      setLoginError('Access Denied: Invalid Admin ID or Password. Verify your credentials.');
+      return;
+    }
+
+    // Role-based verification
+    if (mode === 'main' && matched.role !== 'superadmin') {
+      if (matched.role === 'products') {
+        setLoginError('Access Restricted: This account has Products & Catalog access only. Please visit /admin/products.');
+      } else if (matched.role === 'orders') {
+        setLoginError('Access Restricted: This account has Orders access only. Please visit /admin/orders.');
+      } else {
+        setLoginError('Access Denied: Main Super Admin credentials required to view this deck.');
+      }
+      return;
+    }
+
+    if (mode === 'products' && matched.role !== 'products' && matched.role !== 'superadmin') {
+      setLoginError('Access Denied: This account is not authorized for Products & Catalog administration.');
+      return;
+    }
+
+    if (mode === 'orders' && matched.role !== 'orders' && matched.role !== 'superadmin') {
+      setLoginError('Access Denied: This account is not authorized for Orders & Logistics administration.');
+      return;
+    }
+
+    // Persist authenticated state
+    if (matched.role === 'superadmin' && mode === 'main') {
       sessionStorage.setItem('navidron_admin_authenticated', 'true');
       sessionStorage.setItem('navidron_admin_user', matched.display);
-      setIsAuthenticated(true);
-      setCurrentAdminUser(matched.display);
-      setLoginError('');
-      showToast(`Access granted. Welcome, ${matched.display}`);
-      try {
-        confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
-      } catch (_) {}
-    } else {
-      setLoginError('Access Denied: Invalid Admin ID or Password. Verify your credentials.');
+      sessionStorage.setItem('navidron_admin_role', 'superadmin');
+    } else if (mode === 'products') {
+      sessionStorage.setItem('navidron_products_admin_authenticated', 'true');
+      sessionStorage.setItem('navidron_products_admin_user', matched.display);
+      sessionStorage.setItem('navidron_products_admin_role', matched.role);
+    } else if (mode === 'orders') {
+      sessionStorage.setItem('navidron_orders_admin_authenticated', 'true');
+      sessionStorage.setItem('navidron_orders_admin_user', matched.display);
+      sessionStorage.setItem('navidron_orders_admin_role', matched.role);
     }
+
+    setIsAuthenticated(true);
+    setCurrentAdminUser(matched.display);
+    setCurrentAdminRole(matched.role);
+    setLoginError('');
+    showToast(`Access granted. Welcome to ${mode === 'products' ? 'Products & Catalog' : mode === 'orders' ? 'Orders & Logistics' : 'Command'} Deck!`);
+    try {
+      confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+    } catch (_) {}
   };
 
   const handleAdminLogout = () => {
-    sessionStorage.removeItem('navidron_admin_authenticated');
-    sessionStorage.removeItem('navidron_admin_user');
+    if (mode === 'main') {
+      sessionStorage.removeItem('navidron_admin_authenticated');
+      sessionStorage.removeItem('navidron_admin_user');
+      sessionStorage.removeItem('navidron_admin_role');
+    } else if (mode === 'products') {
+      sessionStorage.removeItem('navidron_products_admin_authenticated');
+      sessionStorage.removeItem('navidron_products_admin_user');
+      sessionStorage.removeItem('navidron_products_admin_role');
+    } else if (mode === 'orders') {
+      sessionStorage.removeItem('navidron_orders_admin_authenticated');
+      sessionStorage.removeItem('navidron_orders_admin_user');
+      sessionStorage.removeItem('navidron_orders_admin_role');
+    }
     setIsAuthenticated(false);
     setLoginEmail('');
     setLoginPassword('');
@@ -410,11 +546,17 @@ export default function AdminPortal() {
   };
 
   useEffect(() => {
-    document.title = "Admin Portal — NaviDron Operations & Catalog";
+    if (mode === 'products') {
+      document.title = "Products Admin Portal — NaviDron 3D Studio & Catalog";
+    } else if (mode === 'orders') {
+      document.title = "Orders Admin Portal — NaviDron Dispatch & Logistics";
+    } else {
+      document.title = "Admin Portal — NaviDron Operations & Catalog";
+    }
     if (isAuthenticated) {
       loadAllData();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, mode]);
 
   // ── ORDER MANAGEMENT ──────────────────────────────────────────
   const handleStatusChange = async (orderId, newStatus) => {
@@ -688,13 +830,29 @@ export default function AdminPortal() {
           <div style={{ textAlign: 'center' }}>
             <div className="admin-lock-badge">
               <Lock size={13} />
-              <span>NexFly Security Gate</span>
+              <span>
+                {mode === 'products'
+                  ? 'Products & Catalog Gate'
+                  : mode === 'orders'
+                  ? 'Orders & Logistics Gate'
+                  : 'NexFly Master Security Gate'}
+              </span>
             </div>
             <h1 className="admin-lock-title">
-              Admin <span>Portal Access</span>
+              {mode === 'products' ? (
+                <>Products <span>Admin Deck</span></>
+              ) : mode === 'orders' ? (
+                <>Orders <span>Admin Deck</span></>
+              ) : (
+                <>Admin <span>Portal Access</span></>
+              )}
             </h1>
             <p className="admin-lock-subtitle">
-              Restricted control deck. Enter your administrative credentials to manage store catalog, orders, and user operations.
+              {mode === 'products'
+                ? 'Authorized access for Catalog Managers: add and edit 3D Studio models, Robotics Kits, Drone Parts, and RC Planes.'
+                : mode === 'orders'
+                ? 'Authorized access for Logistics & Dispatch: review customer orders, packaging manifests, and custom UAV quotation requests.'
+                : 'Master administrative deck. Full control over live catalog, orders, and registered user accounts.'}
             </p>
           </div>
 
@@ -709,7 +867,13 @@ export default function AdminPortal() {
             <div className="admin-lock-input-group">
               <label>
                 <User size={14} />
-                <span>Admin ID / Email</span>
+                <span>
+                  {mode === 'products'
+                    ? 'Products Admin ID / Email'
+                    : mode === 'orders'
+                    ? 'Orders Admin ID / Email'
+                    : 'Super Admin ID / Email'}
+                </span>
               </label>
               <div className="admin-lock-input-wrap">
                 <Mail size={16} className="input-icon-left" />
@@ -759,10 +923,57 @@ export default function AdminPortal() {
             </button>
           </form>
 
-          <div style={{ marginTop: '1.5rem', textAlign: 'center', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          {/* Quick Admin Portal Switcher */}
+          <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.65rem', textAlign: 'center', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 600, letterSpacing: '0.05em' }}>SWITCH ADMIN PANEL:</div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <Link
+                to="/admin"
+                style={{
+                  fontSize: '0.74rem',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  background: mode === 'main' ? 'rgba(0,200,255,0.18)' : 'rgba(255,255,255,0.05)',
+                  color: mode === 'main' ? 'var(--neon)' : '#94a3b8',
+                  textDecoration: 'none',
+                  border: mode === 'main' ? '1px solid var(--neon)' : '1px solid rgba(255,255,255,0.1)'
+                }}
+              >
+                👑 Main Admin
+              </Link>
+              <Link
+                to="/admin/products"
+                style={{
+                  fontSize: '0.74rem',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  background: mode === 'products' ? 'rgba(0,200,255,0.18)' : 'rgba(255,255,255,0.05)',
+                  color: mode === 'products' ? 'var(--neon)' : '#94a3b8',
+                  textDecoration: 'none',
+                  border: mode === 'products' ? '1px solid var(--neon)' : '1px solid rgba(255,255,255,0.1)'
+                }}
+              >
+                📦 Products Admin
+              </Link>
+              <Link
+                to="/admin/orders"
+                style={{
+                  fontSize: '0.74rem',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  background: mode === 'orders' ? 'rgba(0,200,255,0.18)' : 'rgba(255,255,255,0.05)',
+                  color: mode === 'orders' ? 'var(--neon)' : '#94a3b8',
+                  textDecoration: 'none',
+                  border: mode === 'orders' ? '1px solid var(--neon)' : '1px solid rgba(255,255,255,0.1)'
+                }}
+              >
+                📑 Orders Admin
+              </Link>
+            </div>
+
             <Link
               to="/"
-              style={{ fontSize: '0.82rem', color: '#64748b', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+              style={{ fontSize: '0.82rem', color: '#64748b', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', marginTop: '0.35rem' }}
               onMouseOver={(e) => (e.currentTarget.style.color = 'var(--neon)')}
               onMouseOut={(e) => (e.currentTarget.style.color = '#64748b')}
             >
@@ -788,35 +999,143 @@ export default function AdminPortal() {
       <div className="admin-top-hero">
         <div className="admin-hero-inner">
           <div>
-            <div className="admin-badge-live">
-              <span className="pulse-dot"></span>
-              Command & Catalog Admin Portal
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+              <div className="admin-badge-live">
+                <span className="pulse-dot"></span>
+                {mode === 'products'
+                  ? 'Products & Catalog Operations'
+                  : mode === 'orders'
+                  ? 'Orders & Logistics Operations'
+                  : 'Command & Catalog Super Admin'}
+              </div>
+
+              <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
+                <Link
+                  to="/admin"
+                  style={{
+                    fontSize: '0.72rem',
+                    padding: '2px 8px',
+                    borderRadius: '5px',
+                    background: mode === 'main' ? 'rgba(0,200,255,0.2)' : 'rgba(255,255,255,0.06)',
+                    color: mode === 'main' ? 'var(--neon)' : '#94a3b8',
+                    textDecoration: 'none',
+                    border: mode === 'main' ? '1px solid var(--neon)' : '1px solid rgba(255,255,255,0.1)'
+                  }}
+                >
+                  👑 Main
+                </Link>
+                <Link
+                  to="/admin/products"
+                  style={{
+                    fontSize: '0.72rem',
+                    padding: '2px 8px',
+                    borderRadius: '5px',
+                    background: mode === 'products' ? 'rgba(0,200,255,0.2)' : 'rgba(255,255,255,0.06)',
+                    color: mode === 'products' ? 'var(--neon)' : '#94a3b8',
+                    textDecoration: 'none',
+                    border: mode === 'products' ? '1px solid var(--neon)' : '1px solid rgba(255,255,255,0.1)'
+                  }}
+                >
+                  📦 Products
+                </Link>
+                <Link
+                  to="/admin/orders"
+                  style={{
+                    fontSize: '0.72rem',
+                    padding: '2px 8px',
+                    borderRadius: '5px',
+                    background: mode === 'orders' ? 'rgba(0,200,255,0.2)' : 'rgba(255,255,255,0.06)',
+                    color: mode === 'orders' ? 'var(--neon)' : '#94a3b8',
+                    textDecoration: 'none',
+                    border: mode === 'orders' ? '1px solid var(--neon)' : '1px solid rgba(255,255,255,0.1)'
+                  }}
+                >
+                  📑 Orders
+                </Link>
+              </div>
             </div>
+
             <h1 className="admin-title-head">
-              NaviDron <span>Operations Control</span>
+              {mode === 'products' ? (
+                <>Products & Catalog <span>Control Deck</span></>
+              ) : mode === 'orders' ? (
+                <>Orders & Logistics <span>Control Deck</span></>
+              ) : (
+                <>NaviDron <span>Operations Control</span></>
+              )}
             </h1>
             <p style={{ margin: '0.4rem 0 0', fontSize: '0.88rem', color: '#94a3b8' }}>
-              Manage users, track dispatch addresses in <code>Order</code> collection, and decide live catalog prices & stock for 3D Studio, Drone Accessories, Robotics Kits, and UAVs.
+              {mode === 'products'
+                ? 'Create, edit, and manage products across 3D Studio, Drone Accessories, Robotics Kits, and UAV / RC Planes. Control live pricing, stock, specs, and multi-image galleries.'
+                : mode === 'orders'
+                ? 'Real-time order dispatch management: review customer details, delivery addresses with nearby landmarks, uploaded print files, and update shipping progress.'
+                : 'Manage users, track dispatch addresses in Order collection, and decide live catalog prices & stock for 3D Studio, Drone Accessories, Robotics Kits, and UAVs.'}
             </p>
           </div>
 
           <div className="admin-hero-stats">
-            <div className="admin-hero-metric">
-              <div className="admin-metric-num">{orders.length}</div>
-              <div className="admin-metric-lbl">Total Orders</div>
-            </div>
-            <div className="admin-hero-metric">
-              <div className="admin-metric-num">{usersList.length}</div>
-              <div className="admin-metric-lbl">Total Users</div>
-            </div>
-            <div className="admin-hero-metric">
-              <div className="admin-metric-num">₹{totalRevenue.toLocaleString('en-IN')}</div>
-              <div className="admin-metric-lbl">Total Volume</div>
-            </div>
-            <div className="admin-hero-metric">
-              <div className="admin-metric-num">{threeDItems.length + droneParts.length + roboticsKits.length + uavPreBuilt.length}</div>
-              <div className="admin-metric-lbl">Live Catalog</div>
-            </div>
+            {mode === 'products' ? (
+              <>
+                <div className="admin-hero-metric">
+                  <div className="admin-metric-num">{threeDItems.length + droneParts.length + roboticsKits.length + uavPreBuilt.length}</div>
+                  <div className="admin-metric-lbl">Total Catalog</div>
+                </div>
+                <div className="admin-hero-metric">
+                  <div className="admin-metric-num">{threeDItems.length}</div>
+                  <div className="admin-metric-lbl">3D Studio</div>
+                </div>
+                <div className="admin-hero-metric">
+                  <div className="admin-metric-num">{droneParts.length + roboticsKits.length}</div>
+                  <div className="admin-metric-lbl">Parts & Kits</div>
+                </div>
+                <div className="admin-hero-metric">
+                  <div className="admin-metric-num">{uavPreBuilt.length}</div>
+                  <div className="admin-metric-lbl">UAV / Planes</div>
+                </div>
+              </>
+            ) : mode === 'orders' ? (
+              <>
+                <div className="admin-hero-metric">
+                  <div className="admin-metric-num">{orders.length}</div>
+                  <div className="admin-metric-lbl">Total Orders</div>
+                </div>
+                <div className="admin-hero-metric">
+                  <div className="admin-metric-num" style={{ color: '#f59e0b' }}>
+                    {orders.filter((o) => o.status === 'Pending').length}
+                  </div>
+                  <div className="admin-metric-lbl">Pending</div>
+                </div>
+                <div className="admin-hero-metric">
+                  <div className="admin-metric-num" style={{ color: '#10b981' }}>
+                    {orders.filter((o) => o.status === 'Delivered' || o.status === 'Dispatched').length}
+                  </div>
+                  <div className="admin-metric-lbl">Dispatched</div>
+                </div>
+                <div className="admin-hero-metric">
+                  <div className="admin-metric-num">₹{totalRevenue.toLocaleString('en-IN')}</div>
+                  <div className="admin-metric-lbl">Total Value</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="admin-hero-metric">
+                  <div className="admin-metric-num">{orders.length}</div>
+                  <div className="admin-metric-lbl">Total Orders</div>
+                </div>
+                <div className="admin-hero-metric">
+                  <div className="admin-metric-num">{usersList.length}</div>
+                  <div className="admin-metric-lbl">Total Users</div>
+                </div>
+                <div className="admin-hero-metric">
+                  <div className="admin-metric-num">₹{totalRevenue.toLocaleString('en-IN')}</div>
+                  <div className="admin-metric-lbl">Total Volume</div>
+                </div>
+                <div className="admin-hero-metric">
+                  <div className="admin-metric-num">{threeDItems.length + droneParts.length + roboticsKits.length + uavPreBuilt.length}</div>
+                  <div className="admin-metric-lbl">Live Catalog</div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -824,64 +1143,89 @@ export default function AdminPortal() {
       {/* Admin Navbar */}
       <nav className="admin-nav-bar">
         <div className="admin-nav-inner">
-          <button
-            type="button"
-            className={`admin-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveTab('profile')}
-          >
-            <ShieldCheck size={18} />
-            <span>Admin Profile</span>
-          </button>
+          {mode === 'main' && (
+            <button
+              type="button"
+              className={`admin-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+              onClick={() => setActiveTab('profile')}
+            >
+              <ShieldCheck size={18} />
+              <span>Admin Profile</span>
+            </button>
+          )}
 
-          <button
-            type="button"
-            className={`admin-nav-item ${activeTab === 'orders' ? 'active' : ''}`}
-            onClick={() => setActiveTab('orders')}
-          >
-            <ShoppingBag size={18} />
-            <span>Orders</span>
-            <span className="admin-count-pill">{orders.length}</span>
-          </button>
+          {(mode === 'main' || mode === 'orders') && (
+            <button
+              type="button"
+              className={`admin-nav-item ${activeTab === 'orders' ? 'active' : ''}`}
+              onClick={() => setActiveTab('orders')}
+            >
+              <ShoppingBag size={18} />
+              <span>Orders</span>
+              <span className="admin-count-pill">{orders.length}</span>
+            </button>
+          )}
 
-          <button
-            type="button"
-            className={`admin-nav-item ${activeTab === 'items' ? 'active' : ''}`}
-            onClick={() => setActiveTab('items')}
-          >
-            <Wrench size={18} />
-            <span>Items (Parts & Kits)</span>
-            <span className="admin-count-pill">{droneParts.length + roboticsKits.length}</span>
-          </button>
+          {(mode === 'main' || mode === 'products') && (
+            <button
+              type="button"
+              className={`admin-nav-item ${activeTab === 'items' ? 'active' : ''}`}
+              onClick={() => setActiveTab('items')}
+            >
+              <Wrench size={18} />
+              <span>Items (Parts & Kits)</span>
+              <span className="admin-count-pill">{droneParts.length + roboticsKits.length}</span>
+            </button>
+          )}
 
-          <button
-            type="button"
-            className={`admin-nav-item ${activeTab === '3dstudio' ? 'active' : ''}`}
-            onClick={() => setActiveTab('3dstudio')}
-          >
-            <Printer size={18} />
-            <span>3DStudio</span>
-            <span className="admin-count-pill">{threeDItems.length}</span>
-          </button>
+          {(mode === 'main' || mode === 'products') && (
+            <button
+              type="button"
+              className={`admin-nav-item ${activeTab === '3dstudio' ? 'active' : ''}`}
+              onClick={() => setActiveTab('3dstudio')}
+            >
+              <Printer size={18} />
+              <span>3DStudio</span>
+              <span className="admin-count-pill">{threeDItems.length}</span>
+            </button>
+          )}
 
-          <button
-            type="button"
-            className={`admin-nav-item ${activeTab === 'uav' ? 'active' : ''}`}
-            onClick={() => setActiveTab('uav')}
-          >
-            <Compass size={18} />
-            <span>UAV (Pre-Built & Custom)</span>
-            <span className="admin-count-pill">{uavPreBuilt.length + uavCustomOrders.length}</span>
-          </button>
+          {(mode === 'main' || mode === 'products') && (
+            <button
+              type="button"
+              className={`admin-nav-item ${activeTab === 'uav' ? 'active' : ''}`}
+              onClick={() => setActiveTab('uav')}
+            >
+              <Compass size={18} />
+              <span>UAV & RC Planes</span>
+              <span className="admin-count-pill">{uavPreBuilt.length + (mode === 'main' ? uavCustomOrders.length : 0)}</span>
+            </button>
+          )}
 
-          <button
-            type="button"
-            className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
-            onClick={() => setActiveTab('users')}
-          >
-            <Users size={18} />
-            <span>Users</span>
-            <span className="admin-count-pill">{usersList.length}</span>
-          </button>
+          {mode === 'orders' && (
+            <button
+              type="button"
+              className={`admin-nav-item ${activeTab === 'uav_custom' ? 'active' : ''}`}
+              onClick={() => setActiveTab('uav_custom')}
+            >
+              <Compass size={18} />
+              <span>Custom Drone Quotes</span>
+              <span className="admin-count-pill">{uavCustomOrders.length}</span>
+            </button>
+          )}
+
+          {/* Users tab: STRICTLY Main Super Admin Only */}
+          {mode === 'main' && (
+            <button
+              type="button"
+              className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
+              onClick={() => setActiveTab('users')}
+            >
+              <Users size={18} />
+              <span>Users & Logins</span>
+              <span className="admin-count-pill">{usersList.length}</span>
+            </button>
+          )}
 
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '1rem' }}>
             <div style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(255,255,255,0.04)', padding: '0.35rem 0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', whiteSpace: 'nowrap' }}>
@@ -1860,22 +2204,24 @@ export default function AdminPortal() {
                       >
                         Pre-Built UAVs ({uavPreBuilt.length})
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setUavSubTab('custom')}
-                        style={{
-                          background: uavSubTab === 'custom' ? 'var(--neon)' : 'transparent',
-                          color: uavSubTab === 'custom' ? 'var(--navy)' : '#94a3b8',
-                          border: 'none',
-                          padding: '0.45rem 0.85rem',
-                          borderRadius: '6px',
-                          fontSize: '0.8rem',
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Custom UAV Orders ({uavCustomOrders.length})
-                      </button>
+                      {mode !== 'products' && (
+                        <button
+                          type="button"
+                          onClick={() => setUavSubTab('custom')}
+                          style={{
+                            background: uavSubTab === 'custom' ? 'var(--neon)' : 'transparent',
+                            color: uavSubTab === 'custom' ? 'var(--navy)' : '#94a3b8',
+                            border: 'none',
+                            padding: '0.45rem 0.85rem',
+                            borderRadius: '6px',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Custom UAV Orders ({uavCustomOrders.length})
+                        </button>
+                      )}
                     </div>
 
                     {uavSubTab === 'prebuilt' && (
@@ -2021,7 +2367,7 @@ export default function AdminPortal() {
                 )}
 
                 {/* Custom UAV Orders */}
-                {uavSubTab === 'custom' && (
+                {uavSubTab === 'custom' && mode !== 'products' && (
                   <div>
                     {uavCustomOrders.length === 0 ? (
                       <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#94a3b8' }}>
@@ -2090,8 +2436,96 @@ export default function AdminPortal() {
               </div>
             )}
 
-            {/* ── TAB 6: USERS ─────────────────────────────────── */}
-            {activeTab === 'users' && (
+            {/* ── TAB 5b: CUSTOM UAV QUOTES (FOR ORDERS ADMIN) ───────── */}
+            {activeTab === 'uav_custom' && mode === 'orders' && (
+              <div className="admin-panel-card fade-in">
+                <div className="admin-card-header-bar">
+                  <div>
+                    <h2 style={{ fontFamily: 'var(--font-head)', fontSize: '1.4rem', color: '#fff', margin: 0 }}>
+                      Custom UAV Builds & Quotation Requests
+                    </h2>
+                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                      Customer quotation requests, custom payload specs, and direct client contact details for dispatch review.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-btn-action-primary"
+                    onClick={loadAllData}
+                  >
+                    <RefreshCw size={15} /> Refresh Quotes
+                  </button>
+                </div>
+
+                <div>
+                  {uavCustomOrders.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#94a3b8' }}>
+                      <Compass size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+                      <p>No custom UAV quotation requests submitted yet.</p>
+                    </div>
+                  ) : (
+                    <div className="admin-orders-list">
+                      {uavCustomOrders.map((ord) => (
+                        <div key={ord.id} className="admin-order-box">
+                          <div className="admin-order-header">
+                            <div>
+                              <span className="admin-order-id-badge">#{ord.id}</span>
+                              <span style={{ marginLeft: '0.75rem', fontSize: '0.8rem', color: '#94a3b8' }}>
+                                Custom Order Request • {ord.createdAt?.split('T')[0] || 'Recent'}
+                              </span>
+                            </div>
+                            <select
+                              className="admin-status-dropdown"
+                              value={ord.status || 'Pending Review'}
+                              onChange={async (e) => {
+                                await updateUAVCustomOrderStatus(ord.id, e.target.value);
+                                setUavCustomOrders((prev) =>
+                                  prev.map((o) => (o.id === ord.id ? { ...o, status: e.target.value } : o))
+                                );
+                                showToast(`Status updated to "${e.target.value}"`);
+                              }}
+                            >
+                              <option value="Pending Review">⏳ Pending Review</option>
+                              <option value="In Assembly">⚙️ In Assembly / Sourcing</option>
+                              <option value="Flight Tested">✈️ Flight Tested & Bench OK</option>
+                              <option value="Dispatched">🚚 Dispatched</option>
+                              <option value="Delivered">🟢 Delivered</option>
+                            </select>
+                          </div>
+
+                          <div className="admin-order-grid-details">
+                            <div>
+                              <div className="admin-order-section-lbl">Client Contact</div>
+                              <div style={{ color: '#fff', fontWeight: 700 }}>{ord.customerName || ord.name || 'Client'}</div>
+                              <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{ord.customerEmail || ord.email}</div>
+                              <div style={{ fontSize: '0.8rem', color: '#10b981' }}>{ord.customerPhone || ord.phone || '+91 9508106177'}</div>
+                            </div>
+                            <div>
+                              <div className="admin-order-section-lbl">Specifications</div>
+                              <div style={{ fontSize: '0.82rem', color: '#cbd5e1' }}>
+                                Type: <strong>{ord.droneType || 'Custom Drone'}</strong> | Frame: <strong>{ord.frameSize || '5 inch'}</strong>
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.2rem' }}>
+                                {ord.purpose || ord.notes || 'Custom build requirements'}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="admin-order-section-lbl">Estimated Price</div>
+                              <div style={{ color: 'var(--neon)', fontWeight: 800, fontSize: '1rem' }}>
+                                ₹{(ord.estimatedPrice || ord.price || 14999).toLocaleString('en-IN')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── TAB 6: USERS (STRICTLY MAIN ADMIN ONLY) ───────── */}
+            {activeTab === 'users' && mode === 'main' && (
               <div className="admin-panel-card fade-in">
                 <div className="admin-card-header-bar">
                   <div>
