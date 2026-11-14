@@ -173,138 +173,164 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
           </a>
         </div>
 
-        {/* Card Body */}
-        <div className="card-body" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-            <span className="card-tag" style={{ color: tagColor, margin: 0 }}>
-              {item.category || defaultTag}
-            </span>
-            <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '3px' }}>
-              <Clock size={11} color="#00c8ff" /> {item.printTime || '6h 30m'}
-            </span>
-          </div>
+        {/* Card Body - Clean & Compact */}
+        <div className="card-body" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+          {/* Name & Stock Quantity */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.4rem' }}>
+            <Link
+              to={`/prints/${item.id}`}
+              onClick={(e) => e.stopPropagation()}
+              style={{ textDecoration: 'none', color: 'inherit', flex: 1 }}
+            >
+              <h4
+                className="card-title"
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 800,
+                  color: '#0a0f2e',
+                  lineHeight: 1.35,
+                  margin: 0,
+                  cursor: 'pointer',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 1,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
+                }}
+                title={item.name}
+              >
+                {item.name}
+              </h4>
+            </Link>
 
-          <Link
-            to={`/prints/${item.id}`}
-            onClick={(e) => e.stopPropagation()}
-            style={{ textDecoration: 'none', color: 'inherit' }}
-          >
-            <h4
-              className="card-title"
+            <span
               style={{
-                fontSize: '1.05rem',
-                fontWeight: 800,
-                color: '#0a0f2e',
-                lineHeight: 1.35,
-                marginBottom: '0.5rem',
-                cursor: 'pointer'
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                color: isOutOfStock ? '#ffffff' : (stockCount > 5 ? '#065f46' : '#991b1b'),
+                backgroundColor: isOutOfStock ? '#ef4444' : (stockCount > 5 ? '#d1fae5' : '#fee2e2'),
+                padding: '2px 7px',
+                borderRadius: '4px',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
               }}
             >
-              {item.name}
-            </h4>
-          </Link>
-
-          <p className="card-text" style={{ fontSize: '0.84rem', color: '#64748b', lineHeight: 1.5, flex: 1, marginBottom: '0.85rem' }}>
-            {item.desc}
-          </p>
-
-          {/* Size & Print Info Bar */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              backgroundColor: '#f8faff',
-              padding: '0.5rem 0.75rem',
-              borderRadius: '8px',
-              fontSize: '0.76rem',
-              color: '#475569',
-              marginBottom: '0.85rem',
-              border: '1px solid #f1f5f9'
-            }}
-          >
-            <span><Ruler size={12} color="#00c8ff" style={{ display: 'inline', marginRight: '3px' }} /> Scale: <strong>{item.size || '8 inch'}</strong></span>
-            <span>FDM: <strong>0.2mm (PLA / TPU)</strong></span>
-          </div>
-
-          {/* Price & Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-            <div className="card-price" style={{ color: '#0a0f2e', fontSize: '1.35rem', fontWeight: 900, margin: 0 }}>
-              ₹{numPrice.toLocaleString('en-IN')}
-            </div>
-            <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 700 }}>
-              ✓ Strength 20%-100% Options
+              {isOutOfStock ? 'Out of Stock' : `${stockCount} in stock`}
             </span>
           </div>
 
-          {/* Dual Action Buttons: View Details and Add to Cart */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+          {/* Single Line Description with "Know more" in last */}
+          <div
+            style={{
+              fontSize: '0.8rem',
+              color: '#64748b',
+              lineHeight: 1.4,
+              marginBottom: '0.75rem',
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '0.35rem',
+              overflow: 'hidden',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <span
+              style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                flex: 1
+              }}
+              title={item.desc}
+            >
+              {item.desc || 'High-precision FDM 3D printed figure.'}
+            </span>
             <Link
               to={`/prints/${item.id}`}
               onClick={(e) => e.stopPropagation()}
               style={{
-                padding: '0.65rem 0.4rem',
-                borderRadius: '8px',
-                border: '1.5px solid #00c8ff',
-                backgroundColor: 'rgba(0,200,255,0.06)',
                 color: '#0077b6',
                 fontWeight: 700,
-                fontSize: '0.8rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.3rem',
+                fontSize: '0.78rem',
+                flexShrink: 0,
                 textDecoration: 'none',
-                textAlign: 'center'
+                display: 'inline-flex',
+                alignItems: 'center'
               }}
             >
-              <Eye size={14} /> View Details
+              Know more &rarr;
             </Link>
+          </div>
 
-            {isOutOfStock ? (
-              <button
-                type="button"
-                disabled
+          {/* Price & Actions Row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '0.65rem', borderTop: '1px solid #f1f5f9' }}>
+            <div className="card-price" style={{ color: '#0a0f2e', fontSize: '1.25rem', fontWeight: 900, margin: 0 }}>
+              ₹{numPrice.toLocaleString('en-IN')}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.4rem' }}>
+              <Link
+                to={`/prints/${item.id}`}
+                onClick={(e) => e.stopPropagation()}
                 style={{
-                  padding: '0.65rem 0.4rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: '#fee2e2',
-                  color: '#dc2626',
-                  fontWeight: 800,
-                  fontSize: '0.78rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'not-allowed'
-                }}
-              >
-                Out of Stock
-              </button>
-            ) : (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCartItem(item);
-                }}
-                style={{
-                  padding: '0.65rem 0.4rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: '#0a0f2e',
-                  color: '#ffffff',
+                  padding: '0.45rem 0.65rem',
+                  borderRadius: '7px',
+                  border: '1.5px solid #00c8ff',
+                  backgroundColor: 'rgba(0,200,255,0.06)',
+                  color: '#0077b6',
                   fontWeight: 700,
-                  fontSize: '0.8rem',
-                  display: 'flex',
+                  fontSize: '0.76rem',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.3rem',
-                  cursor: 'pointer'
+                  gap: '0.25rem',
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap'
                 }}
               >
-                <ShoppingCart size={14} /> Add to Cart
-              </button>
-            )}
+                <Eye size={13} /> Know more
+              </Link>
+
+              {isOutOfStock ? (
+                <button
+                  type="button"
+                  disabled
+                  style={{
+                    padding: '0.45rem 0.65rem',
+                    borderRadius: '7px',
+                    border: 'none',
+                    backgroundColor: '#fee2e2',
+                    color: '#dc2626',
+                    fontWeight: 700,
+                    fontSize: '0.74rem',
+                    cursor: 'not-allowed',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Out of Stock
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCartItem(item);
+                  }}
+                  style={{
+                    padding: '0.45rem 0.75rem',
+                    borderRadius: '7px',
+                    border: 'none',
+                    backgroundColor: '#0a0f2e',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '0.76rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <ShoppingCart size={13} /> Add
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

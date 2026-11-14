@@ -14,3 +14,4 @@ import AdminPortal from './AdminPortal';
 export default function ProductsAdminPortal() {
   return <AdminPortal mode="products" />;
 }
+

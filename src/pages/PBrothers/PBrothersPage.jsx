@@ -155,28 +155,45 @@ export default function PBrothersPage({ onOpenQuote }) {
 
           <div className="grid-4">
             {printsData.gta6Figures.map((fig) => (
-              <div key={fig.id} className="card">
+              <div key={fig.id} className="card" style={{ background: '#ffffff', borderRadius: '16px', border: '1.5px solid #e2e8f0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ position: 'relative' }}>
                   <img src={fig.image} alt={fig.name} className="card-img" />
                   <span className="badge badge-gta" style={{ position: 'absolute', top: '10px', left: '10px' }}>
                     {fig.badge}
                   </span>
                 </div>
-                <div className="card-body">
-                  <div className="card-tag" style={{ color: '#ff00aa' }}>Scale: {fig.size}</div>
-                  <h4 className="card-title">{fig.name}</h4>
-                  <p className="card-text">{fig.desc}</p>
-                  <div className="card-price" style={{ color: 'var(--navy)' }}>
-                    {fig.price}{' '}
-                    <small style={{ textDecoration: 'line-through', color: '#999' }}>{fig.oldPrice}</small>
+                <div className="card-body" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                    <h4 className="card-title" style={{ fontSize: '0.98rem', fontWeight: 800, color: '#0a0f2e', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                      {fig.name}
+                    </h4>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#ff00aa', backgroundColor: 'rgba(255,0,170,0.1)', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      Scale: {fig.size}
+                    </span>
                   </div>
-                  <button
-                    onClick={() => handleMerchBuy(fig.name)}
-                    className="btn btn-glow"
-                    style={{ width: '100%', marginTop: '.75rem', padding: '.65rem 1rem', fontSize: '.84rem', animation: 'none' }}
-                  >
-                    <ShoppingCart size={15} /> Order Figure
-                  </button>
+
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: 1.4, marginBottom: '0.75rem', display: 'flex', alignItems: 'baseline', gap: '0.35rem', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                      {fig.desc}
+                    </span>
+                    <Link to="/prints?filter=gta6" style={{ color: '#ff00aa', fontWeight: 700, fontSize: '0.78rem', flexShrink: 0, textDecoration: 'none' }}>
+                      Know more &rarr;
+                    </Link>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '0.65rem', borderTop: '1px solid #f1f5f9' }}>
+                    <div className="card-price" style={{ color: 'var(--navy)', fontSize: '1.25rem', fontWeight: 900, margin: 0 }}>
+                      {fig.price}{' '}
+                      <small style={{ textDecoration: 'line-through', color: '#999', fontSize: '0.8rem' }}>{fig.oldPrice}</small>
+                    </div>
+                    <button
+                      onClick={() => handleMerchBuy(fig.name)}
+                      className="btn btn-glow"
+                      style={{ padding: '.45rem .85rem', fontSize: '.78rem', animation: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                    >
+                      <ShoppingCart size={13} /> Order
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -199,35 +216,45 @@ export default function PBrothersPage({ onOpenQuote }) {
 
           <div className="grid-3">
             {pBrothersData.tshirts.map((tee) => (
-              <div key={tee.id} className="card" style={{ background: 'white' }}>
+              <div key={tee.id} className="card" style={{ background: '#ffffff', borderRadius: '16px', border: '1.5px solid #e2e8f0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ position: 'relative' }}>
                   <img src={tee.img} alt={tee.name} className="card-img" />
                   <span className="badge badge-hot" style={{ position: 'absolute', top: '10px', left: '10px' }}>
                     {tee.badge}
                   </span>
                 </div>
-                <div className="card-body">
-                  <div className="card-tag" style={{ color: '#ff00aa' }}>Apparel</div>
-                  <h4 className="card-title" style={{ fontSize: '1.05rem' }}>{tee.name}</h4>
-                  <p className="card-text">{tee.details}</p>
-                  <div style={{ display: 'flex', gap: '.4rem', margin: '.75rem 0' }}>
-                    {tee.sizes.map((s) => (
-                      <span key={s} style={{ fontSize: '.75rem', padding: '3px 8px', borderRadius: '4px', background: 'var(--off-white)', border: '1px solid #ccc', fontWeight: 700 }}>
-                        {s}
-                      </span>
-                    ))}
+                <div className="card-body" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                    <h4 className="card-title" style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0a0f2e', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                      {tee.name}
+                    </h4>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#ff00aa', backgroundColor: 'rgba(255,0,170,0.1)', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      Sizes: {tee.sizes.join(', ')}
+                    </span>
                   </div>
-                  <div className="card-price">
-                    {tee.price}{' '}
-                    <small style={{ textDecoration: 'line-through', color: '#999' }}>{tee.oldPrice}</small>
+
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: 1.4, marginBottom: '0.75rem', display: 'flex', alignItems: 'baseline', gap: '0.35rem', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                      {tee.details}
+                    </span>
+                    <Link to="/prints?filter=tshirts" style={{ color: '#ff00aa', fontWeight: 700, fontSize: '0.78rem', flexShrink: 0, textDecoration: 'none' }}>
+                      Know more &rarr;
+                    </Link>
                   </div>
-                  <button
-                    onClick={() => handleMerchBuy(tee.name)}
-                    className="btn btn-primary"
-                    style={{ width: '100%', marginTop: '.75rem', padding: '.65rem 1rem', fontSize: '.84rem' }}
-                  >
-                    <ShoppingCart size={15} /> Buy T-Shirt
-                  </button>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '0.65rem', borderTop: '1px solid #f1f5f9' }}>
+                    <div className="card-price" style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900 }}>
+                      {tee.price}{' '}
+                      <small style={{ textDecoration: 'line-through', color: '#999', fontSize: '0.8rem' }}>{tee.oldPrice}</small>
+                    </div>
+                    <button
+                      onClick={() => handleMerchBuy(tee.name)}
+                      className="btn btn-primary"
+                      style={{ padding: '.45rem .85rem', fontSize: '.78rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                    >
+                      <ShoppingCart size={13} /> Buy
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

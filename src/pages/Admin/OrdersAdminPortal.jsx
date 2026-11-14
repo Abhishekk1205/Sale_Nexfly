@@ -14,3 +14,4 @@ import AdminPortal from './AdminPortal';
 export default function OrdersAdminPortal() {
   return <AdminPortal mode="orders" />;
 }
+
