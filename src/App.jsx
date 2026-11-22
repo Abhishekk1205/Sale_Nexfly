@@ -178,7 +178,7 @@ export default function App() {
 
         {/* Dynamic Route Pages */}
         <Routes>
-          <Route path="/" element={<HomePage onOpenQuote={() => setQuoteModalOpen(true)} />} />
+          <Route path="/" element={<HomePage onOpenQuote={() => setQuoteModalOpen(true)} onAddToCart={handleAddToCart} />} />
           <Route
             path="/uav"
             element={<UAVPage onOpenQuote={() => setQuoteModalOpen(true)} onAddToCart={handleAddToCart} />}

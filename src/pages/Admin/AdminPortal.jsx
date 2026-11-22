@@ -68,6 +68,9 @@ import {
   getUAVPreBuilt,
   saveUAVPreBuilt,
   deleteUAVPreBuilt,
+  getHomeProducts,
+  saveHomeProduct,
+  deleteHomeProduct,
   getUAVCustomOrders,
   updateUAVCustomOrderStatus,
   getAllUsers,
@@ -132,7 +135,7 @@ export default function AdminPortal({ mode = 'main' }) {
     return 'orders';
   };
 
-  const [activeTab, setActiveTab] = useState(getDefaultTab); // 'profile' | 'orders' | 'items' | '3dstudio' | 'uav' | 'uav_custom' | 'users'
+  const [activeTab, setActiveTab] = useState(getDefaultTab); // 'profile' | 'orders' | 'items' | '3dstudio' | 'uav' | 'home_products' | 'uav_custom' | 'users'
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
@@ -144,7 +147,7 @@ export default function AdminPortal({ mode = 'main' }) {
         setActiveTab('3dstudio');
       }
     } else if (mode === 'orders') {
-      if (activeTab === 'items' || activeTab === '3dstudio' || activeTab === 'uav' || activeTab === 'users' || activeTab === 'profile') {
+      if (activeTab === 'items' || activeTab === '3dstudio' || activeTab === 'uav' || activeTab === 'home_products' || activeTab === 'users' || activeTab === 'profile') {
         setActiveTab('orders');
       }
     }
@@ -156,12 +159,15 @@ export default function AdminPortal({ mode = 'main' }) {
   const [droneParts, setDroneParts] = useState([]);
   const [roboticsKits, setRoboticsKits] = useState([]);
   const [uavPreBuilt, setUavPreBuilt] = useState([]);
+  const [homeProducts, setHomeProducts] = useState([]);
   const [uavCustomOrders, setUavCustomOrders] = useState([]);
   const [usersList, setUsersList] = useState([]);
 
   // Sub-tabs & filters
   const [orderFilter, setOrderFilter] = useState('all');
   const [orderSearch, setOrderSearch] = useState('');
+  const [homeFilter, setHomeFilter] = useState('all');
+  const [homeSearch, setHomeSearch] = useState('');
   const [itemsSubTab, setItemsSubTab] = useState('drone'); // 'drone' | 'robotics'
   const [threeDSubTab, setThreeDSubTab] = useState('all'); // 'all' | 'Anime' | 'Game Characters' | 'Personal Character'
   const [uavSubTab, setUavSubTab] = useState('prebuilt'); // 'prebuilt' | 'custom'
@@ -236,7 +242,9 @@ export default function AdminPortal({ mode = 'main' }) {
       productId: item.productId || item.id || '',
       name: item.name || '',
       category: item.category || '',
-      brand: item.brand || '',
+      brand: type === 'home' ? (item.badge || 'HOT') : (item.brand || ''),
+      oldPrice: item.oldPrice || '',
+      showInMarquee: item.showInMarquee !== undefined ? item.showInMarquee : true,
       price: type === '3dstudio' ? p8 : (item.price || 0),
       price6Inch: p6,
       price8Inch: p8,
@@ -315,6 +323,22 @@ export default function AdminPortal({ mode = 'main' }) {
       } else if (type === 'uav') {
         await saveUAVPreBuilt(updatedItem);
         setUavPreBuilt((prev) => prev.map((i) => (i.id === item.id ? updatedItem : i)));
+      } else if (type === 'home') {
+        const oldP = parseInt(String(editProductForm.oldPrice || 0).replace(/[^0-9]/g, ''), 10) || 0;
+        const updatedHomeItem = {
+          ...item,
+          productId: updatedProductId,
+          name: editProductForm.name,
+          category: editProductForm.category || 'Featured',
+          badge: editProductForm.brand || item.badge || 'HOT',
+          price: numPrice,
+          oldPrice: oldP,
+          quantity: numQty,
+          desc: editProductForm.desc,
+          showInMarquee: editProductForm.showInMarquee !== undefined ? editProductForm.showInMarquee : true
+        };
+        await saveHomeProduct(updatedHomeItem);
+        setHomeProducts((prev) => prev.map((i) => (i.id === item.id ? updatedHomeItem : i)));
       }
       showToast(`💾 Successfully updated details for "${updatedItem.name}"!`);
       setEditProductModalOpen(false);
@@ -389,6 +413,9 @@ export default function AdminPortal({ mode = 'main' }) {
       } else if (type === 'uav') {
         await saveUAVPreBuilt(updatedItem);
         setUavPreBuilt((prev) => prev.map((i) => (i.id === item.id ? updatedItem : i)));
+      } else if (type === 'home') {
+        await saveHomeProduct(updatedItem);
+        setHomeProducts((prev) => prev.map((i) => (i.id === item.id ? updatedItem : i)));
       }
       showToast(`📸 Updated ${images.length} photos for "${item.name}"!`);
       setPhotoModalOpen(false);
@@ -404,17 +431,20 @@ export default function AdminPortal({ mode = 'main' }) {
     setNewPhotosList([]);
     setAddPhotoInput('');
     setNewItemForm({
+      productId: type === 'home' ? `HP-${Math.floor(100 + Math.random() * 900)}` : '',
       name: '',
-      category: type === '3dstudio' ? 'Anime' : 'Motors',
-      brand: type === '3dstudio' ? 'P_Brothers × NaviDron 3D' : type === 'robotics' ? 'NaviDron Robotics' : 'NaviDron AeroLab',
+      category: type === 'home' ? 'Gaming Collectibles' : type === '3dstudio' ? 'Anime' : 'Motors',
+      brand: type === 'home' ? 'SALE' : type === '3dstudio' ? 'P_Brothers × NaviDron 3D' : type === 'robotics' ? 'NaviDron Robotics' : 'NaviDron AeroLab',
       kitType: 'Chassis & Base',
       type: 'FPV Drone',
       price: '',
-      quantity: '',
+      oldPrice: '',
+      quantity: '25',
       size: '8 inch',
       image: '',
       images: [],
       desc: '',
+      showInMarquee: true,
       flightTime: '',
       range: ''
     });
@@ -430,16 +460,18 @@ export default function AdminPortal({ mode = 'main' }) {
     setLoading(true);
     try {
       if (mode === 'products') {
-        const [prints, parts, kits, uavs] = await Promise.all([
+        const [prints, parts, kits, uavs, homeProds] = await Promise.all([
           get3DStudioItems(),
           getDroneAccessories(),
           getRoboticsKits(),
-          getUAVPreBuilt()
+          getUAVPreBuilt(),
+          getHomeProducts()
         ]);
         setThreeDItems(prints || []);
         setDroneParts(parts || []);
         setRoboticsKits(kits || []);
         setUavPreBuilt(uavs || []);
+        setHomeProducts(homeProds || []);
       } else if (mode === 'orders') {
         const [ords, customs] = await Promise.all([
           getAllOrders(),
@@ -448,14 +480,15 @@ export default function AdminPortal({ mode = 'main' }) {
         setOrders(ords || []);
         setUavCustomOrders(customs || []);
       } else {
-        const [ords, prints, parts, kits, uavs, customs, usrs] = await Promise.all([
+        const [ords, prints, parts, kits, uavs, customs, usrs, homeProds] = await Promise.all([
           getAllOrders(),
           get3DStudioItems(),
           getDroneAccessories(),
           getRoboticsKits(),
           getUAVPreBuilt(),
           getUAVCustomOrders(),
-          getAllUsers()
+          getAllUsers(),
+          getHomeProducts()
         ]);
         setOrders(ords || []);
         setThreeDItems(prints || []);
@@ -464,6 +497,7 @@ export default function AdminPortal({ mode = 'main' }) {
         setUavPreBuilt(uavs || []);
         setUavCustomOrders(customs || []);
         setUsersList(usrs || []);
+        setHomeProducts(homeProds || []);
       }
     } catch (err) {
       console.error('Error loading admin portal data:', err);
@@ -715,6 +749,33 @@ export default function AdminPortal({ mode = 'main' }) {
     }
   };
 
+  const handleSaveHomeProductInline = async (item) => {
+    setActionLoading(true);
+    try {
+      await saveHomeProduct(item);
+      setHomeProducts((prev) => prev.map((i) => (i.id === item.id ? item : i)));
+      showToast(`💾 Saved home product "${item.name}" (Price: ₹${item.price}, Stock: ${item.quantity})`);
+    } catch (err) {
+      showToast(`❌ Error: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteHomeProduct = async (id) => {
+    if (!window.confirm('Delete this product from Home Page?')) return;
+    setActionLoading(true);
+    try {
+      await deleteHomeProduct(id);
+      setHomeProducts((prev) => prev.filter((i) => i.id !== id));
+      showToast('🗑️ Product removed from Home Page.');
+    } catch (err) {
+      showToast(`❌ Error: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // ── ADD NEW PRODUCT SUBMISSION ────────────────────────────────
   const handleAddNewSubmit = async (e) => {
     e.preventDefault();
@@ -790,6 +851,20 @@ export default function AdminPortal({ mode = 'main' }) {
         });
         setUavPreBuilt((prev) => [created, ...prev]);
         showToast(`🎉 Added "${created.name}" (ID: ${pId}) to Pre-Built UAV catalog with ${finalImages.length} photos!`);
+      } else if (modalType === 'home') {
+        const docId = customProductId ? sanitizeKey(customProductId).toLowerCase() : `hp-${Date.now()}`;
+        const pId = customProductId || docId.toUpperCase();
+        const oldPriceVal = typeof newItemForm.oldPrice === 'number' ? newItemForm.oldPrice : parseInt(newItemForm.oldPrice, 10) || 0;
+        const created = await saveHomeProduct({
+          ...cleanedPayload,
+          id: docId,
+          productId: pId,
+          oldPrice: oldPriceVal,
+          badge: newItemForm.brand || 'HOT',
+          showInMarquee: newItemForm.showInMarquee !== undefined ? !!newItemForm.showInMarquee : true
+        });
+        setHomeProducts((prev) => [created, ...prev]);
+        showToast(`🎉 Added "${created.name}" (ID: ${pId}) to Home Page Catalog with ${finalImages.length} photos!`);
       }
 
       try {
@@ -1246,6 +1321,18 @@ export default function AdminPortal({ mode = 'main' }) {
               <Compass size={18} />
               <span>UAV & RC Planes</span>
               <span className="admin-count-pill">{uavPreBuilt.length + (mode === 'main' ? uavCustomOrders.length : 0)}</span>
+            </button>
+          )}
+
+          {(mode === 'main' || mode === 'products') && (
+            <button
+              type="button"
+              className={`admin-nav-item ${activeTab === 'home_products' ? 'active' : ''}`}
+              onClick={() => setActiveTab('home_products')}
+            >
+              <Sparkles size={18} />
+              <span>Home Products</span>
+              <span className="admin-count-pill">{homeProducts.length}</span>
             </button>
           )}
 
@@ -2616,6 +2703,273 @@ export default function AdminPortal({ mode = 'main' }) {
               </div>
             )}
 
+            {/* ── TAB: HOME PAGE PRODUCTS ────────────────────── */}
+            {(mode === 'main' || mode === 'products') && activeTab === 'home_products' && (
+              <div className="admin-panel-card fade-in">
+                <div className="admin-card-header-bar">
+                  <div>
+                    <h2 style={{ fontFamily: 'var(--font-head)', fontSize: '1.4rem', color: '#fff', margin: 0 }}>
+                      Home Page Products & Deals
+                    </h2>
+                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                      Manage products, action figures, drones, and collectibles displayed on the Home Page, with marquee banner controls and live customer ordering.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', minWidth: '220px' }}>
+                      <Search size={14} style={{ position: 'absolute', left: '10px', top: '10px', color: '#64748b' }} />
+                      <input
+                        type="text"
+                        placeholder="Search Product ID, Name..."
+                        value={homeSearch}
+                        onChange={(e) => setHomeSearch(e.target.value)}
+                        style={{
+                          padding: '0.45rem 0.75rem 0.45rem 2rem',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '0.8rem',
+                          outline: 'none',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', background: '#1e293b', borderRadius: '8px', padding: '3px', flexWrap: 'wrap', gap: '2px' }}>
+                      {['all', 'Gaming Collectibles', 'GTA 6 × P_Brothers', 'Anime & Manga', 'Curated Gift Sets', 'UAV Systems', 'Robotics Kits'].map((sub) => (
+                        <button
+                          key={sub}
+                          type="button"
+                          onClick={() => setHomeFilter(sub)}
+                          style={{
+                            background: homeFilter === sub ? 'var(--neon)' : 'transparent',
+                            color: homeFilter === sub ? 'var(--navy)' : '#94a3b8',
+                            border: 'none',
+                            padding: '0.45rem 0.75rem',
+                            borderRadius: '6px',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {sub === 'all' ? 'All' : sub.split(' ')[0]}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      className="admin-btn-action-primary"
+                      onClick={() => handleOpenAddModal('home')}
+                    >
+                      <Plus size={16} /> Add Home Product
+                    </button>
+                  </div>
+                </div>
+
+                {/* Home Products Grid */}
+                {(() => {
+                  const filtered = homeProducts.filter((item) => {
+                    if (homeFilter !== 'all' && item.category !== homeFilter) return false;
+                    if (homeSearch.trim()) {
+                      const q = homeSearch.toLowerCase();
+                      const matchId = (item.productId || item.id || '').toLowerCase().includes(q);
+                      const matchName = (item.name || '').toLowerCase().includes(q);
+                      const matchCat = (item.category || '').toLowerCase().includes(q);
+                      return matchId || matchName || matchCat;
+                    }
+                    return true;
+                  });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="admin-empty-state">
+                        <Package size={40} style={{ opacity: 0.3, marginBottom: '0.75rem' }} />
+                        <h4 style={{ margin: 0, color: '#fff' }}>No home products found</h4>
+                        <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                          Add products to display on the Home Page storefront for customers to view and order.
+                        </p>
+                        <button
+                          type="button"
+                          className="admin-btn-action-primary"
+                          style={{ marginTop: '1rem' }}
+                          onClick={() => handleOpenAddModal('home')}
+                        >
+                          <Plus size={15} /> Add First Home Product
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="admin-catalog-grid">
+                      {filtered.map((item) => {
+                        const imgs = Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/valorant_action_figures_1791059182363.jpg'];
+                        const stockCount = typeof item.quantity === 'number' ? item.quantity : (parseInt(String(item.quantity || 0), 10) || 0);
+
+                        return (
+                          <div key={item.id} className="admin-catalog-card">
+                            <div className="admin-catalog-card-image-wrap">
+                              <img src={imgs[0]} alt={item.name} />
+
+                              <span className="admin-catalog-badge" style={{ textTransform: 'uppercase', background: 'var(--neon)', color: 'var(--navy)' }}>
+                                {item.badge || 'HOT'}
+                              </span>
+
+                              <span
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '8px',
+                                  left: '8px',
+                                  background: 'rgba(10, 15, 46, 0.88)',
+                                  color: 'var(--neon)',
+                                  fontSize: '0.7rem',
+                                  fontFamily: 'monospace',
+                                  fontWeight: 800,
+                                  padding: '2px 7px',
+                                  borderRadius: '4px',
+                                  border: '1px solid rgba(0, 255, 204, 0.4)'
+                                }}
+                              >
+                                ID: {item.productId || item.id}
+                              </span>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = { ...item, showInMarquee: !item.showInMarquee };
+                                  handleSaveHomeProductInline(updated);
+                                }}
+                                style={{
+                                  position: 'absolute',
+                                  top: '8px',
+                                  right: '8px',
+                                  background: item.showInMarquee !== false ? 'rgba(16, 185, 129, 0.9)' : 'rgba(100, 116, 139, 0.8)',
+                                  color: '#fff',
+                                  border: 'none',
+                                  fontSize: '0.68rem',
+                                  fontWeight: 800,
+                                  padding: '2px 7px',
+                                  borderRadius: '12px',
+                                  cursor: 'pointer'
+                                }}
+                                title="Click to toggle display in top marquee ticker"
+                              >
+                                {item.showInMarquee !== false ? '⚡ Ticker: ON' : 'Ticker: OFF'}
+                              </button>
+                            </div>
+
+                            <div className="admin-catalog-card-body">
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                                <span style={{ fontSize: '0.72rem', color: 'var(--neon)', textTransform: 'uppercase', fontWeight: 800 }}>
+                                  {item.category || 'Featured'}
+                                </span>
+                                <span style={{ fontSize: '0.72rem', color: stockCount > 0 ? '#10b981' : '#ef4444', fontWeight: 700 }}>
+                                  {stockCount > 0 ? `${stockCount} in stock` : 'Out of Stock'}
+                                </span>
+                              </div>
+
+                              <h4 style={{ margin: '0 0 0.45rem', fontSize: '0.98rem', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.name}>
+                                {item.name}
+                              </h4>
+
+                              <p style={{ margin: '0 0 0.75rem', fontSize: '0.8rem', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.desc}>
+                                {item.desc || 'Featured product on homepage.'}
+                              </p>
+
+                              {/* Edit details & photos buttons */}
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem', marginBottom: '0.75rem' }}>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  style={{ padding: '0.4rem', fontSize: '0.78rem', borderColor: 'rgba(255,255,255,0.2)', color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                                  onClick={() => handleOpenEditProduct(item, 'home')}
+                                >
+                                  <Edit3 size={13} /> Edit Details
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  style={{ padding: '0.4rem', fontSize: '0.78rem', borderColor: 'rgba(255,255,255,0.2)', color: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                                  onClick={() => handleOpenPhotoManager(item, 'home')}
+                                >
+                                  <ImageIcon size={13} /> Photos ({imgs.length})
+                                </button>
+                              </div>
+
+                              {/* Inline editable price, old price, quantity */}
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.45rem', marginBottom: '0.75rem' }}>
+                                <div className="admin-input-group">
+                                  <label style={{ fontSize: '0.7rem' }}>Price (₹)</label>
+                                  <input
+                                    type="number"
+                                    className="admin-input-field"
+                                    value={item.price}
+                                    onChange={(e) => {
+                                      const val = parseInt(e.target.value, 10) || 0;
+                                      setHomeProducts((prev) => prev.map((i) => (i.id === item.id ? { ...i, price: val } : i)));
+                                    }}
+                                  />
+                                </div>
+                                <div className="admin-input-group">
+                                  <label style={{ fontSize: '0.7rem' }}>Old Price (₹)</label>
+                                  <input
+                                    type="number"
+                                    className="admin-input-field"
+                                    value={item.oldPrice || ''}
+                                    onChange={(e) => {
+                                      const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10) || 0;
+                                      setHomeProducts((prev) => prev.map((i) => (i.id === item.id ? { ...i, oldPrice: val } : i)));
+                                    }}
+                                  />
+                                </div>
+                                <div className="admin-input-group">
+                                  <label style={{ fontSize: '0.7rem' }}>Stock Units</label>
+                                  <input
+                                    type="number"
+                                    className="admin-input-field"
+                                    value={item.quantity}
+                                    onChange={(e) => {
+                                      const val = parseInt(e.target.value, 10) || 0;
+                                      setHomeProducts((prev) => prev.map((i) => (i.id === item.id ? { ...i, quantity: val } : i)));
+                                    }}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="admin-card-actions-row">
+                                <button
+                                  type="button"
+                                  className="btn btn-primary"
+                                  style={{ flex: 1, padding: '0.45rem', fontSize: '0.78rem' }}
+                                  onClick={() => handleSaveHomeProductInline(item)}
+                                  disabled={actionLoading}
+                                >
+                                  <Save size={13} style={{ marginRight: '4px' }} /> Save Price/Stock
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  style={{ padding: '0.45rem 0.65rem', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#ef4444' }}
+                                  onClick={() => handleDeleteHomeProduct(item.id)}
+                                  title="Remove from Home Page"
+                                  disabled={actionLoading}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
             {/* ── TAB 5b: CUSTOM UAV QUOTES (FOR ORDERS ADMIN) ───────── */}
             {activeTab === 'uav_custom' && mode === 'orders' && (
               <div className="admin-panel-card fade-in">
@@ -2809,7 +3163,7 @@ export default function AdminPortal({ mode = 'main' }) {
           <div className="admin-modal-card" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.85rem' }}>
               <h3 style={{ fontFamily: 'var(--font-head)', color: '#fff', margin: 0, fontSize: '1.25rem' }}>
-                Add New {modalType === '3dstudio' ? '3D Studio Figure' : modalType === 'drone' ? 'Drone Part' : modalType === 'robotics' ? 'Robotics Kit' : 'Pre-Built UAV'}
+                Add New {modalType === 'home' ? 'Home Page Product' : modalType === '3dstudio' ? '3D Studio Figure' : modalType === 'drone' ? 'Drone Part' : modalType === 'robotics' ? 'Robotics Kit' : 'Pre-Built UAV'}
               </h3>
               <button
                 type="button"
@@ -2845,6 +3199,46 @@ export default function AdminPortal({ mode = 'main' }) {
                   />
                 </div>
               </div>
+
+              {/* Category for Home Page Product */}
+              {modalType === 'home' && (
+                <div>
+                  <label className="form-field-label" style={{ color: '#cbd5e1' }}>Category *</label>
+                  <select
+                    className="profile-input"
+                    value={newItemForm.category}
+                    onChange={(e) => setNewItemForm({ ...newItemForm, category: e.target.value })}
+                  >
+                    <option value="Gaming Collectibles">Gaming Collectibles</option>
+                    <option value="GTA 6 × P_Brothers">GTA 6 × P_Brothers</option>
+                    <option value="Anime & Manga">Anime & Manga</option>
+                    <option value="Curated Gift Sets">Curated Gift Sets</option>
+                    <option value="UAV Systems">UAV Systems</option>
+                    <option value="Robotics Kits">Robotics Kits</option>
+                    <option value="Streetwear Apparel">Streetwear Apparel</option>
+                    <option value="Custom 3D Prints">Custom 3D Prints</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Badge for Home Page Product */}
+              {modalType === 'home' && (
+                <div>
+                  <label className="form-field-label" style={{ color: '#cbd5e1' }}>Sale Badge Tag *</label>
+                  <select
+                    className="profile-input"
+                    value={newItemForm.brand}
+                    onChange={(e) => setNewItemForm({ ...newItemForm, brand: e.target.value })}
+                  >
+                    <option value="SALE">SALE (Discount)</option>
+                    <option value="HOT">HOT (Trending)</option>
+                    <option value="NEW">NEW (Latest)</option>
+                    <option value="BESTSELLER">BESTSELLER</option>
+                    <option value="COMBO">COMBO (Bundle)</option>
+                    <option value="FLAGSHIP">FLAGSHIP</option>
+                  </select>
+                </div>
+              )}
 
               {/* Category for 3D Studio */}
               {modalType === '3dstudio' && (
@@ -2953,6 +3347,34 @@ export default function AdminPortal({ mode = 'main' }) {
                   required
                 />
               </div>
+
+              {modalType === 'home' && (
+                <div>
+                  <label className="form-field-label" style={{ color: '#cbd5e1' }}>Old / Original Price (₹)</label>
+                  <input
+                    type="number"
+                    className="profile-input"
+                    value={newItemForm.oldPrice}
+                    onChange={(e) => setNewItemForm({ ...newItemForm, oldPrice: e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0 })}
+                    placeholder="e.g. 1199 (optional)"
+                  />
+                </div>
+              )}
+
+              {modalType === 'home' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginTop: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    id="addShowInMarqueeCheck"
+                    checked={newItemForm.showInMarquee !== false}
+                    onChange={(e) => setNewItemForm({ ...newItemForm, showInMarquee: e.target.checked })}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="addShowInMarqueeCheck" style={{ color: '#cbd5e1', fontSize: '0.85rem', cursor: 'pointer', margin: 0 }}>
+                    Show in Top Sale Marquee Ticker
+                  </label>
+                </div>
+              )}
 
               <div className="full-span">
                 <label className="form-field-label" style={{ color: '#cbd5e1' }}>Primary Image URL / Asset Path *</label>
@@ -3361,19 +3783,52 @@ export default function AdminPortal({ mode = 'main' }) {
                   />
                 </div>
                 <div className="admin-input-group">
-                  <label>Brand / Manufacturer</label>
+                  <label>{editingProductTarget.type === 'home' ? 'Sale Badge Tag (e.g. SALE, HOT, NEW)' : 'Brand / Manufacturer'}</label>
                   <input
                     type="text"
                     className="admin-input-field"
                     value={editProductForm.brand}
                     onChange={(e) => setEditProductForm((prev) => ({ ...prev, brand: e.target.value }))}
-                    placeholder="e.g. NexFly Studio, T-Motor"
+                    placeholder={editingProductTarget.type === 'home' ? 'e.g. SALE, HOT, NEW, BESTSELLER' : 'e.g. NexFly Studio, T-Motor'}
                   />
                 </div>
               </div>
 
-              {/* Price & Quantity (Separate prices for 6", 8", 10" sizes for 3D Studio) */}
-              {editingProductTarget.type === '3dstudio' ? (
+              {/* Price & Quantity */}
+              {editingProductTarget.type === 'home' ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.9rem' }}>
+                  <div className="admin-input-group">
+                    <label>Price (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      className="admin-input-field"
+                      value={editProductForm.price}
+                      onChange={(e) => setEditProductForm((prev) => ({ ...prev, price: e.target.value }))}
+                    />
+                  </div>
+                  <div className="admin-input-group">
+                    <label>Old Price (₹)</label>
+                    <input
+                      type="number"
+                      className="admin-input-field"
+                      value={editProductForm.oldPrice}
+                      onChange={(e) => setEditProductForm((prev) => ({ ...prev, oldPrice: e.target.value }))}
+                      placeholder="e.g. 1199"
+                    />
+                  </div>
+                  <div className="admin-input-group">
+                    <label>Stock / In-Stock Units *</label>
+                    <input
+                      type="number"
+                      required
+                      className="admin-input-field"
+                      value={editProductForm.quantity}
+                      onChange={(e) => setEditProductForm((prev) => ({ ...prev, quantity: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              ) : editingProductTarget.type === '3dstudio' ? (
                 <div style={{ background: 'rgba(0, 200, 255, 0.06)', border: '1.5px solid rgba(0, 200, 255, 0.25)', borderRadius: '10px', padding: '0.85rem', marginBottom: '0.9rem' }}>
                   <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--neon)', marginBottom: '0.55rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
                     <span>💰 Separate Prices per Model Size (25% Density):</span>
@@ -3444,6 +3899,21 @@ export default function AdminPortal({ mode = 'main' }) {
                       onChange={(e) => setEditProductForm((prev) => ({ ...prev, quantity: e.target.value }))}
                     />
                   </div>
+                </div>
+              )}
+
+              {editingProductTarget.type === 'home' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.9rem' }}>
+                  <input
+                    type="checkbox"
+                    id="editShowInMarqueeCheck"
+                    checked={editProductForm.showInMarquee !== false}
+                    onChange={(e) => setEditProductForm((prev) => ({ ...prev, showInMarquee: e.target.checked }))}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="editShowInMarqueeCheck" style={{ color: '#cbd5e1', fontSize: '0.85rem', cursor: 'pointer', margin: 0 }}>
+                    Show in Top Sale Marquee Ticker
+                  </label>
                 </div>
               )}
 

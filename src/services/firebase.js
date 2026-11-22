@@ -2167,6 +2167,201 @@ export async function getAllUsers() {
   return [];
 }
 
+// ── Root Collection 7: "HomeProducts" (Home Page Dynamic Showcase) ─
+export const INITIAL_HOME_PRODUCTS = [
+  {
+    id: "hp-val-01",
+    productId: "HP-VAL-01",
+    name: "Valorant Agents Full Collection",
+    category: "Gaming Collectibles",
+    badge: "SALE",
+    price: 799,
+    oldPrice: 1199,
+    quantity: 35,
+    image: "/images/valorant_action_figures_1791059182363.jpg",
+    images: [
+      "/images/valorant_action_figures_1791059182363.jpg",
+      "/images/anime_figure_3d.jpg"
+    ],
+    showInMarquee: true,
+    desc: "Your favorite Valorant agents in ultra-detailed 3D resin prints. Choose Jett, Reyna, Omen, Chamber and more!"
+  },
+  {
+    id: "hp-gta-02",
+    productId: "HP-GTA-02",
+    name: "GTA 6 Vice City Legends — Jason & Lucia",
+    category: "GTA 6 × P_Brothers",
+    badge: "HOT",
+    price: 999,
+    oldPrice: 1499,
+    quantity: 20,
+    image: "/images/gta6_merchandise_banner_1791059157486.jpg",
+    images: [
+      "/images/gta6_merchandise_banner_1791059157486.jpg",
+      "/images/valorant_action_figures_1791059182363.jpg"
+    ],
+    showInMarquee: true,
+    desc: "Limited edition Jason & Lucia 3D figures in partnership with YouTuber Priyanshu. Numbered collector series."
+  },
+  {
+    id: "hp-anm-03",
+    productId: "HP-ANM-03",
+    name: "Anime Heroes Collection (Goku / Luffy)",
+    category: "Anime & Manga",
+    badge: "BESTSELLER",
+    price: 649,
+    oldPrice: 899,
+    quantity: 40,
+    image: "/images/anime_figure_3d.jpg",
+    images: [
+      "/images/anime_figure_3d.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    showInMarquee: true,
+    desc: "DBZ Goku, One Piece Luffy Gear 5, Demon Slayer Tanjiro, Naruto Sage mode with dynamic aura effect bases."
+  },
+  {
+    id: "hp-gft-04",
+    productId: "HP-GFT-04",
+    name: "3D Gift Packs & Curated Combos",
+    category: "Curated Gift Sets",
+    badge: "COMBO",
+    price: 1299,
+    oldPrice: 1799,
+    quantity: 15,
+    image: "/images/3d_printed_gift_pack.jpg",
+    images: [
+      "/images/3d_printed_gift_pack.jpg",
+      "/images/anime_figure_3d.jpg"
+    ],
+    showInMarquee: true,
+    desc: "Packaged combo sets featuring multiple figures, lithophane keychains, and display bases. Ideal for gifts!"
+  },
+  {
+    id: "hp-uav-05",
+    productId: "HP-UAV-05",
+    name: "Nexfly Chimera 7 Pro FPV Long-Range Drone",
+    category: "UAV Systems",
+    badge: "FLAGSHIP",
+    price: 28999,
+    oldPrice: 34999,
+    quantity: 8,
+    image: "/images/fpv_racing_drone.jpg",
+    images: [
+      "/images/fpv_racing_drone.jpg",
+      "/images/hero_drone_bg.jpg"
+    ],
+    showInMarquee: false,
+    desc: "7-inch BNF analog/HD long range FPV quadcopter with GPS rescue, 6S powertrain, and 28-min flight endurance."
+  },
+  {
+    id: "hp-rob-06",
+    productId: "HP-ROB-06",
+    name: "Autonomous ROS2 Lidar Robot Rover Kit",
+    category: "Robotics Kits",
+    badge: "NEW",
+    price: 14999,
+    oldPrice: 18499,
+    quantity: 12,
+    image: "/images/college_project_drone.jpg",
+    images: [
+      "/images/college_project_drone.jpg",
+      "/images/fpv_racing_drone.jpg"
+    ],
+    showInMarquee: false,
+    desc: "Full aluminum chassis with 360-degree LDS Lidar, depth camera, Raspberry Pi / Jetson mount, and SLAM navigation."
+  }
+];
+
+export async function getHomeProducts() {
+  const localKey = 'navidron_catalog_home_products';
+  const cached = localStorage.getItem(localKey);
+  let localList = null;
+  if (cached) {
+    try { localList = JSON.parse(cached); } catch (e) {}
+  }
+
+  const cleanHomeItem = (item) => {
+    const rawPrice = typeof item.price === 'number'
+      ? item.price
+      : parseInt(String(item.price || '799').replace(/[^0-9]/g, ''), 10) || 799;
+    const rawOldPrice = typeof item.oldPrice === 'number'
+      ? item.oldPrice
+      : (item.oldPrice ? parseInt(String(item.oldPrice).replace(/[^0-9]/g, ''), 10) || 0 : 0);
+
+    return {
+      ...item,
+      id: item.id || `hp-${Date.now()}`,
+      productId: item.productId && String(item.productId).trim() ? String(item.productId).trim() : (item.id || ''),
+      price: rawPrice,
+      oldPrice: rawOldPrice,
+      quantity: typeof item.quantity === 'number'
+        ? item.quantity
+        : (item.quantity !== undefined ? (parseInt(String(item.quantity), 10) || 0) : 25),
+      images: Array.isArray(item.images) && item.images.length > 0 ? item.images : [item.image || '/images/valorant_action_figures_1791059182363.jpg'],
+      image: Array.isArray(item.images) && item.images[0] ? item.images[0] : (item.image || '/images/valorant_action_figures_1791059182363.jpg'),
+      category: item.category || 'Featured',
+      badge: item.badge || 'HOT',
+      showInMarquee: item.showInMarquee !== undefined ? !!item.showInMarquee : true,
+      desc: item.desc || ''
+    };
+  };
+
+  const cloudList = await readFirestoreCollection('HomeProducts');
+  if (Array.isArray(cloudList) && cloudList.length > 0) {
+    const normalized = cloudList.map(cleanHomeItem);
+    localStorage.setItem(localKey, JSON.stringify(normalized));
+    return normalized;
+  }
+
+  if (localList && localList.length > 0) {
+    const normalized = localList.map(cleanHomeItem);
+    localStorage.setItem(localKey, JSON.stringify(normalized));
+    return normalized;
+  }
+
+  // Preload initial collection
+  localStorage.setItem(localKey, JSON.stringify(INITIAL_HOME_PRODUCTS));
+  INITIAL_HOME_PRODUCTS.forEach((item) => writeFirestoreDoc('HomeProducts', item.id, item));
+  return INITIAL_HOME_PRODUCTS;
+}
+
+export async function saveHomeProduct(item) {
+  const id = item.id || `hp-${Date.now()}`;
+  const productId = item.productId && String(item.productId).trim() ? String(item.productId).trim() : id;
+  const images = Array.isArray(item.images) && item.images.length > 0
+    ? item.images
+    : [item.image || '/images/valorant_action_figures_1791059182363.jpg'];
+  const cleanItem = {
+    ...item,
+    id,
+    productId,
+    image: images[0] || item.image || '/images/valorant_action_figures_1791059182363.jpg',
+    images,
+    price: typeof item.price === 'number' ? item.price : parseInt(String(item.price || 0).replace(/[^0-9]/g, ''), 10) || 0,
+    oldPrice: typeof item.oldPrice === 'number' ? item.oldPrice : (item.oldPrice ? parseInt(String(item.oldPrice).replace(/[^0-9]/g, ''), 10) || 0 : 0),
+    quantity: typeof item.quantity === 'number' ? item.quantity : (parseInt(String(item.quantity || 0), 10) || 0),
+    category: item.category || 'Featured',
+    badge: item.badge || 'HOT',
+    showInMarquee: item.showInMarquee !== undefined ? !!item.showInMarquee : true,
+    updatedAt: new Date().toISOString()
+  };
+  await writeFirestoreDoc('HomeProducts', id, cleanItem);
+
+  const current = await getHomeProducts();
+  const updated = [cleanItem, ...current.filter((i) => i.id !== id)];
+  localStorage.setItem('navidron_catalog_home_products', JSON.stringify(updated));
+  return cleanItem;
+}
+
+export async function deleteHomeProduct(id) {
+  await deleteFirestoreDoc('HomeProducts', id);
+  const current = await getHomeProducts();
+  const updated = current.filter((i) => i.id !== id);
+  localStorage.setItem('navidron_catalog_home_products', JSON.stringify(updated));
+  return true;
+}
+
 // ── Bills / Invoices Services ─────────────────────────────────
 export async function getUserBills(uidOrUser = 'guest_user') {
   const orders = await getUserOrders(uidOrUser);

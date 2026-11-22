@@ -10,7 +10,7 @@ import AboutNexfly from './components/AboutNexfly';
 import Testimonials from './components/Testimonials';
 import ContactSection from './components/ContactSection';
 
-export default function HomePage({ onOpenQuote }) {
+export default function HomePage({ onOpenQuote, onAddToCart }) {
   useEffect(() => {
     document.title = "NaviDron — Premium Drones, 3D Prints & GTA 6 Merch | Nexfly Robotics";
   }, []);
@@ -24,7 +24,7 @@ export default function HomePage({ onOpenQuote }) {
       <PBrothersPromo onOpenQuote={onOpenQuote} />
       <hr className="neon-line" />
 
-      <ActionFiguresSale onOpenQuote={onOpenQuote} />
+      <ActionFiguresSale onOpenQuote={onOpenQuote} onAddToCart={onAddToCart} />
       <hr className="neon-line" />
 
       <UAVOverview onOpenQuote={onOpenQuote} />
