@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, MapPin, CheckCircle2, Calendar, Clock } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, MapPin, CheckCircle2, Calendar, Clock, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { createGlobalOrder, clearUserCart } from '../../services/firebase';
 
@@ -14,11 +14,17 @@ export default function CartDrawer({
   userAddresses = [],
   onOpenAuth
 }) {
-  const [selectedAddress, setSelectedAddress] = useState(
-    userAddresses.find((a) => a.isDefault) || userAddresses[0] || null
-  );
-  const [customAddress, setCustomAddress] = useState('');
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [useCustomAddress, setUseCustomAddress] = useState(userAddresses.length === 0);
+  const [recipientName, setRecipientName] = useState(user?.name || user?.fullName || '');
+  const [contactPhone, setContactPhone] = useState(user?.phone || '');
+  const [contactEmail, setContactEmail] = useState(user?.email || user?.primaryEmailAddress?.emailAddress || '');
+  const [streetAddress, setStreetAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [stateName, setStateName] = useState('');
+  const [pincode, setPincode] = useState('');
   const [customLandmark, setCustomLandmark] = useState('');
+  const [addressError, setAddressError] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
 
@@ -32,17 +38,76 @@ export default function CartDrawer({
     return sum + rawPrice * (item.quantity || 1);
   }, 0);
 
-  const deliveryFee = cart.length > 0 ? 199 : 0;
+  // Delivery Rule: ₹169 per order. FREE if order subtotal is Rs 1,000 or above.
+  const isFreeDelivery = subtotal >= 1000;
+  const deliveryFee = cart.length > 0 ? (isFreeDelivery ? 0 : 169) : 0;
   const gstAmount = Math.round((subtotal + deliveryFee) * 0.18);
   const totalAmount = subtotal + deliveryFee + gstAmount;
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
-    setIsPlacingOrder(true);
+    setAddressError('');
 
-    const deliveryAddressStr = selectedAddress
-      ? `${selectedAddress.recipient ? selectedAddress.recipient + ', ' : ''}${selectedAddress.street}${selectedAddress.landmark ? ', Landmark: ' + selectedAddress.landmark : ''}, ${selectedAddress.city}${selectedAddress.state ? ', ' + selectedAddress.state : ''} - ${selectedAddress.pincode} (Phone: ${selectedAddress.phone || 'N/A'})`
-      : `${customAddress.trim()}${customLandmark.trim() ? ', Landmark: ' + customLandmark.trim() : ''}` || 'A. M. Das Lane, Brahmpura, Muzaffarpur, Bihar - 842003';
+    let finalDeliveryAddressStr = '';
+    let finalRecipient = recipientName.trim() || user?.name || user?.fullName || '';
+    let finalPhone = contactPhone.trim() || user?.phone || '';
+    let finalEmail = contactEmail.trim() || user?.email || user?.primaryEmailAddress?.emailAddress || '';
+
+    // Validate delivery address selection & required fields
+    if (selectedAddress && !useCustomAddress) {
+      finalRecipient = selectedAddress.recipient?.trim() || finalRecipient;
+      finalPhone = selectedAddress.phone?.trim() || finalPhone;
+      const addrStreet = selectedAddress.street || '';
+      const addrCity = selectedAddress.city || '';
+      const addrPincode = selectedAddress.pincode || '';
+      const addrLandmark = selectedAddress.landmark ? `, Landmark: ${selectedAddress.landmark}` : '';
+      const addrState = selectedAddress.state ? `, ${selectedAddress.state}` : '';
+
+      if (!addrStreet || !addrCity || !addrPincode) {
+        setAddressError('The selected address is incomplete. Please choose or enter a complete address.');
+        return;
+      }
+      finalDeliveryAddressStr = `${finalRecipient ? finalRecipient + ', ' : ''}${addrStreet}${addrLandmark}, ${addrCity}${addrState} - ${addrPincode} (Contact: ${finalPhone || 'N/A'})`;
+    } else {
+      // Must give complete address
+      if (!finalRecipient || finalRecipient.length < 2) {
+        setAddressError('Please enter the recipient full name.');
+        return;
+      }
+      if (!finalPhone || finalPhone.replace(/[^0-9]/g, '').length < 10) {
+        setAddressError('Please enter a valid 10-digit contact mobile phone number.');
+        return;
+      }
+      if (!finalEmail || !finalEmail.includes('@') || !finalEmail.includes('.')) {
+        setAddressError('Please enter a valid contact email address for order notifications.');
+        return;
+      }
+      if (!streetAddress.trim() || streetAddress.trim().length < 5) {
+        setAddressError('Please enter complete house/flat, building, and street/area address.');
+        return;
+      }
+      if (!city.trim() || city.trim().length < 2) {
+        setAddressError('Please enter your city.');
+        return;
+      }
+      if (!pincode.trim() || pincode.replace(/[^0-9]/g, '').length < 6) {
+        setAddressError('Please enter a valid 6-digit postal PIN code.');
+        return;
+      }
+
+      finalDeliveryAddressStr = `${finalRecipient}, ${streetAddress.trim()}${customLandmark.trim() ? ', Landmark: ' + customLandmark.trim() : ''}, ${city.trim()}${stateName.trim() ? ', ' + stateName.trim() : ''} - ${pincode.trim()} (Phone: ${finalPhone}, Email: ${finalEmail})`;
+    }
+
+    if (!finalPhone || finalPhone.replace(/[^0-9]/g, '').length < 10) {
+      setAddressError('Please provide a valid 10-digit contact phone number.');
+      return;
+    }
+    if (!finalEmail || !finalEmail.includes('@')) {
+      setAddressError('Please provide a valid contact email address.');
+      return;
+    }
+
+    setIsPlacingOrder(true);
 
     const randId = Math.floor(10000 + Math.random() * 90000);
     const now = new Date();
@@ -70,12 +135,12 @@ export default function CartDrawer({
       createdAt: now.toISOString(),
       customer: {
         uid: user?.id || user?.uid || 'guest_user',
-        name: user?.name || user?.fullName || 'Pilot Customer',
-        email: user?.email || user?.primaryEmailAddress?.emailAddress || 'navidron.a@gmail.com',
-        phone: user?.phone || '+919508106177'
+        name: finalRecipient,
+        email: finalEmail,
+        phone: finalPhone
       },
       customerUid: user?.id || user?.uid || 'guest_user',
-      deliveryAddress: deliveryAddressStr,
+      deliveryAddress: finalDeliveryAddressStr,
       items: cart.map((it) => ({
         id: it.id,
         productId: it.productId || it.id,
@@ -189,8 +254,10 @@ export default function CartDrawer({
                   <span>₹{(orderSuccess.subtotal ?? orderSuccess.totalAmount).toLocaleString('en-IN')}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#64748b', marginBottom: '2px' }}>
-                  <span>Packaging & Delivery:</span>
-                  <span>₹{orderSuccess.deliveryFee ?? 199}</span>
+                  <span>Delivery:</span>
+                  <span style={{ fontWeight: 700, color: orderSuccess.deliveryFee === 0 ? '#16a34a' : '#0f172a' }}>
+                    {orderSuccess.deliveryFee === 0 ? 'FREE (Above ₹1,000)' : `₹${orderSuccess.deliveryFee ?? 169}`}
+                  </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#b45309', marginBottom: '4px' }}>
                   <span>GST (18%):</span>
@@ -320,17 +387,90 @@ export default function CartDrawer({
               })}
             </div>
 
+            {/* Free Delivery Incentive / Status Banner */}
+            <div
+              style={{
+                margin: '0.75rem 1rem 0.25rem',
+                padding: '0.65rem 0.95rem',
+                borderRadius: '10px',
+                backgroundColor: isFreeDelivery ? 'rgba(16, 185, 129, 0.08)' : 'rgba(2, 132, 199, 0.06)',
+                border: `1.5px solid ${isFreeDelivery ? 'rgba(16, 185, 129, 0.3)' : 'rgba(2, 132, 199, 0.2)'}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '0.82rem'
+              }}
+            >
+              <span style={{ fontWeight: 800, color: isFreeDelivery ? '#047857' : '#0369a1' }}>
+                {isFreeDelivery
+                  ? '🎉 FREE Delivery Unlocked! (Order above ₹1,000)'
+                  : `🚚 Add ₹${(1000 - subtotal).toLocaleString('en-IN')} more to get FREE Delivery`}
+              </span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: isFreeDelivery ? '#059669' : '#0284c7' }}>
+                {isFreeDelivery ? '₹0 Delivery' : 'Standard ₹169'}
+              </span>
+            </div>
+
             {/* Delivery Address Section */}
             <div className="cart-address-section">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.6rem' }}>
-                <MapPin size={16} color="var(--neon)" />
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--navy)' }}>
-                  Delivery Destination
-                </span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <MapPin size={16} color="var(--neon)" />
+                  <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--navy)' }}>
+                    Particular Delivery Address <span style={{ color: '#ef4444' }}>*</span>
+                  </span>
+                </div>
+
+                {userAddresses && userAddresses.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUseCustomAddress(!useCustomAddress);
+                      if (!useCustomAddress) setSelectedAddress(null);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#0284c7',
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      padding: 0
+                    }}
+                  >
+                    {useCustomAddress ? 'Select Saved Address' : '+ New Address'}
+                  </button>
+                )}
               </div>
 
-              {userAddresses && userAddresses.length > 0 ? (
+              {/* Validation Error Banner */}
+              {addressError && (
+                <div
+                  style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1.5px solid #fecaca',
+                    borderRadius: '8px',
+                    padding: '0.6rem 0.85rem',
+                    marginBottom: '0.75rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    color: '#991b1b',
+                    fontSize: '0.78rem',
+                    fontWeight: 700
+                  }}
+                >
+                  <AlertCircle size={16} color="#dc2626" style={{ flexShrink: 0 }} />
+                  <span>{addressError}</span>
+                </div>
+              )}
+
+              {/* Saved Addresses Options */}
+              {userAddresses && userAddresses.length > 0 && !useCustomAddress ? (
                 <div className="cart-address-options">
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.35rem' }}>
+                    Select a destination address for this dispatch:
+                  </div>
                   {userAddresses.map((addr) => (
                     <label
                       key={addr.id}
@@ -344,29 +484,141 @@ export default function CartDrawer({
                         onChange={() => setSelectedAddress(addr)}
                       />
                       <span>
-                        <strong>{addr.tag || 'Address'}:</strong> {addr.street}{addr.landmark ? `, Landmark: ${addr.landmark}` : ''}, {addr.city} ({addr.pincode})
+                        <strong>{addr.tag || 'Saved Address'}:</strong> {addr.street}{addr.landmark ? `, Landmark: ${addr.landmark}` : ''}, {addr.city} ({addr.pincode})
+                        {addr.recipient && <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Recipient: {addr.recipient} {addr.phone ? `(${addr.phone})` : ''}</div>}
                       </span>
                     </label>
                   ))}
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-                  <input
-                    type="text"
-                    className="cart-address-input"
-                    value={customAddress}
-                    onChange={(e) => setCustomAddress(e.target.value)}
-                    placeholder="House / Flat / Street / Area, City, PIN Code"
-                  />
-                  <input
-                    type="text"
-                    className="cart-address-input"
-                    value={customLandmark}
-                    onChange={(e) => setCustomLandmark(e.target.value)}
-                    placeholder="Nearby Landmark"
-                  />
-                  <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '0.15rem' }}>
-                    Pan-India express shipping from Nexfly Robotics Labs.
+                /* Complete Detailed Address Form */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '2px' }}>
+                        Full Name <span style={{ color: '#ef4444' }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="cart-address-input"
+                        value={recipientName}
+                        onChange={(e) => {
+                          setRecipientName(e.target.value);
+                          if (addressError) setAddressError('');
+                        }}
+                        placeholder="Recipient Name"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '2px' }}>
+                        Contact Phone <span style={{ color: '#ef4444' }}>*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        className="cart-address-input"
+                        value={contactPhone}
+                        onChange={(e) => {
+                          setContactPhone(e.target.value);
+                          if (addressError) setAddressError('');
+                        }}
+                        placeholder="10-digit Mobile No."
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '2px' }}>
+                      Contact Email Address <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="email"
+                      className="cart-address-input"
+                      value={contactEmail}
+                      onChange={(e) => {
+                        setContactEmail(e.target.value);
+                        if (addressError) setAddressError('');
+                      }}
+                      placeholder="e.g. pilot@example.com (For Order Tracking)"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '2px' }}>
+                      House / Flat / Street / Area <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="cart-address-input"
+                      value={streetAddress}
+                      onChange={(e) => {
+                        setStreetAddress(e.target.value);
+                        if (addressError) setAddressError('');
+                      }}
+                      placeholder="Flat/House No., Building Name, Street, Locality"
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '0.45rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '2px' }}>
+                        City <span style={{ color: '#ef4444' }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="cart-address-input"
+                        value={city}
+                        onChange={(e) => {
+                          setCity(e.target.value);
+                          if (addressError) setAddressError('');
+                        }}
+                        placeholder="City"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '2px' }}>
+                        State
+                      </label>
+                      <input
+                        type="text"
+                        className="cart-address-input"
+                        value={stateName}
+                        onChange={(e) => setStateName(e.target.value)}
+                        placeholder="State"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '2px' }}>
+                        PIN Code <span style={{ color: '#ef4444' }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="cart-address-input"
+                        value={pincode}
+                        onChange={(e) => {
+                          setPincode(e.target.value);
+                          if (addressError) setAddressError('');
+                        }}
+                        placeholder="6 Digits"
+                        maxLength={6}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '2px' }}>
+                      Nearby Landmark (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      className="cart-address-input"
+                      value={customLandmark}
+                      onChange={(e) => setCustomLandmark(e.target.value)}
+                      placeholder="e.g. Near City Hospital / Metro Gate 2"
+                    />
+                  </div>
+
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '0.1rem' }}>
+                    🛡️ Verified Pan-India delivery via express insured courier with live SMS & WhatsApp tracking.
                   </span>
                 </div>
               )}
@@ -379,8 +631,10 @@ export default function CartDrawer({
                 <span style={{ fontWeight: 700, color: '#0f172a' }}>₹{subtotal.toLocaleString('en-IN')}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#475569', marginBottom: '0.35rem' }}>
-                <span>📦 Packaging & Express Delivery:</span>
-                <span style={{ fontWeight: 700, color: '#0f172a' }}>₹{deliveryFee}</span>
+                <span>🚚 Delivery:</span>
+                <span style={{ fontWeight: 800, color: deliveryFee === 0 ? '#16a34a' : '#0f172a' }}>
+                  {deliveryFee === 0 ? 'FREE (Above ₹1,000)' : `₹${deliveryFee}`}
+                </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#b45309', marginBottom: '0.65rem' }}>
                 <span>🧾 GST (18% on total bill):</span>

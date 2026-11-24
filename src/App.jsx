@@ -22,6 +22,7 @@ import ProfilePage from './pages/Profile/ProfilePage';
 import AdminPortal from './pages/Admin/AdminPortal';
 import ProductsAdminPortal from './pages/Admin/ProductsAdminPortal';
 import OrdersAdminPortal from './pages/Admin/OrdersAdminPortal';
+import PBrothersAdminPortal from './pages/Admin/PBrothersAdminPortal';
 import CartDrawer from './components/CartDrawer/CartDrawer';
 import {
   syncUserFullDataToFirebase,
@@ -205,7 +206,7 @@ export default function App() {
           />
           <Route
             path="/p-brothers"
-            element={<PBrothersPage onOpenQuote={() => setQuoteModalOpen(true)} />}
+            element={<PBrothersPage onAddToCart={handleAddToCart} onOpenQuote={() => setQuoteModalOpen(true)} />}
           />
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/services" element={<ServicesPage onOpenQuote={() => setQuoteModalOpen(true)} />} />
@@ -229,6 +230,9 @@ export default function App() {
           <Route path="/admin-products" element={<ProductsAdminPortal />} />
           <Route path="/admin/orders" element={<OrdersAdminPortal />} />
           <Route path="/admin-orders" element={<OrdersAdminPortal />} />
+          <Route path="/admin/pbrothers" element={<PBrothersAdminPortal />} />
+          <Route path="/admin-pbrothers" element={<PBrothersAdminPortal />} />
+          <Route path="/pbrothers-admin" element={<PBrothersAdminPortal />} />
           <Route
             path="/sso-callback"
             element={<AuthenticateWithRedirectCallback signInForceRedirectUrl="/profile" signUpForceRedirectUrl="/profile" />}

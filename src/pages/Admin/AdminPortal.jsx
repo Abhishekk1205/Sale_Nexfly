@@ -51,7 +51,10 @@ export const VALID_ADMIN_ACCOUNTS = [
 
   // Orders & Logistics Admin - Limited Access (Customer Orders & Custom UAV Quotation Requests)
   { id: 'orders@nexfly.com', pass: 'Order@2076', display: 'Orders Manager', role: 'orders' },
-  { id: 'logistics@nexfly.com', pass: 'Order@2076', display: 'Dispatch & Logistics', role: 'orders' }
+  { id: 'logistics@nexfly.com', pass: 'Order@2076', display: 'Dispatch & Logistics', role: 'orders' },
+
+  // P_Brothers & GTA 6 Creator Admin - Limited Access (GTA 6 Merch Products, Featured Video / Live Stream, & Shorts)
+  { id: 'priyanshu', pass: 'Nexfly_1205', display: 'Priyanshu (P_Brothers)', role: 'pbrothers' }
 ];
 import {
   getAllOrders,
@@ -542,6 +545,9 @@ export default function AdminPortal({ mode = 'main' }) {
         setLoginError('Access Restricted: This account has Products & Catalog access only. Please visit /admin/products.');
       } else if (matched.role === 'orders') {
         setLoginError('Access Restricted: This account has Orders access only. Please visit /admin/orders.');
+      } else if (matched.role === 'pbrothers') {
+        setLoginError('Access Restricted: This account has P_Brothers GTA 6 access only. Redirecting to /admin/pbrothers...');
+        setTimeout(() => { window.location.href = '/admin/pbrothers'; }, 1000);
       } else {
         setLoginError('Access Denied: Main Super Admin credentials required to view this deck.');
       }
@@ -1155,6 +1161,20 @@ export default function AdminPortal({ mode = 'main' }) {
               >
                 📑 Orders Admin
               </Link>
+              <Link
+                to="/admin/pbrothers"
+                style={{
+                  fontSize: '0.74rem',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  background: 'rgba(255,0,170,0.12)',
+                  color: '#ff00aa',
+                  textDecoration: 'none',
+                  border: '1px solid rgba(255,0,170,0.3)'
+                }}
+              >
+                🎮 P_Brothers Admin
+              </Link>
             </div>
 
             <Link
@@ -1706,7 +1726,7 @@ export default function AdminPortal({ mode = 'main' }) {
                                   Total: ₹{amount.toLocaleString('en-IN')}
                                 </span>
                                 <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
-                                  Subtotal: ₹{(ord.subtotal || Math.round(amount / 1.18)).toLocaleString('en-IN')} | Pkg & Del: ₹{ord.deliveryFee !== undefined ? ord.deliveryFee : 199} | GST (18%): ₹{(ord.gstAmount || ord.tax || Math.round(amount * 0.18)).toLocaleString('en-IN')}
+                                  Subtotal: ₹{(ord.subtotal || Math.round(amount / 1.18)).toLocaleString('en-IN')} | Delivery: ₹{ord.deliveryFee !== undefined ? ord.deliveryFee : ((ord.subtotal || Math.round(amount / 1.18)) >= 1000 ? 0 : 169)} | GST (18%): ₹{(ord.gstAmount || ord.tax || Math.round(amount * 0.18)).toLocaleString('en-IN')}
                                 </span>
                               </div>
                               <select

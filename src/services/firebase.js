@@ -257,7 +257,7 @@ export function generateBillsFromOrders(orders = [], userProfile = {}) {
   return orders.map((order, idx) => {
     const numericId = String(order.id || idx).replace(/[^0-9]/g, '') || String(1001 + idx);
     const subtotal = typeof order.subtotal === 'number' ? order.subtotal : Math.round((order.totalAmount || 5499) / 1.18);
-    const deliveryFee = order.deliveryFee !== undefined ? order.deliveryFee : 199;
+    const deliveryFee = order.deliveryFee !== undefined ? order.deliveryFee : (subtotal >= 1000 ? 0 : 169);
     const tax = typeof order.gstAmount === 'number' ? order.gstAmount : (typeof order.tax === 'number' ? order.tax : Math.round((order.totalAmount || 5499) * 0.18));
     return {
       id: `BILL-${order.id || numericId}`,
@@ -2657,6 +2657,271 @@ export async function deleteHomeProduct(id) {
   const current = await getHomeProducts();
   const updated = current.filter((i) => i.id !== id);
   localStorage.setItem('navidron_catalog_home_products', JSON.stringify(updated));
+  return true;
+}
+
+// ── P_Brothers × GTA 6 Collab Services ───────────────────────
+export function parseYouTubeVideoId(urlOrId) {
+  if (!urlOrId) return 'QdBZY2fkU-0';
+  const str = String(urlOrId).trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
+  const regExp = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|live\/))([a-zA-Z0-9_-]{11})/;
+  const match = str.match(regExp);
+  return match ? match[1] : str;
+}
+
+export const INITIAL_PBROTHERS_CONFIG = {
+  featuredVideoUrl: "https://www.youtube.com/watch?v=QdBZY2fkU-0",
+  featuredVideoId: "QdBZY2fkU-0",
+  featuredVideoTitle: "GTA 6 Official Trailer 1 & Vice City Lore Breakdown",
+  isLive: false,
+  liveBadgeText: "🔴 STREAMING LIVE",
+  shorts: [
+    {
+      id: "short-1",
+      title: "GTA 6 Vice City 3D Map & World Reveal!",
+      url: "https://www.youtube.com/shorts/QdBZY2fkU-0",
+      videoId: "QdBZY2fkU-0"
+    },
+    {
+      id: "short-2",
+      title: "Unboxing Jason & Lucia 3D Figures by NaviDron",
+      url: "https://www.youtube.com/shorts/V_J1b_eZzZc",
+      videoId: "V_J1b_eZzZc"
+    },
+    {
+      id: "short-3",
+      title: "P_Brothers Official Merch Drop Announcement!",
+      url: "https://www.youtube.com/shorts/kXYiU_JCYtU",
+      videoId: "kXYiU_JCYtU"
+    }
+  ]
+};
+
+export const INITIAL_PBROTHERS_PRODUCTS = [
+  {
+    id: "pbro-gta-jason",
+    productId: "PBRO-GTA-01",
+    name: "Jason — GTA 6 Dual Pistols Edition",
+    category: "GTA 6 Figures",
+    brand: "P_Brothers × NaviDron",
+    price: 999,
+    oldPrice: 1449,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    quantity: 35,
+    image: "/images/gta6_merchandise_banner_1791059157486.jpg",
+    images: [
+      "/images/gta6_merchandise_banner_1791059157486.jpg",
+      "/images/action_figure_valorant.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    desc: "Hand-painted ultra high-resolution 3D print of Jason from GTA 6. Dual pistols, Miami tactical outfit, and custom Vice City street display base.",
+    badge: "BESTSELLER",
+    makerWorldUrl: "https://makerworld.com/en/models/210340"
+  },
+  {
+    id: "pbro-gta-lucia",
+    productId: "PBRO-GTA-02",
+    name: "Lucia — GTA 6 Vice City Star",
+    category: "GTA 6 Figures",
+    brand: "P_Brothers × NaviDron",
+    price: 999,
+    oldPrice: 1449,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    quantity: 30,
+    image: "/images/gta6_merchandise_banner_1791059157486.jpg",
+    images: [
+      "/images/gta6_merchandise_banner_1791059157486.jpg",
+      "/images/valorant_action_figures_1791059182363.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    desc: "The iconic first female lead of the GTA franchise. Detailed hair sculpt, bandana, and realistic Miami palm street aesthetic.",
+    badge: "HOT DROP",
+    makerWorldUrl: "https://makerworld.com/en/models/210341"
+  },
+  {
+    id: "pbro-gta-copcar",
+    productId: "PBRO-GTA-03",
+    name: "Vice City Police Cruiser (VCPD)",
+    category: "GTA 6 Figures",
+    brand: "P_Brothers × NaviDron",
+    price: 1499,
+    oldPrice: 2199,
+    size: "220mm",
+    sizes: ["180mm", "220mm", "260mm"],
+    quantity: 20,
+    image: "/images/college_project_drone.jpg",
+    images: [
+      "/images/college_project_drone.jpg",
+      "/images/gta6_merchandise_banner_1791059157486.jpg"
+    ],
+    desc: "Retro 80s inspired modern VCPD squad car with interior roll cage, pushbar, lightbar, and textured rubber-like tires.",
+    badge: "LIMITED RUN",
+    makerWorldUrl: "https://makerworld.com/en/models/210342"
+  },
+  {
+    id: "pbro-gta-diorama",
+    productId: "PBRO-GTA-04",
+    name: "Jason & Lucia 'Trust' Street Diorama",
+    category: "GTA 6 Figures",
+    brand: "P_Brothers × NaviDron",
+    price: 2499,
+    oldPrice: 3499,
+    size: "240mm",
+    sizes: ["200mm", "240mm"],
+    quantity: 15,
+    image: "/images/3d_printed_gift_pack.jpg",
+    images: [
+      "/images/3d_printed_gift_pack.jpg",
+      "/images/gta6_merchandise_banner_1791059157486.jpg"
+    ],
+    desc: "The ultimate collector center-piece recreates the key promo art with neon palm backdrop, graffiti wall, and streetlamps.",
+    badge: "COLLECTOR PIECE",
+    makerWorldUrl: "https://makerworld.com/en/models/210343"
+  },
+  {
+    id: "pbro-tee-1",
+    productId: "PBRO-TEE-01",
+    name: "P_Brothers Signature Vice City Neon Tee",
+    category: "T-Shirts & Apparel",
+    brand: "P_Brothers × NaviDron",
+    price: 799,
+    oldPrice: 1299,
+    size: "L",
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    quantity: 50,
+    image: "/images/gta6_merchandise_banner_1791059157486.jpg",
+    images: ["/images/gta6_merchandise_banner_1791059157486.jpg"],
+    desc: "Official P_Brothers neon palm graphic with Vice City metallic logo on back and NaviDron crest on left sleeve. 100% breathable cotton.",
+    badge: "CREATOR SIGNATURE"
+  },
+  {
+    id: "pbro-tee-2",
+    productId: "PBRO-TEE-02",
+    name: "GTA 6 Jason & Lucia Dual Threat Tee",
+    category: "T-Shirts & Apparel",
+    brand: "P_Brothers × NaviDron",
+    price: 849,
+    oldPrice: 1399,
+    size: "L",
+    sizes: ["M", "L", "XL", "XXL"],
+    quantity: 45,
+    image: "/images/gta6_merchandise_banner_1791059157486.jpg",
+    images: ["/images/gta6_merchandise_banner_1791059157486.jpg"],
+    desc: "High-contrast duo portrait graphic with Vice City sunset gradient overlay. Reinforced collar and double-needle stitching.",
+    badge: "LIMITED RUN"
+  },
+  {
+    id: "pbro-tee-3",
+    productId: "PBRO-TEE-03",
+    name: "NaviDron × P_Brothers Flight Team Oversized T-Shirt",
+    category: "T-Shirts & Apparel",
+    brand: "P_Brothers × NaviDron",
+    price: 899,
+    oldPrice: 1499,
+    size: "XL",
+    sizes: ["S", "M", "L", "XL"],
+    quantity: 40,
+    image: "/images/gta6_merchandise_banner_1791059157486.jpg",
+    images: ["/images/gta6_merchandise_banner_1791059157486.jpg"],
+    desc: "Heavyweight drop-shoulder oversized aesthetic featuring cyberpunk drone blueprint on the reverse and P_Brothers branding.",
+    badge: "STREETWEAR FIT"
+  }
+];
+
+export async function getPBrothersConfig() {
+  const localKey = 'navidron_pbrothers_config';
+  const cached = localStorage.getItem(localKey);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed && (parsed.featuredVideoUrl || parsed.featuredVideoId)) {
+        return parsed;
+      }
+    } catch (e) {}
+  }
+
+  // Try Firestore doc
+  try {
+    const remote = await readFirestoreDoc('PBrothersConfig', 'settings');
+    if (remote && (remote.featuredVideoUrl || remote.featuredVideoId)) {
+      localStorage.setItem(localKey, JSON.stringify(remote));
+      return remote;
+    }
+  } catch (e) {}
+
+  localStorage.setItem(localKey, JSON.stringify(INITIAL_PBROTHERS_CONFIG));
+  return INITIAL_PBROTHERS_CONFIG;
+}
+
+export async function savePBrothersConfig(config) {
+  const localKey = 'navidron_pbrothers_config';
+  const videoId = parseYouTubeVideoId(config.featuredVideoUrl || config.featuredVideoId);
+  const cleanConfig = {
+    ...config,
+    featuredVideoId: videoId,
+    updatedAt: new Date().toISOString()
+  };
+
+  localStorage.setItem(localKey, JSON.stringify(cleanConfig));
+  await writeFirestoreDoc('PBrothersConfig', 'settings', cleanConfig);
+  return cleanConfig;
+}
+
+export async function getPBrothersProducts() {
+  const localKey = 'navidron_catalog_pbrothers';
+  const cached = localStorage.getItem(localKey);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {}
+  }
+
+  const cloudList = await readFirestoreCollection('PBrothersProducts');
+  if (Array.isArray(cloudList) && cloudList.length > 0) {
+    localStorage.setItem(localKey, JSON.stringify(cloudList));
+    return cloudList;
+  }
+
+  localStorage.setItem(localKey, JSON.stringify(INITIAL_PBROTHERS_PRODUCTS));
+  INITIAL_PBROTHERS_PRODUCTS.forEach((item) => writeFirestoreDoc('PBrothersProducts', item.id, item));
+  return INITIAL_PBROTHERS_PRODUCTS;
+}
+
+export async function savePBrothersProduct(item) {
+  const id = item.id || `pbro-${Date.now()}`;
+  const productId = item.productId && String(item.productId).trim() ? String(item.productId).trim() : id;
+  const images = Array.isArray(item.images) && item.images.length > 0
+    ? item.images
+    : [item.image || '/images/gta6_merchandise_banner_1791059157486.jpg'];
+  const cleanItem = {
+    ...item,
+    id,
+    productId,
+    makerWorldUrl: item.makerWorldUrl || '',
+    image: images[0],
+    images,
+    price: typeof item.price === 'number' ? item.price : parseInt(String(item.price).replace(/[^0-9]/g, ''), 10) || 799,
+    oldPrice: typeof item.oldPrice === 'number' ? item.oldPrice : (item.oldPrice ? parseInt(String(item.oldPrice).replace(/[^0-9]/g, ''), 10) || 0 : 0),
+    quantity: typeof item.quantity === 'number' ? item.quantity : (parseInt(String(item.quantity || 0), 10) || 25),
+    updatedAt: new Date().toISOString()
+  };
+
+  await writeFirestoreDoc('PBrothersProducts', id, cleanItem);
+  const current = await getPBrothersProducts();
+  const updated = [cleanItem, ...current.filter((i) => i.id !== id)];
+  localStorage.setItem('navidron_catalog_pbrothers', JSON.stringify(updated));
+  return cleanItem;
+}
+
+export async function deletePBrothersProduct(id) {
+  await deleteFirestoreDoc('PBrothersProducts', id);
+  const current = await getPBrothersProducts();
+  const updated = current.filter((i) => i.id !== id);
+  localStorage.setItem('navidron_catalog_pbrothers', JSON.stringify(updated));
   return true;
 }
 

@@ -749,7 +749,7 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
                 </div>
                 <div style={{ marginTop: '0.45rem', fontSize: '0.78rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '3px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    📦 <strong>Packaging & Delivery:</strong> ₹199 (Flat express rate added at checkout)
+                    🚚 <strong>Delivery:</strong> {unitPrice >= 1000 ? 'FREE (Orders above ₹1,000)' : '₹169 per order (FREE on orders above ₹1,000)'}
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#b45309' }}>
                     🏷️ <em>GST excluded from base price (18% GST will be added to final bill)</em>
