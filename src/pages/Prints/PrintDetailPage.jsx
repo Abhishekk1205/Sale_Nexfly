@@ -103,23 +103,45 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
 
   const p8 = typeof item.price8Inch === 'number' && item.price8Inch > 0
     ? item.price8Inch
-    : (item.sizeOptions?.find((s) => s.size.includes('8'))?.price || basePrice);
+    : (typeof item.price20cm === 'number' && item.price20cm > 0 ? item.price20cm : (item.sizeOptions?.find((s) => s.size.includes('20') || s.size.includes('8'))?.price || basePrice));
 
   const p6 = typeof item.price6Inch === 'number' && item.price6Inch > 0
     ? item.price6Inch
-    : (item.sizeOptions?.find((s) => s.size.includes('6'))?.price || Math.max(299, p8 - 250));
+    : (typeof item.price15cm === 'number' && item.price15cm > 0 ? item.price15cm : (item.sizeOptions?.find((s) => s.size.includes('15') || s.size.includes('6'))?.price || Math.max(299, p8 - 250)));
 
   const p10 = typeof item.price10Inch === 'number' && item.price10Inch > 0
     ? item.price10Inch
-    : (item.sizeOptions?.find((s) => s.size.includes('10'))?.price || (p8 + 450));
+    : (typeof item.price24cm === 'number' && item.price24cm > 0 ? item.price24cm : (item.sizeOptions?.find((s) => s.size.includes('24') || s.size.includes('10'))?.price || (p8 + 450)));
 
-  const sizeOptions = [
-    { size: "6 inch (150mm)", price: p6, printTime: "3h 45m", weight: "120g" },
-    { size: "8 inch (200mm)", price: p8, printTime: "6h 30m", weight: "240g" },
-    { size: "10 inch (250mm)", price: p10, printTime: "11h 15m", weight: "420g" }
+  const categoryStr = (item.category || '').toLowerCase();
+  const nameStr = (item.name || '').toLowerCase();
+  const idStr = (item.id || '').toLowerCase();
+
+  // Size chart ONLY for: 3D model, 3D Lithopane, Game Characters, Anime Characters
+  // In Others & Accessories, size chart is NOT present (Only Fix price)
+  const is3DModel = categoryStr.includes('3d model') || categoryStr.includes('person') || categoryStr.includes('2d to 3d') || nameStr.includes('sculpt') || nameStr.includes('bust') || idStr.includes('pers');
+  const isLithophane = categoryStr.includes('litho') || nameStr.includes('litho') || idStr.includes('litho');
+  const isGameChar = categoryStr.includes('game') || idStr.includes('gta') || idStr.includes('val');
+  const isAnimeChar = categoryStr.includes('anime') || nameStr.includes('luffy') || nameStr.includes('goku') || nameStr.includes('naruto') || nameStr.includes('tanjiro');
+
+  const hasSizeChart = is3DModel || isLithophane || isGameChar || isAnimeChar;
+
+  // Photo upload ONLY present in 3D model and 3D lithopane
+  const isPhotoUploadSupported = is3DModel || isLithophane;
+
+  // Size options in 15cm, 20cm, 24cm (not in inches)
+  const sizeOptions = hasSizeChart ? [
+    { size: "15cm", price: p6, printTime: "3h 45m", weight: "120g" },
+    { size: "20cm", price: p8, printTime: "6h 30m", weight: "240g" },
+    { size: "24cm", price: p10, printTime: "11h 15m", weight: "420g" }
+  ] : [
+    { size: "Standard", price: basePrice, printTime: "Standard", weight: "Standard" }
   ];
 
-  const currentOption = sizeOptions[selectedSizeIndex] || sizeOptions[1] || sizeOptions[0];
+  const currentOption = hasSizeChart
+    ? (sizeOptions[selectedSizeIndex] || sizeOptions[1] || sizeOptions[0])
+    : sizeOptions[0];
+
   const currentMaterial = MATERIAL_OPTIONS.find((m) => m.id === selectedMaterial) || MATERIAL_OPTIONS[0];
 
   const unitPrice = currentOption.price + (currentMaterial.priceOffset || 0);
@@ -143,31 +165,6 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
     }
   };
 
-  const isPersonalCustom = (() => {
-    if (!item) return false;
-    const cat = (item.category || '').toLowerCase();
-    const name = (item.name || '').toLowerCase();
-    const idStr = (item.id || '').toLowerCase();
-    const badge = (item.badge || '').toLowerCase();
-
-    // Explicit exclusions: Never show for Anime or Game Characters
-    if (cat.includes('anime') || cat.includes('game')) {
-      return false;
-    }
-
-    // Included only for Personal Custom Figures, Lithophanes, and Custom Models
-    return (
-      cat.includes('personal') ||
-      cat.includes('custom') ||
-      idStr.includes('custom') ||
-      idStr.includes('litho') ||
-      name.includes('custom') ||
-      name.includes('personal') ||
-      name.includes('lithophane') ||
-      badge.includes('custom')
-    );
-  })();
-
   const handleAddToCart = () => {
     if (isOutOfStock) return;
     try {
@@ -189,9 +186,9 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
         price: unitPrice,
         quantity: quantity,
         image: images[0],
-        customEngraving: (isPersonalCustom && engravingText) ? engravingText : undefined,
-        uploadedPhoto: (isPersonalCustom && uploadedPhotoPreview) ? uploadedPhotoPreview : undefined,
-        hasCustomPhoto: isPersonalCustom && !!uploadedPhotoPreview
+        customEngraving: (isPhotoUploadSupported && engravingText) ? engravingText : undefined,
+        uploadedPhoto: (isPhotoUploadSupported && uploadedPhotoPreview) ? uploadedPhotoPreview : undefined,
+        hasCustomPhoto: isPhotoUploadSupported && !!uploadedPhotoPreview
       });
     } else if (onOpenQuote) {
       onOpenQuote();
@@ -276,7 +273,8 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
               <ImageSlider
                 images={images}
                 alt={item.name}
-                aspectRatio="4/3"
+                aspectRatio="4/5"
+                objectFit="contain"
                 showThumbnails={true}
               />
 
@@ -416,138 +414,165 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
               {item.desc}
             </p>
 
-            {/* SIZE SELECTION & DYNAMIC PRICE CALCULATOR */}
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                border: '1.5px solid #e2e8f0',
-                borderRadius: '16px',
-                padding: '1.5rem',
-                marginBottom: '1.5rem',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.03)'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-                <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0a0f2e', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Ruler size={16} color="#00c8ff" /> 1. Select Print Size (Scale):
-                </label>
-                <span style={{ fontSize: '0.78rem', color: '#00c8ff', fontWeight: 700 }}>
-                  Larger sizes scale print volume & weight
-                </span>
-              </div>
-
-              {/* Size Buttons Grid (Clean sizes without price increments) */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.65rem', marginBottom: '1.25rem' }}>
-                {sizeOptions.map((opt, idx) => {
-                  const isSelected = idx === selectedSizeIndex;
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setSelectedSizeIndex(idx)}
-                      style={{
-                        padding: '0.9rem 0.6rem',
-                        borderRadius: '10px',
-                        border: isSelected ? '2px solid #00c8ff' : '1.5px solid #cbd5e1',
-                        backgroundColor: isSelected ? 'rgba(0, 200, 255, 0.08)' : '#ffffff',
-                        color: isSelected ? '#0077b6' : '#334155',
-                        fontWeight: 800,
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        boxShadow: isSelected ? '0 0 12px rgba(0,200,255,0.25)' : 'none'
-                      }}
-                    >
-                      <div style={{ fontSize: '0.92rem', fontWeight: 800 }}>{opt.size}</div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Casual 25% Strength Indicator */}
+            {/* SIZE SELECTION & DYNAMIC PRICE CALCULATOR - ONLY IN (3D Model, 3D Lithophane, Game Characters, Anime Characters) */}
+            {hasSizeChart ? (
               <div
                 style={{
-                  borderTop: '1px solid #f1f5f9',
-                  paddingTop: '0.9rem',
-                  marginBottom: '1.25rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '0.5rem'
+                  backgroundColor: '#ffffff',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '16px',
+                  padding: '1.5rem',
+                  marginBottom: '1.5rem',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.03)'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Shield size={16} color="#0284c7" />
-                  <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0a0f2e' }}>
-                    Density:
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '0.8rem',
-                      fontWeight: 800,
-                      backgroundColor: 'rgba(2, 132, 199, 0.1)',
-                      color: '#0284c7',
-                      padding: '2px 9px',
-                      borderRadius: '6px'
-                    }}
-                  >
-                    25% Strength
-                  </span>
-                </div>
-                <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                  Casual solid core infill — optimal durability & finish
-                </span>
-              </div>
-
-              {/* 2. MATERIAL SELECTION: PLA (Hard Plastic) vs TPU (Soft Flexible) */}
-              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1.1rem', marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
                   <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0a0f2e', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <Layers size={16} color="#10b981" /> 2. 3D Filament Material:
+                    <Ruler size={16} color="#0077b6" /> 1. Select Print Size:
                   </label>
-                  <span style={{ fontSize: '0.76rem', color: '#10b981', fontWeight: 700 }}>
-                    PLA (Hard) vs TPU (Soft)
+                  <span style={{ fontSize: '0.78rem', color: '#0077b6', fontWeight: 700 }}>
+                    15cm • 20cm • 24cm Scale
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
-                  {MATERIAL_OPTIONS.map((mat) => {
-                    const isSelected = selectedMaterial === mat.id;
+                {/* Size Buttons Grid: 15cm, 20cm, 24cm */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                  {sizeOptions.map((opt, idx) => {
+                    const isSelected = idx === selectedSizeIndex;
                     return (
-                      <div
-                        key={mat.id}
-                        onClick={() => setSelectedMaterial(mat.id)}
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setSelectedSizeIndex(idx)}
                         style={{
-                          padding: '0.85rem 1rem',
+                          padding: '0.9rem 0.6rem',
                           borderRadius: '10px',
-                          border: isSelected ? '2px solid #10b981' : '1.5px solid #cbd5e1',
-                          backgroundColor: isSelected ? 'rgba(16, 185, 129, 0.08)' : '#ffffff',
+                          border: isSelected ? '2.5px solid #0077b6' : '1.5px solid #cbd5e1',
+                          backgroundColor: isSelected ? '#f0f9ff' : '#ffffff',
+                          color: isSelected ? '#0077b6' : '#334155',
+                          fontWeight: 900,
+                          textAlign: 'center',
                           cursor: 'pointer',
                           transition: 'all 0.2s',
-                          boxShadow: isSelected ? '0 0 12px rgba(16,185,129,0.2)' : 'none'
+                          boxShadow: isSelected ? '0 0 12px rgba(0,119,182,0.2)' : 'none'
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 800, color: isSelected ? '#047857' : '#0a0f2e' }}>
-                            {mat.name}
-                          </span>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: isSelected ? '#047857' : '#64748b' }}>
-                            {mat.priceOffset === 0 ? 'Included' : `+₹${mat.priceOffset}`}
-                          </span>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 900 }}>{opt.size}</div>
+                        <div style={{ fontSize: '0.76rem', color: isSelected ? '#0077b6' : '#64748b', marginTop: '3px' }}>
+                          ₹{opt.price.toLocaleString('en-IN')}
                         </div>
-                        <p style={{ fontSize: '0.74rem', color: '#64748b', margin: 0, lineHeight: 1.4 }}>
-                          {mat.desc}
-                        </p>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
-              </div>
-            </div>
 
-            {/* Custom Photo Upload Section (Only for Personal Custom Figures & Models, NOT Anime / Game / Others) */}
-            {isPersonalCustom && (
+                {/* Casual 25% Strength Indicator */}
+                <div
+                  style={{
+                    borderTop: '1px solid #f1f5f9',
+                    paddingTop: '0.9rem',
+                    marginBottom: '1.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Shield size={16} color="#0284c7" />
+                    <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0a0f2e' }}>
+                      Density:
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.8rem',
+                        fontWeight: 800,
+                        backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                        color: '#0284c7',
+                        padding: '2px 9px',
+                        borderRadius: '6px'
+                      }}
+                    >
+                      25% Strength
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                    Casual solid core infill — optimal durability & finish
+                  </span>
+                </div>
+
+                {/* 2. MATERIAL SELECTION: PLA (Hard Plastic) vs TPU (Soft Flexible) */}
+                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1.1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                    <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0a0f2e', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Layers size={16} color="#10b981" /> 2. 3D Filament Material:
+                    </label>
+                    <span style={{ fontSize: '0.76rem', color: '#10b981', fontWeight: 700 }}>
+                      PLA (Hard) vs TPU (Soft)
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
+                    {MATERIAL_OPTIONS.map((mat) => {
+                      const isSelected = selectedMaterial === mat.id;
+                      return (
+                        <div
+                          key={mat.id}
+                          onClick={() => setSelectedMaterial(mat.id)}
+                          style={{
+                            padding: '0.85rem 1rem',
+                            borderRadius: '10px',
+                            border: isSelected ? '2px solid #10b981' : '1.5px solid #cbd5e1',
+                            backgroundColor: isSelected ? 'rgba(16, 185, 129, 0.08)' : '#ffffff',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: isSelected ? '0 0 12px rgba(16,185,129,0.2)' : 'none'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                            <span style={{ fontSize: '0.9rem', fontWeight: 800, color: isSelected ? '#047857' : '#0a0f2e' }}>
+                              {mat.name}
+                            </span>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: isSelected ? '#047857' : '#64748b' }}>
+                              {mat.priceOffset === 0 ? 'Included' : `+₹${mat.priceOffset}`}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: '0.74rem', color: '#64748b', margin: 0, lineHeight: 1.4 }}>
+                            {mat.desc}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '16px',
+                  padding: '1.25rem',
+                  marginBottom: '1.5rem'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
+                    Standard Verified Dimensions (Fixed Price)
+                  </span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669', backgroundColor: '#ecfdf5', padding: '3px 8px', borderRadius: '4px' }}>
+                    Only Fix Price
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
+                  This product is manufactured to exact engineering standard specifications with fixed pricing. No size variation required.
+                </p>
+              </div>
+            )}
+
+            {/* Custom Photo Upload Section (ONLY FOR 3D Model and 3D Lithophane) */}
+            {isPhotoUploadSupported && (
               <div
                 style={{
                   backgroundColor: '#fffdf5',
@@ -561,7 +586,7 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Upload size={17} color="#d97706" />
                     <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#92400e' }}>
-                      Attach Your Photo For 3D Portrait / Lithophane / Custom Figure
+                      Attach Your Photo For 3D Portrait / Lithophane / 3D Model
                     </span>
                   </div>
                   <span style={{ fontSize: '0.72rem', color: '#b45309', fontWeight: 700, backgroundColor: 'rgba(245,158,11,0.15)', padding: '2px 8px', borderRadius: '4px' }}>
@@ -700,6 +725,14 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
                   </span>
                   <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
                     (₹{unitPrice.toLocaleString('en-IN')} / item)
+                  </span>
+                </div>
+                <div style={{ marginTop: '0.45rem', fontSize: '0.78rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    📦 <strong>Packaging & Delivery:</strong> ₹199 (Flat express rate added at checkout)
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#b45309' }}>
+                    🏷️ <em>GST excluded from base price (18% GST will be added to final bill)</em>
                   </span>
                 </div>
               </div>

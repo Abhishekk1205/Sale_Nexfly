@@ -256,15 +256,21 @@ export function generateBillsFromOrders(orders = [], userProfile = {}) {
   if (!Array.isArray(orders)) return [];
   return orders.map((order, idx) => {
     const numericId = String(order.id || idx).replace(/[^0-9]/g, '') || String(1001 + idx);
+    const subtotal = typeof order.subtotal === 'number' ? order.subtotal : Math.round((order.totalAmount || 5499) / 1.18);
+    const deliveryFee = order.deliveryFee !== undefined ? order.deliveryFee : 199;
+    const tax = typeof order.gstAmount === 'number' ? order.gstAmount : (typeof order.tax === 'number' ? order.tax : Math.round((order.totalAmount || 5499) * 0.18));
     return {
       id: `BILL-${order.id || numericId}`,
       orderId: order.id || `NVD-${numericId}`,
       billNumber: `INV-2026-${numericId}`,
-      date: order.date || new Date().toISOString().split('T')[0],
-      customerName: userProfile.name || 'Valued Pilot',
-      customerEmail: userProfile.email || '',
-      totalAmount: order.totalAmount || 5499,
-      tax: Math.round((order.totalAmount || 5499) * 0.18),
+      date: order.date || order.orderDate || new Date().toISOString().split('T')[0],
+      customerName: userProfile.name || order.customer?.name || 'Valued Pilot',
+      customerEmail: userProfile.email || order.customer?.email || '',
+      subtotal,
+      deliveryFee,
+      tax,
+      gstRate: '18%',
+      totalAmount: order.totalAmount || (subtotal + deliveryFee + tax),
       paymentStatus: order.paymentStatus || 'Paid Online',
       status: 'Paid',
       itemsCount: Array.isArray(order.items) ? order.items.length : 1,
@@ -973,262 +979,27 @@ export async function updateOrderData(orderId, updates) {
 
 // ── Root Collection 2: "3DStudio" ──────────────────────────────
 export const INITIAL_3D_STUDIO = [
-  {
-    id: "3d-luffy-gear5",
-    name: "Monkey D. Luffy — Gear 5 Sun God",
-    category: "Anime",
-    brand: "P_Brothers × NaviDron 3D",
-    price: 949,
-    price6Inch: 699,
-    price8Inch: 949,
-    price10Inch: 1399,
-    quantity: 25,
-    size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 699, printTime: "3h 45m", weight: "120g" },
-      { size: "8 inch (200mm)", price: 949, printTime: "6h 30m", weight: "240g" },
-      { size: "10 inch (250mm)", price: 1399, printTime: "11h 15m", weight: "420g" }
-    ],
-    image: "/images/anime_figure_3d.jpg",
-    images: [
-      "/images/anime_figure_3d.jpg",
-      "/images/3d_printed_gift_pack.jpg",
-      "/images/valorant_action_figures_1791059182363.jpg"
-    ],
-    printTime: "6h 30m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
-    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "25% Strength",
-    desc: "Whimsical Gear 5 cloud-ring sculpt with joyful laughing expression from One Piece Wano arc. FDM precision printed in tough PLA hard plastic.",
-    badge: "TRENDING"
-  },
-  {
-    id: "3d-goku-ssj",
-    name: "Goku — Super Saiyan Kamehameha",
-    category: "Anime",
-    brand: "P_Brothers × NaviDron 3D",
-    price: 849,
-    price6Inch: 599,
-    price8Inch: 849,
-    price10Inch: 1299,
-    quantity: 20,
-    size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 599, printTime: "3h 20m", weight: "115g" },
-      { size: "8 inch (200mm)", price: 849, printTime: "6h 15m", weight: "230g" },
-      { size: "10 inch (250mm)", price: 1299, printTime: "10h 50m", weight: "410g" }
-    ],
-    image: "/images/anime_figure_3d.jpg",
-    images: [
-      "/images/anime_figure_3d.jpg",
-      "/images/action_figure_valorant.jpg",
-      "/images/3d_printed_gift_pack.jpg"
-    ],
-    printTime: "6h 15m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
-    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "25% Strength",
-    desc: "Iconic Dragon Ball Z protagonist with translucent golden energy wave aura piece and battle-damaged gi texture.",
-    badge: "ANIME HERO"
-  },
-  {
-    id: "3d-naruto-sage",
-    name: "Naruto Uzumaki — Sage Mode Rasenshuriken",
-    category: "Anime",
-    brand: "P_Brothers × NaviDron 3D",
-    price: 799,
-    price6Inch: 549,
-    price8Inch: 799,
-    price10Inch: 1199,
-    quantity: 30,
-    size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 549, printTime: "3h 10m", weight: "110g" },
-      { size: "8 inch (200mm)", price: 799, printTime: "5h 50m", weight: "220g" },
-      { size: "10 inch (250mm)", price: 1199, printTime: "10h 20m", weight: "390g" }
-    ],
-    image: "/images/anime_figure_3d.jpg",
-    images: [
-      "/images/anime_figure_3d.jpg",
-      "/images/valorant_action_figures_1791059182363.jpg",
-      "/images/3d_printed_gift_pack.jpg"
-    ],
-    printTime: "5h 50m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
-    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "25% Strength",
-    desc: "Toad sage cloak, orange eye markings, and translucent wind spiral Rasenshuriken hovering on custom stone stand.",
-    badge: "CLASSIC"
-  },
-  {
-    id: "3d-tanjiro-flame",
-    name: "Tanjiro Kamado — Hinokami Kagura",
-    category: "Anime",
-    brand: "P_Brothers × NaviDron 3D",
-    price: 849,
-    price6Inch: 599,
-    price8Inch: 849,
-    price10Inch: 1299,
-    quantity: 18,
-    size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 599, printTime: "3h 30m", weight: "125g" },
-      { size: "8 inch (200mm)", price: 849, printTime: "6h 40m", weight: "245g" },
-      { size: "10 inch (250mm)", price: 1299, printTime: "11h 30m", weight: "430g" }
-    ],
-    image: "/images/anime_figure_3d.jpg",
-    images: [
-      "/images/anime_figure_3d.jpg",
-      "/images/action_figure_valorant.jpg",
-      "/images/3d_printed_gift_pack.jpg"
-    ],
-    printTime: "6h 40m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
-    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "25% Strength",
-    desc: "Demon Slayer sun-breathing spiral flame dragon wrapped around the Nichirin black blade with dynamic haori folds.",
-    badge: "ANIME HERO"
-  },
-  {
-    id: "3d-gta-jason",
-    name: "Jason — GTA 6 Dual Pistols Edition",
-    category: "Game Characters",
-    brand: "Rockstar Fan Art × NaviDron",
-    price: 999,
-    price6Inch: 749,
-    price8Inch: 999,
-    price10Inch: 1449,
-    quantity: 40,
-    size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 749, printTime: "4h 00m", weight: "135g" },
-      { size: "8 inch (200mm)", price: 999, printTime: "7h 15m", weight: "260g" },
-      { size: "10 inch (250mm)", price: 1449, printTime: "12h 45m", weight: "460g" }
-    ],
-    image: "/images/gta6_merchandise_banner_1791059157486.jpg",
-    images: [
-      "/images/gta6_merchandise_banner_1791059157486.jpg",
-      "/images/action_figure_valorant.jpg",
-      "/images/3d_printed_gift_pack.jpg"
-    ],
-    printTime: "7h 15m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
-    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "25% Strength",
-    desc: "Ultra high-resolution 3D print of Jason from GTA 6. Dual pistols, Miami tactical outfit, and custom Vice City street display base.",
-    badge: "LIMITED DROP"
-  },
-  {
-    id: "3d-gta-lucia",
-    name: "Lucia — GTA 6 Vice City Star",
-    category: "Game Characters",
-    brand: "Rockstar Fan Art × NaviDron",
-    price: 999,
-    price6Inch: 749,
-    price8Inch: 999,
-    price10Inch: 1449,
-    quantity: 35,
-    size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 749, printTime: "3h 50m", weight: "130g" },
-      { size: "8 inch (200mm)", price: 999, printTime: "7h 00m", weight: "250g" },
-      { size: "10 inch (250mm)", price: 1449, printTime: "12h 20m", weight: "450g" }
-    ],
-    image: "/images/gta6_merchandise_banner_1791059157486.jpg",
-    images: [
-      "/images/gta6_merchandise_banner_1791059157486.jpg",
-      "/images/valorant_action_figures_1791059182363.jpg",
-      "/images/3d_printed_gift_pack.jpg"
-    ],
-    printTime: "7h 00m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
-    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "25% Strength",
-    desc: "The iconic first female lead of the GTA franchise. Detailed hair sculpt, bandana, and realistic Miami palm street aesthetic.",
-    badge: "BESTSELLER"
-  },
-  {
-    id: "3d-val-jett",
-    name: "Jett — Blade Storm Pose",
-    category: "Game Characters",
-    brand: "Riot Fan Art × NaviDron",
-    price: 799,
-    price6Inch: 549,
-    price8Inch: 799,
-    price10Inch: 1199,
-    quantity: 22,
-    size: "6 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 549, printTime: "3h 15m", weight: "115g" },
-      { size: "8 inch (200mm)", price: 799, printTime: "6h 00m", weight: "225g" },
-      { size: "10 inch (250mm)", price: 1199, printTime: "10h 30m", weight: "400g" }
-    ],
-    image: "/images/valorant_action_figures_1791059182363.jpg",
-    images: [
-      "/images/valorant_action_figures_1791059182363.jpg",
-      "/images/action_figure_valorant.jpg",
-      "/images/anime_figure_3d.jpg"
-    ],
-    printTime: "3h 15m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
-    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "25% Strength",
-    desc: "Wind assassin Jett captured mid-air holding signature kunai daggers on a transparent acrylic flight stand with wind swirls.",
-    badge: "HOT"
-  },
-  {
-    id: "3d-val-reyna",
-    name: "Reyna — Empress Leer",
-    category: "Game Characters",
-    brand: "Riot Fan Art × NaviDron",
-    price: 799,
-    price6Inch: 549,
-    price8Inch: 799,
-    price10Inch: 1199,
-    quantity: 15,
-    size: "6 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 549, printTime: "3h 15m", weight: "115g" },
-      { size: "8 inch (200mm)", price: 799, printTime: "6h 00m", weight: "225g" },
-      { size: "10 inch (250mm)", price: 1199, printTime: "10h 30m", weight: "400g" }
-    ],
-    image: "/images/action_figure_valorant.jpg",
-    images: [
-      "/images/action_figure_valorant.jpg",
-      "/images/valorant_action_figures_1791059182363.jpg",
-      "/images/anime_figure_3d.jpg"
-    ],
-    printTime: "3h 15m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
-    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "25% Strength",
-    desc: "Duelist Reyna glowing in radiant purple finish with ethereal eye ability accent and Soul Orb hovering by her side.",
-    badge: "POPULAR"
-  },
+  // 1. 3D Model
   {
     id: "3d-custom-person",
-    name: "Custom 3D Person Figure Sculpt (From Your Photo)",
-    category: "Personal Character",
+    productId: "3D-MOD-01",
+    name: "Custom 3D Person Figure Sculpt (2D Photo to 3D Model)",
+    category: "3D Model",
     brand: "NaviDron Bespoke Sculpting Labs",
     price: 1499,
+    price15cm: 1099,
+    price20cm: 1499,
+    price24cm: 2099,
     price6Inch: 1099,
     price8Inch: 1499,
     price10Inch: 2099,
     quantity: 999,
-    size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
     sizeOptions: [
-      { size: "6 inch (150mm)", price: 1099, printTime: "5h 30m", weight: "140g" },
-      { size: "8 inch (200mm)", price: 1499, printTime: "8h 45m", weight: "270g" },
-      { size: "10 inch (250mm)", price: 2099, printTime: "14h 20m", weight: "490g" }
+      { size: "15cm", price: 1099, printTime: "5h 30m", weight: "140g" },
+      { size: "20cm", price: 1499, printTime: "8h 45m", weight: "270g" },
+      { size: "24cm", price: 2099, printTime: "14h 20m", weight: "490g" }
     ],
     image: "/images/3d_print_lithophane.jpg",
     images: [
@@ -1241,25 +1012,30 @@ export const INITIAL_3D_STUDIO = [
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
     infill: "25% Strength",
     desc: "Upload or send your photo. Our digital sculptors convert facial features, posture, and clothing into a lifelike miniature 3D statue with custom name engraving.",
-    badge: "CUSTOM PHOTO"
+    badge: "CUSTOM PHOTO",
+    makerWorldUrl: "https://makerworld.com/en/models/304915"
   },
+  // 2. 3D Lithophane (Placed beside 3D Model in web catalog grid)
   {
     id: "3d-litho-portrait",
     productId: "3D-LIT-01",
-    name: "Custom Photo Curved Backlit Lithophane",
-    category: "3D Lithophanes",
+    name: "Custom Photo Curved Backlit 3D Lithophane",
+    category: "3D Lithophane",
     brand: "NaviDron Bespoke Sculpting Labs",
-    price: 499,
+    price: 799,
+    price15cm: 499,
+    price20cm: 799,
+    price24cm: 1199,
     price6Inch: 499,
     price8Inch: 799,
     price10Inch: 1199,
     quantity: 999,
-    size: "6 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
     sizeOptions: [
-      { size: "6 inch (150mm)", price: 499, printTime: "4h 45m", weight: "130g" },
-      { size: "8 inch (200mm)", price: 799, printTime: "8h 15m", weight: "250g" },
-      { size: "10 inch (250mm)", price: 1199, printTime: "13h 00m", weight: "430g" }
+      { size: "15cm", price: 499, printTime: "4h 45m", weight: "130g" },
+      { size: "20cm", price: 799, printTime: "8h 15m", weight: "250g" },
+      { size: "24cm", price: 1199, printTime: "13h 00m", weight: "430g" }
     ],
     image: "/images/lithophane_3d_print_1791059239454.jpg",
     images: [
@@ -1267,7 +1043,7 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_print_lithophane.jpg",
       "/images/3d_printed_gift_pack.jpg"
     ],
-    printTime: "4h 45m",
+    printTime: "8h 15m",
     material: "FDM Translucent PLA (Hard Plastic) Optical Lithophane",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
     infill: "25% Strength",
@@ -1275,54 +1051,27 @@ export const INITIAL_3D_STUDIO = [
     badge: "ILLUMINATED",
     makerWorldUrl: "https://makerworld.com/en/models/148293"
   },
-  {
-    id: "3d-litho-heart",
-    productId: "3D-LIT-02",
-    name: "Heart-Shaped LED Glow 3D Lithophane Lamp",
-    category: "3D Lithophanes",
-    brand: "NaviDron Bespoke Sculpting Labs",
-    price: 699,
-    price6Inch: 699,
-    price8Inch: 999,
-    price10Inch: 1399,
-    quantity: 50,
-    size: "6 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 699, printTime: "5h 15m", weight: "150g" },
-      { size: "8 inch (200mm)", price: 999, printTime: "8h 45m", weight: "270g" },
-      { size: "10 inch (250mm)", price: 1399, printTime: "13h 30m", weight: "450g" }
-    ],
-    image: "/images/3d_print_lithophane.jpg",
-    images: [
-      "/images/3d_print_lithophane.jpg",
-      "/images/lithophane_3d_print_1791059239454.jpg"
-    ],
-    printTime: "5h 15m",
-    material: "FDM Translucent PLA Optical Lithophane",
-    layerHeight: "0.2mm Ultra-Fine Detail",
-    infill: "100% Solid Optical Infill",
-    desc: "Romantic heart-shaped custom photo lithophane night light with built-in rechargeable RGB LED base.",
-    badge: "GIFT SPECIAL",
-    makerWorldUrl: "https://makerworld.com/en/models/148300"
-  },
+  // 3. 3D Model (Bust)
   {
     id: "3d-pers-bust",
-    productId: "3D-PER-02",
+    productId: "3D-MOD-02",
     name: "Mini-Me 3D Bust Figurine (2D to 3D Model)",
-    category: "3D Model Person (2D to 3D)",
+    category: "3D Model",
     brand: "NaviDron Bespoke Sculpting Labs",
     price: 1299,
+    price15cm: 999,
+    price20cm: 1299,
+    price24cm: 1799,
     price6Inch: 999,
     price8Inch: 1299,
     price10Inch: 1799,
     quantity: 999,
-    size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
     sizeOptions: [
-      { size: "6 inch (150mm)", price: 999, printTime: "4h 30m", weight: "125g" },
-      { size: "8 inch (200mm)", price: 1299, printTime: "7h 15m", weight: "240g" },
-      { size: "10 inch (250mm)", price: 1799, printTime: "12h 00m", weight: "420g" }
+      { size: "15cm", price: 999, printTime: "4h 30m", weight: "125g" },
+      { size: "20cm", price: 1299, printTime: "7h 15m", weight: "240g" },
+      { size: "24cm", price: 1799, printTime: "12h 00m", weight: "420g" }
     ],
     image: "/images/3d_print_lithophane.jpg",
     images: [
@@ -1337,6 +1086,324 @@ export const INITIAL_3D_STUDIO = [
     badge: "POPULAR",
     makerWorldUrl: "https://makerworld.com/en/models/304915"
   },
+  // 4. 3D Lithophane (Heart)
+  {
+    id: "3d-litho-heart",
+    productId: "3D-LIT-02",
+    name: "Heart-Shaped LED Glow 3D Lithophane Lamp",
+    category: "3D Lithophane",
+    brand: "NaviDron Bespoke Sculpting Labs",
+    price: 999,
+    price15cm: 699,
+    price20cm: 999,
+    price24cm: 1399,
+    price6Inch: 699,
+    price8Inch: 999,
+    price10Inch: 1399,
+    quantity: 50,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    sizeOptions: [
+      { size: "15cm", price: 699, printTime: "5h 15m", weight: "150g" },
+      { size: "20cm", price: 999, printTime: "8h 45m", weight: "270g" },
+      { size: "24cm", price: 1399, printTime: "13h 30m", weight: "450g" }
+    ],
+    image: "/images/3d_print_lithophane.jpg",
+    images: [
+      "/images/3d_print_lithophane.jpg",
+      "/images/lithophane_3d_print_1791059239454.jpg"
+    ],
+    printTime: "8h 45m",
+    material: "FDM Translucent PLA Optical Lithophane",
+    layerHeight: "0.2mm Ultra-Fine Detail",
+    infill: "100% Solid Optical Infill",
+    desc: "Romantic heart-shaped custom photo lithophane night light with built-in rechargeable RGB LED base.",
+    badge: "GIFT SPECIAL",
+    makerWorldUrl: "https://makerworld.com/en/models/148300"
+  },
+  // 5. Game Characters
+  {
+    id: "3d-gta-jason",
+    productId: "3D-GAM-01",
+    name: "Jason — GTA 6 Dual Pistols Edition",
+    category: "Game Characters",
+    brand: "Rockstar Fan Art × NaviDron",
+    price: 999,
+    price15cm: 749,
+    price20cm: 999,
+    price24cm: 1449,
+    price6Inch: 749,
+    price8Inch: 999,
+    price10Inch: 1449,
+    quantity: 40,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    sizeOptions: [
+      { size: "15cm", price: 749, printTime: "4h 00m", weight: "135g" },
+      { size: "20cm", price: 999, printTime: "7h 15m", weight: "260g" },
+      { size: "24cm", price: 1449, printTime: "12h 45m", weight: "460g" }
+    ],
+    image: "/images/gta6_merchandise_banner_1791059157486.jpg",
+    images: [
+      "/images/gta6_merchandise_banner_1791059157486.jpg",
+      "/images/action_figure_valorant.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "7h 15m",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "25% Strength",
+    desc: "Ultra high-resolution 3D print of Jason from GTA 6. Dual pistols, Miami tactical outfit, and custom Vice City street display base.",
+    badge: "LIMITED DROP",
+    makerWorldUrl: "https://makerworld.com/en/models/210340"
+  },
+  {
+    id: "3d-gta-lucia",
+    productId: "3D-GAM-02",
+    name: "Lucia — GTA 6 Vice City Star",
+    category: "Game Characters",
+    brand: "Rockstar Fan Art × NaviDron",
+    price: 999,
+    price15cm: 749,
+    price20cm: 999,
+    price24cm: 1449,
+    price6Inch: 749,
+    price8Inch: 999,
+    price10Inch: 1449,
+    quantity: 35,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    sizeOptions: [
+      { size: "15cm", price: 749, printTime: "3h 50m", weight: "130g" },
+      { size: "20cm", price: 999, printTime: "7h 00m", weight: "250g" },
+      { size: "24cm", price: 1449, printTime: "12h 20m", weight: "450g" }
+    ],
+    image: "/images/gta6_merchandise_banner_1791059157486.jpg",
+    images: [
+      "/images/gta6_merchandise_banner_1791059157486.jpg",
+      "/images/valorant_action_figures_1791059182363.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "7h 00m",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "25% Strength",
+    desc: "The iconic first female lead of the GTA franchise. Detailed hair sculpt, bandana, and realistic Miami palm street aesthetic.",
+    badge: "BESTSELLER",
+    makerWorldUrl: "https://makerworld.com/en/models/210341"
+  },
+  {
+    id: "3d-val-jett",
+    productId: "3D-GAM-03",
+    name: "Jett — Blade Storm Pose",
+    category: "Game Characters",
+    brand: "Riot Fan Art × NaviDron",
+    price: 799,
+    price15cm: 549,
+    price20cm: 799,
+    price24cm: 1199,
+    price6Inch: 549,
+    price8Inch: 799,
+    price10Inch: 1199,
+    quantity: 22,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    sizeOptions: [
+      { size: "15cm", price: 549, printTime: "3h 15m", weight: "115g" },
+      { size: "20cm", price: 799, printTime: "6h 00m", weight: "225g" },
+      { size: "24cm", price: 1199, printTime: "10h 30m", weight: "400g" }
+    ],
+    image: "/images/valorant_action_figures_1791059182363.jpg",
+    images: [
+      "/images/valorant_action_figures_1791059182363.jpg",
+      "/images/action_figure_valorant.jpg",
+      "/images/anime_figure_3d.jpg"
+    ],
+    printTime: "6h 00m",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "25% Strength",
+    desc: "Wind assassin Jett captured mid-air holding signature kunai daggers on a transparent acrylic flight stand with wind swirls.",
+    badge: "HOT",
+    makerWorldUrl: "https://makerworld.com/en/models/210342"
+  },
+  {
+    id: "3d-val-reyna",
+    productId: "3D-GAM-04",
+    name: "Reyna — Empress Leer",
+    category: "Game Characters",
+    brand: "Riot Fan Art × NaviDron",
+    price: 799,
+    price15cm: 549,
+    price20cm: 799,
+    price24cm: 1199,
+    price6Inch: 549,
+    price8Inch: 799,
+    price10Inch: 1199,
+    quantity: 15,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    sizeOptions: [
+      { size: "15cm", price: 549, printTime: "3h 15m", weight: "115g" },
+      { size: "20cm", price: 799, printTime: "6h 00m", weight: "225g" },
+      { size: "24cm", price: 1199, printTime: "10h 30m", weight: "400g" }
+    ],
+    image: "/images/action_figure_valorant.jpg",
+    images: [
+      "/images/action_figure_valorant.jpg",
+      "/images/valorant_action_figures_1791059182363.jpg",
+      "/images/anime_figure_3d.jpg"
+    ],
+    printTime: "6h 00m",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "25% Strength",
+    desc: "Duelist Reyna glowing in radiant purple finish with ethereal eye ability accent and Soul Orb hovering by her side.",
+    badge: "POPULAR",
+    makerWorldUrl: "https://makerworld.com/en/models/210343"
+  },
+  // 6. Anime Characters
+  {
+    id: "3d-luffy-gear5",
+    productId: "3D-ANI-01",
+    name: "Monkey D. Luffy — Gear 5 Sun God",
+    category: "Anime Characters",
+    brand: "P_Brothers × NaviDron 3D",
+    price: 949,
+    price15cm: 699,
+    price20cm: 949,
+    price24cm: 1399,
+    price6Inch: 699,
+    price8Inch: 949,
+    price10Inch: 1399,
+    quantity: 25,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    sizeOptions: [
+      { size: "15cm", price: 699, printTime: "3h 45m", weight: "120g" },
+      { size: "20cm", price: 949, printTime: "6h 30m", weight: "240g" },
+      { size: "24cm", price: 1399, printTime: "11h 15m", weight: "420g" }
+    ],
+    image: "/images/anime_figure_3d.jpg",
+    images: [
+      "/images/anime_figure_3d.jpg",
+      "/images/3d_printed_gift_pack.jpg",
+      "/images/valorant_action_figures_1791059182363.jpg"
+    ],
+    printTime: "6h 30m",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "25% Strength",
+    desc: "Whimsical Gear 5 cloud-ring sculpt with joyful laughing expression from One Piece Wano arc. FDM precision printed in tough PLA hard plastic.",
+    badge: "TRENDING",
+    makerWorldUrl: "https://makerworld.com/en/models/210344"
+  },
+  {
+    id: "3d-goku-ssj",
+    productId: "3D-ANI-02",
+    name: "Goku — Super Saiyan Kamehameha",
+    category: "Anime Characters",
+    brand: "P_Brothers × NaviDron 3D",
+    price: 849,
+    price15cm: 599,
+    price20cm: 849,
+    price24cm: 1299,
+    price6Inch: 599,
+    price8Inch: 849,
+    price10Inch: 1299,
+    quantity: 20,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    sizeOptions: [
+      { size: "15cm", price: 599, printTime: "3h 20m", weight: "115g" },
+      { size: "20cm", price: 849, printTime: "6h 15m", weight: "230g" },
+      { size: "24cm", price: 1299, printTime: "10h 50m", weight: "410g" }
+    ],
+    image: "/images/anime_figure_3d.jpg",
+    images: [
+      "/images/anime_figure_3d.jpg",
+      "/images/action_figure_valorant.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "6h 15m",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "25% Strength",
+    desc: "Iconic Dragon Ball Z protagonist with translucent golden energy wave aura piece and battle-damaged gi texture.",
+    badge: "ANIME HERO",
+    makerWorldUrl: "https://makerworld.com/en/models/210345"
+  },
+  {
+    id: "3d-naruto-sage",
+    productId: "3D-ANI-03",
+    name: "Naruto Uzumaki — Sage Mode Rasenshuriken",
+    category: "Anime Characters",
+    brand: "P_Brothers × NaviDron 3D",
+    price: 799,
+    price15cm: 549,
+    price20cm: 799,
+    price24cm: 1199,
+    price6Inch: 549,
+    price8Inch: 799,
+    price10Inch: 1199,
+    quantity: 30,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    sizeOptions: [
+      { size: "15cm", price: 549, printTime: "3h 10m", weight: "110g" },
+      { size: "20cm", price: 799, printTime: "5h 50m", weight: "220g" },
+      { size: "24cm", price: 1199, printTime: "10h 20m", weight: "390g" }
+    ],
+    image: "/images/anime_figure_3d.jpg",
+    images: [
+      "/images/anime_figure_3d.jpg",
+      "/images/valorant_action_figures_1791059182363.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "5h 50m",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "25% Strength",
+    desc: "Toad sage cloak, orange eye markings, and translucent wind spiral Rasenshuriken hovering on custom stone stand.",
+    badge: "CLASSIC",
+    makerWorldUrl: "https://makerworld.com/en/models/210346"
+  },
+  {
+    id: "3d-tanjiro-flame",
+    productId: "3D-ANI-04",
+    name: "Tanjiro Kamado — Hinokami Kagura",
+    category: "Anime Characters",
+    brand: "P_Brothers × NaviDron 3D",
+    price: 849,
+    price15cm: 599,
+    price20cm: 849,
+    price24cm: 1299,
+    price6Inch: 599,
+    price8Inch: 849,
+    price10Inch: 1299,
+    quantity: 18,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    sizeOptions: [
+      { size: "15cm", price: 599, printTime: "3h 30m", weight: "125g" },
+      { size: "20cm", price: 849, printTime: "6h 40m", weight: "245g" },
+      { size: "24cm", price: 1299, printTime: "11h 30m", weight: "430g" }
+    ],
+    image: "/images/anime_figure_3d.jpg",
+    images: [
+      "/images/anime_figure_3d.jpg",
+      "/images/action_figure_valorant.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "6h 40m",
+    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "25% Strength",
+    desc: "Demon Slayer sun-breathing spiral flame dragon wrapped around the Nichirin black blade with dynamic haori folds.",
+    badge: "ANIME HERO",
+    makerWorldUrl: "https://makerworld.com/en/models/210347"
+  },
+  // 7. Accessories (NO size chart, Only Fixed Price)
   {
     id: "3d-acc-dragon",
     productId: "3D-ACC-01",
@@ -1344,17 +1411,9 @@ export const INITIAL_3D_STUDIO = [
     category: "Accessories",
     brand: "P_Brothers × NaviDron 3D",
     price: 499,
-    price6Inch: 349,
-    price8Inch: 499,
-    price10Inch: 799,
     quantity: 60,
-    size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 349, printTime: "3h 00m", weight: "90g" },
-      { size: "8 inch (200mm)", price: 499, printTime: "5h 15m", weight: "170g" },
-      { size: "10 inch (250mm)", price: 799, printTime: "9h 30m", weight: "310g" }
-    ],
+    size: "Standard",
+    sizes: ["Standard"],
     image: "/images/3d_printed_gift_pack.jpg",
     images: [
       "/images/3d_printed_gift_pack.jpg",
@@ -1375,17 +1434,9 @@ export const INITIAL_3D_STUDIO = [
     category: "Accessories",
     brand: "NaviDron AeroLab Maker",
     price: 349,
-    price6Inch: 249,
-    price8Inch: 349,
-    price10Inch: 549,
     quantity: 45,
-    size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 249, printTime: "2h 30m", weight: "80g" },
-      { size: "8 inch (200mm)", price: 349, printTime: "4h 00m", weight: "140g" },
-      { size: "10 inch (250mm)", price: 549, printTime: "7h 00m", weight: "260g" }
-    ],
+    size: "Standard",
+    sizes: ["Standard"],
     image: "/images/fpv_racing_drone.jpg",
     images: [
       "/images/fpv_racing_drone.jpg",
@@ -1399,6 +1450,7 @@ export const INITIAL_3D_STUDIO = [
     badge: "WORKSHOP",
     makerWorldUrl: "https://makerworld.com/en/models/88120"
   },
+  // 8. Others (NO size chart, Only Fixed Price)
   {
     id: "3d-oth-iris",
     productId: "3D-OTH-01",
@@ -1406,17 +1458,9 @@ export const INITIAL_3D_STUDIO = [
     category: "Others",
     brand: "P_Brothers × NaviDron 3D",
     price: 599,
-    price6Inch: 449,
-    price8Inch: 599,
-    price10Inch: 899,
     quantity: 30,
-    size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 449, printTime: "3h 45m", weight: "110g" },
-      { size: "8 inch (200mm)", price: 599, printTime: "6h 15m", weight: "210g" },
-      { size: "10 inch (250mm)", price: 899, printTime: "10h 30m", weight: "380g" }
-    ],
+    size: "Standard",
+    sizes: ["Standard"],
     image: "/images/college_project_drone.jpg",
     images: [
       "/images/college_project_drone.jpg",
@@ -1437,17 +1481,9 @@ export const INITIAL_3D_STUDIO = [
     category: "Others",
     brand: "NaviDron 3D Home",
     price: 299,
-    price6Inch: 199,
-    price8Inch: 299,
-    price10Inch: 449,
     quantity: 40,
-    size: "8 inch",
-    sizes: ["6 inch", "8 inch", "10 inch"],
-    sizeOptions: [
-      { size: "6 inch (150mm)", price: 199, printTime: "2h 00m", weight: "70g" },
-      { size: "8 inch (200mm)", price: 299, printTime: "3h 30m", weight: "130g" },
-      { size: "10 inch (250mm)", price: 449, printTime: "6h 00m", weight: "240g" }
-    ],
+    size: "Standard",
+    sizes: ["Standard"],
     image: "/images/hero_drone_bg.jpg",
     images: [
       "/images/hero_drone_bg.jpg",
@@ -1476,35 +1512,56 @@ export async function get3DStudioItems() {
       ? item.price
       : parseInt(String(item.price || '899').replace(/[^0-9]/g, ''), 10) || 899;
 
-    const p8 = typeof item.price8Inch === 'number' && item.price8Inch > 0
-      ? item.price8Inch
-      : (item.sizeOptions?.find(s => s.size.includes('8'))?.price || rawPrice);
+    const p8 = typeof item.price20cm === 'number' && item.price20cm > 0
+      ? item.price20cm
+      : (typeof item.price8Inch === 'number' && item.price8Inch > 0
+        ? item.price8Inch
+        : (item.sizeOptions?.find(s => s.size.includes('20') || s.size.includes('8'))?.price || rawPrice));
 
-    const p6 = typeof item.price6Inch === 'number' && item.price6Inch > 0
-      ? item.price6Inch
-      : (item.sizeOptions?.find(s => s.size.includes('6'))?.price || Math.max(299, p8 - 250));
+    const p6 = typeof item.price15cm === 'number' && item.price15cm > 0
+      ? item.price15cm
+      : (typeof item.price6Inch === 'number' && item.price6Inch > 0
+        ? item.price6Inch
+        : (item.sizeOptions?.find(s => s.size.includes('15') || s.size.includes('6'))?.price || Math.max(299, p8 - 250)));
 
-    const p10 = typeof item.price10Inch === 'number' && item.price10Inch > 0
-      ? item.price10Inch
-      : (item.sizeOptions?.find(s => s.size.includes('10'))?.price || (p8 + 450));
+    const p10 = typeof item.price24cm === 'number' && item.price24cm > 0
+      ? item.price24cm
+      : (typeof item.price10Inch === 'number' && item.price10Inch > 0
+        ? item.price10Inch
+        : (item.sizeOptions?.find(s => s.size.includes('24') || s.size.includes('10'))?.price || (p8 + 450)));
 
-    const sizeOptions = [
-      { size: "6 inch (150mm)", price: p6, printTime: "3h 45m", weight: "120g" },
-      { size: "8 inch (200mm)", price: p8, printTime: "6h 30m", weight: "240g" },
-      { size: "10 inch (250mm)", price: p10, printTime: "11h 15m", weight: "420g" }
-    ];
+    let normalizedCategory = item.category || 'Anime Characters';
+    const cLow = normalizedCategory.toLowerCase();
+    const nm = (item.name || '').toLowerCase();
+    const ds = (item.desc || '').toLowerCase();
 
-    let normalizedCategory = item.category || 'Anime Models';
-    if (normalizedCategory === 'Anime') normalizedCategory = 'Anime Models';
-    else if (normalizedCategory === 'Personal Character') {
-      const nm = (item.name || '').toLowerCase();
-      const ds = (item.desc || '').toLowerCase();
-      if (nm.includes('litho') || ds.includes('litho')) {
-        normalizedCategory = '3D Lithophanes';
-      } else {
-        normalizedCategory = '3D Model Person (2D to 3D)';
-      }
+    if (cLow.includes('litho') || nm.includes('litho') || ds.includes('litho')) {
+      normalizedCategory = '3D Lithophane';
+    } else if (cLow.includes('3d model') || cLow.includes('person') || cLow.includes('2d to 3d') || nm.includes('sculpt') || nm.includes('bust')) {
+      normalizedCategory = '3D Model';
+    } else if (cLow.includes('game') || nm.includes('gta') || nm.includes('val') || nm.includes('jett') || nm.includes('reyna')) {
+      normalizedCategory = 'Game Characters';
+    } else if (cLow.includes('anime') || nm.includes('luffy') || nm.includes('goku') || nm.includes('naruto') || nm.includes('tanjiro')) {
+      normalizedCategory = 'Anime Characters';
+    } else if (cLow.includes('access') || nm.includes('dragon') || nm.includes('organizer')) {
+      normalizedCategory = 'Accessories';
+    } else if (cLow.includes('other') || nm.includes('iris') || nm.includes('puzzle')) {
+      normalizedCategory = 'Others';
     }
+
+    // Size chart ONLY for: 3D Model, 3D Lithophane, Game Characters, Anime Characters
+    // For Accessories and Others: NO size chart, Only Fixed Price
+    const is3DModel = normalizedCategory === '3D Model';
+    const isLitho = normalizedCategory === '3D Lithophane';
+    const isGame = normalizedCategory === 'Game Characters';
+    const isAnime = normalizedCategory === 'Anime Characters';
+    const hasSizeChart = is3DModel || isLitho || isGame || isAnime;
+
+    const sizeOptions = hasSizeChart ? [
+      { size: "15cm", price: p6, printTime: "3h 45m", weight: "120g" },
+      { size: "20cm", price: p8, printTime: "6h 30m", weight: "240g" },
+      { size: "24cm", price: p10, printTime: "11h 15m", weight: "420g" }
+    ] : undefined;
 
     return {
       ...item,
@@ -1512,12 +1569,15 @@ export async function get3DStudioItems() {
       productId: item.productId && String(item.productId).trim() ? String(item.productId).trim() : (item.id || ''),
       category: normalizedCategory,
       makerWorldUrl: item.makerWorldUrl || '',
-      price: p8,
+      price: hasSizeChart ? p8 : rawPrice,
+      price15cm: p6,
+      price20cm: p8,
+      price24cm: p10,
       price6Inch: p6,
       price8Inch: p8,
       price10Inch: p10,
-      size: item.size && (item.size.includes('6') || item.size.includes('8') || item.size.includes('10')) ? item.size : '8 inch',
-      sizes: ["6 inch", "8 inch", "10 inch"],
+      size: hasSizeChart ? (item.size && (item.size.includes('15') || item.size.includes('20') || item.size.includes('24')) ? item.size : '20cm') : 'Standard',
+      sizes: hasSizeChart ? ["15cm", "20cm", "24cm"] : ["Standard"],
       sizeOptions,
       material: item.material?.includes('SLA') || item.material?.includes('Resin')
         ? 'FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)'

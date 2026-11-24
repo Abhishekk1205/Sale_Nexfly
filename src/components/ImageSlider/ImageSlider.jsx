@@ -4,7 +4,8 @@ import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
 export default function ImageSlider({
   images = [],
   alt = "Product Photo",
-  aspectRatio = "4/3",
+  aspectRatio = "4/5",
+  objectFit = "cover",
   showThumbnails = true,
   className = "",
   compact = false
@@ -63,7 +64,7 @@ export default function ImageSlider({
           style={{
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
+            objectFit: objectFit,
             display: 'block',
             transition: 'transform 0.3s ease'
           }}

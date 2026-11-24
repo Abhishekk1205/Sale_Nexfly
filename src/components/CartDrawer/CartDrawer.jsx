@@ -32,6 +32,10 @@ export default function CartDrawer({
     return sum + rawPrice * (item.quantity || 1);
   }, 0);
 
+  const deliveryFee = cart.length > 0 ? 199 : 0;
+  const gstAmount = Math.round((subtotal + deliveryFee) * 0.18);
+  const totalAmount = subtotal + deliveryFee + gstAmount;
+
   const handleCheckout = async () => {
     if (cart.length === 0) return;
     setIsPlacingOrder(true);
@@ -90,7 +94,12 @@ export default function CartDrawer({
         quantity: it.quantity || 1,
         image: it.image || '/images/fpv_racing_drone.jpg'
       })),
-      totalAmount: subtotal,
+      subtotal: subtotal,
+      deliveryFee: deliveryFee,
+      gstAmount: gstAmount,
+      gstRate: '18%',
+      tax: gstAmount,
+      totalAmount: totalAmount,
       paymentStatus: 'Paid Online (UPI / Card)',
       status: 'Succeeded',
       statusLabel: 'Payment Confirmed & In Assembly',
@@ -174,9 +183,23 @@ export default function CartDrawer({
               <div style={{ marginBottom: '0.4rem', color: '#334155' }}>
                 <strong>Recipient Address:</strong> {orderSuccess.deliveryAddress}
               </div>
-              <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#334155' }}><strong>Total Paid:</strong></span>
-                <strong style={{ color: '#0f172a', fontSize: '0.95rem' }}>₹{orderSuccess.totalAmount.toLocaleString('en-IN')}</strong>
+              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.45rem', marginTop: '0.45rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#64748b', marginBottom: '2px' }}>
+                  <span>Items Subtotal:</span>
+                  <span>₹{(orderSuccess.subtotal ?? orderSuccess.totalAmount).toLocaleString('en-IN')}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#64748b', marginBottom: '2px' }}>
+                  <span>Packaging & Delivery:</span>
+                  <span>₹{orderSuccess.deliveryFee ?? 199}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#b45309', marginBottom: '4px' }}>
+                  <span>GST (18%):</span>
+                  <span>+₹{(orderSuccess.gstAmount ?? Math.round((orderSuccess.totalAmount || 0) * 0.18)).toLocaleString('en-IN')}</span>
+                </div>
+                <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', paddingTop: '4px', borderTop: '1px dashed #cbd5e1' }}>
+                  <span style={{ color: '#0f172a', fontWeight: 800 }}>Total Paid:</span>
+                  <strong style={{ color: '#0f172a', fontSize: '1rem', fontWeight: 900 }}>₹{orderSuccess.totalAmount.toLocaleString('en-IN')}</strong>
+                </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '0.8rem' }}>
                 <span><strong>Tracking ID:</strong> {orderSuccess.trackingNumber}</span>
@@ -351,15 +374,24 @@ export default function CartDrawer({
 
             {/* Footer Summary & Checkout */}
             <div className="cart-drawer-footer">
-              <div className="cart-subtotal-row">
-                <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Order Subtotal</span>
-                <span style={{ fontFamily: 'var(--font-head)', fontSize: '1.25rem', color: 'var(--navy)', fontWeight: 800 }}>
-                  ₹{subtotal.toLocaleString('en-IN')}
-                </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.86rem', color: '#64748b', marginBottom: '0.35rem' }}>
+                <span>Items Subtotal (Excl. GST):</span>
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>₹{subtotal.toLocaleString('en-IN')}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#10b981', fontWeight: 600, marginBottom: '1rem' }}>
-                <span>📦 Shipping & Foam Packaging</span>
-                <span>FREE (Pan-India)</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#475569', marginBottom: '0.35rem' }}>
+                <span>📦 Packaging & Express Delivery:</span>
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>₹{deliveryFee}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#b45309', marginBottom: '0.65rem' }}>
+                <span>🧾 GST (18% on total bill):</span>
+                <span style={{ fontWeight: 700 }}>+₹{gstAmount.toLocaleString('en-IN')}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.65rem', borderTop: '1.5px solid #e2e8f0', marginBottom: '0.95rem' }}>
+                <span style={{ color: '#0f172a', fontWeight: 800, fontSize: '0.95rem' }}>Final Total Bill Amount:</span>
+                <span style={{ fontFamily: 'var(--font-head)', fontSize: '1.35rem', color: 'var(--navy)', fontWeight: 900 }}>
+                  ₹{totalAmount.toLocaleString('en-IN')}
+                </span>
               </div>
 
               <button

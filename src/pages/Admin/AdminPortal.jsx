@@ -289,6 +289,8 @@ export default function AdminPortal({ mode = 'main' }) {
       ? editProductForm.productId.trim()
       : (item.productId || item.id);
 
+    const hasSizeChart = type === '3dstudio' && editProductForm.category !== 'Accessories' && editProductForm.category !== 'Others';
+
     const updatedItem = {
       ...item,
       productId: updatedProductId,
@@ -296,19 +298,22 @@ export default function AdminPortal({ mode = 'main' }) {
       category: editProductForm.category,
       brand: editProductForm.brand,
       makerWorldUrl: editProductForm.makerWorldUrl || '',
-      price: type === '3dstudio' ? p8 : numPrice,
+      price: hasSizeChart ? p8 : numPrice,
+      price15cm: p6,
+      price20cm: p8,
+      price24cm: p10,
       price6Inch: p6,
       price8Inch: p8,
       price10Inch: p10,
-      sizes: ["6 inch", "8 inch", "10 inch"],
-      sizeOptions: type === '3dstudio' ? [
-        { size: "6 inch (150mm)", price: p6, printTime: "3h 45m", weight: "120g" },
-        { size: "8 inch (200mm)", price: p8, printTime: "6h 30m", weight: "240g" },
-        { size: "10 inch (250mm)", price: p10, printTime: "11h 15m", weight: "420g" }
-      ] : item.sizeOptions,
+      sizes: hasSizeChart ? ["15cm", "20cm", "24cm"] : ["Standard"],
+      sizeOptions: hasSizeChart ? [
+        { size: "15cm", price: p6, printTime: "3h 45m", weight: "120g" },
+        { size: "20cm", price: p8, printTime: "6h 30m", weight: "240g" },
+        { size: "24cm", price: p10, printTime: "11h 15m", weight: "420g" }
+      ] : undefined,
       quantity: numQty,
       desc: editProductForm.desc,
-      size: editProductForm.size || '8 inch',
+      size: hasSizeChart ? (editProductForm.size || '20cm') : 'Standard',
       material: editProductForm.material,
       infill: '25% Strength',
       printTime: editProductForm.printTime,
@@ -855,20 +860,27 @@ export default function AdminPortal({ mode = 'main' }) {
         const p10 = p8 + 450;
         const docId = customProductId ? sanitizeKey(customProductId).toLowerCase() : `3d-${Date.now()}`;
         const pId = customProductId || docId;
+        const cat = cleanedPayload.category || 'Anime Characters';
+        const hasSizeChart = cat !== 'Accessories' && cat !== 'Others';
+
         const created = await save3DStudioItem({
           ...cleanedPayload,
           id: docId,
           productId: pId,
-          price: p8,
+          price: hasSizeChart ? p8 : (priceVal || 499),
+          price15cm: p6,
+          price20cm: p8,
+          price24cm: p10,
           price6Inch: p6,
           price8Inch: p8,
           price10Inch: p10,
-          sizes: ["6 inch", "8 inch", "10 inch"],
-          sizeOptions: [
-            { size: "6 inch (150mm)", price: p6, printTime: "3h 45m", weight: "120g" },
-            { size: "8 inch (200mm)", price: p8, printTime: "6h 30m", weight: "240g" },
-            { size: "10 inch (250mm)", price: p10, printTime: "11h 15m", weight: "420g" }
-          ],
+          size: hasSizeChart ? (cleanedPayload.size || "20cm") : "Standard",
+          sizes: hasSizeChart ? ["15cm", "20cm", "24cm"] : ["Standard"],
+          sizeOptions: hasSizeChart ? [
+            { size: "15cm", price: p6, printTime: "3h 45m", weight: "120g" },
+            { size: "20cm", price: p8, printTime: "6h 30m", weight: "240g" },
+            { size: "24cm", price: p10, printTime: "11h 15m", weight: "420g" }
+          ] : undefined,
           infill: "25% Strength"
         });
         setThreeDItems((prev) => [created, ...prev]);
@@ -1689,9 +1701,14 @@ export default function AdminPortal({ mode = 'main' }) {
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                              <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#fff' }}>
-                                Total: ₹{amount.toLocaleString('en-IN')}
-                              </span>
+                              <div style={{ textAlign: 'right' }}>
+                                <span style={{ fontSize: '0.92rem', fontWeight: 800, color: '#fff', display: 'block' }}>
+                                  Total: ₹{amount.toLocaleString('en-IN')}
+                                </span>
+                                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                                  Subtotal: ₹{(ord.subtotal || Math.round(amount / 1.18)).toLocaleString('en-IN')} | Pkg & Del: ₹{ord.deliveryFee !== undefined ? ord.deliveryFee : 199} | GST (18%): ₹{(ord.gstAmount || ord.tax || Math.round(amount * 0.18)).toLocaleString('en-IN')}
+                                </span>
+                              </div>
                               <select
                                 className="admin-status-dropdown"
                                 value={ord.status || 'Succeeded'}
@@ -2411,7 +2428,7 @@ export default function AdminPortal({ mode = 'main' }) {
                     </div>
 
                     <div style={{ display: 'flex', background: '#1e293b', borderRadius: '8px', padding: '3px', flexWrap: 'wrap', gap: '2px' }}>
-                      {['all', 'Anime Models', 'Game Characters', '3D Lithophanes', '3D Model Person (2D to 3D)', 'Accessories', 'Others'].map((sub) => (
+                      {['all', '3D Model', '3D Lithophane', 'Game Characters', 'Anime Characters', 'Accessories', 'Others'].map((sub) => (
                         <button
                           key={sub}
                           type="button"
@@ -2446,13 +2463,14 @@ export default function AdminPortal({ mode = 'main' }) {
                   {threeDItems
                     .filter((it) => {
                       const itemCat = it.category || '';
+                      const catLow = itemCat.toLowerCase();
                       const matchTab = threeDSubTab === 'all' ||
-                        (threeDSubTab === 'Anime Models' && (itemCat === 'Anime' || itemCat === 'Anime Models')) ||
-                        (threeDSubTab === 'Game Characters' && itemCat === 'Game Characters') ||
-                        (threeDSubTab === '3D Lithophanes' && (itemCat === '3D Lithophanes' || itemCat.toLowerCase().includes('litho'))) ||
-                        (threeDSubTab === '3D Model Person (2D to 3D)' && (itemCat === '3D Model Person (2D to 3D)' || (itemCat === 'Personal Character' && !itemCat.toLowerCase().includes('litho')))) ||
-                        (threeDSubTab === 'Accessories' && itemCat === 'Accessories') ||
-                        (threeDSubTab === 'Others' && itemCat === 'Others') ||
+                        (threeDSubTab === '3D Model' && (catLow.includes('3d model') || catLow.includes('person') || catLow.includes('2d to 3d'))) ||
+                        (threeDSubTab === '3D Lithophane' && catLow.includes('litho')) ||
+                        (threeDSubTab === 'Game Characters' && catLow.includes('game')) ||
+                        (threeDSubTab === 'Anime Characters' && (catLow.includes('anime') || catLow.includes('manga'))) ||
+                        (threeDSubTab === 'Accessories' && catLow.includes('access')) ||
+                        (threeDSubTab === 'Others' && catLow.includes('other')) ||
                         itemCat === threeDSubTab;
                       if (!matchTab) return false;
                       if (!productSearch.trim()) return true;
@@ -3545,10 +3563,10 @@ export default function AdminPortal({ mode = 'main' }) {
                     value={newItemForm.category}
                     onChange={(e) => setNewItemForm({ ...newItemForm, category: e.target.value })}
                   >
-                    <option value="Anime Models">Anime Models</option>
+                    <option value="3D Model">3D Model</option>
+                    <option value="3D Lithophane">3D Lithophane</option>
                     <option value="Game Characters">Game Characters</option>
-                    <option value="3D Lithophanes">3D Lithophanes</option>
-                    <option value="3D Model Person (2D to 3D)">3D Model Person (2D to 3D)</option>
+                    <option value="Anime Characters">Anime Characters</option>
                     <option value="Accessories">Accessories</option>
                     <option value="Others">Others</option>
                   </select>
@@ -3572,20 +3590,29 @@ export default function AdminPortal({ mode = 'main' }) {
                 </span>
               </div>
 
-              {/* Size for 3D Studio */}
+              {/* Size for 3D Studio (Only for categories with size chart) */}
               {modalType === '3dstudio' && (
-                <div>
-                  <label className="form-field-label" style={{ color: '#cbd5e1' }}>Figure Size *</label>
-                  <select
-                    className="profile-input"
-                    value={newItemForm.size}
-                    onChange={(e) => setNewItemForm({ ...newItemForm, size: e.target.value })}
-                  >
-                    <option value="6 inch">6 inch (Compact)</option>
-                    <option value="8 inch">8 inch (Standard)</option>
-                    <option value="10 inch">10 inch (Large Scale)</option>
-                  </select>
-                </div>
+                newItemForm.category === 'Accessories' || newItemForm.category === 'Others' ? (
+                  <div>
+                    <label className="form-field-label" style={{ color: '#cbd5e1' }}>Product Size & Price Rule</label>
+                    <div style={{ fontSize: '0.82rem', color: '#10b981', padding: '0.55rem 0.85rem', background: 'rgba(16,185,129,0.1)', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.2)' }}>
+                      ✓ Fixed Price Product — Standard verified dimensions (No size chart variation)
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="form-field-label" style={{ color: '#cbd5e1' }}>Default Print Size *</label>
+                    <select
+                      className="profile-input"
+                      value={newItemForm.size || '20cm'}
+                      onChange={(e) => setNewItemForm({ ...newItemForm, size: e.target.value })}
+                    >
+                      <option value="15cm">15cm (Compact)</option>
+                      <option value="20cm">20cm (Standard)</option>
+                      <option value="24cm">24cm (Large Scale)</option>
+                    </select>
+                  </div>
+                )
               )}
 
               {/* Type for UAV */}
@@ -4096,10 +4123,10 @@ export default function AdminPortal({ mode = 'main' }) {
                       value={editProductForm.category}
                       onChange={(e) => setEditProductForm((prev) => ({ ...prev, category: e.target.value }))}
                     >
-                      <option value="Anime Models">Anime Models</option>
+                      <option value="3D Model">3D Model</option>
+                      <option value="3D Lithophane">3D Lithophane</option>
                       <option value="Game Characters">Game Characters</option>
-                      <option value="3D Lithophanes">3D Lithophanes</option>
-                      <option value="3D Model Person (2D to 3D)">3D Model Person (2D to 3D)</option>
+                      <option value="Anime Characters">Anime Characters</option>
                       <option value="Accessories">Accessories</option>
                       <option value="Others">Others</option>
                     </select>
@@ -4186,15 +4213,43 @@ export default function AdminPortal({ mode = 'main' }) {
                     />
                   </div>
                 </div>
+              ) : (editingProductTarget.type === '3dstudio' && (editProductForm.category === 'Accessories' || editProductForm.category === 'Others')) ? (
+                <div style={{ background: 'rgba(16, 185, 129, 0.06)', border: '1.5px solid rgba(16, 185, 129, 0.25)', borderRadius: '10px', padding: '0.85rem', marginBottom: '0.9rem' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#10b981', marginBottom: '0.55rem' }}>
+                    💰 Fixed Price Product (No size chart variation):
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div className="admin-input-group">
+                      <label style={{ fontSize: '0.75rem' }}>Fixed Product Price (₹) *</label>
+                      <input
+                        type="number"
+                        required
+                        className="admin-input-field"
+                        value={editProductForm.price}
+                        onChange={(e) => setEditProductForm((prev) => ({ ...prev, price: e.target.value, price8Inch: e.target.value }))}
+                      />
+                    </div>
+                    <div className="admin-input-group">
+                      <label style={{ fontSize: '0.75rem' }}>Stock / In-Stock Units *</label>
+                      <input
+                        type="number"
+                        required
+                        className="admin-input-field"
+                        value={editProductForm.quantity}
+                        onChange={(e) => setEditProductForm((prev) => ({ ...prev, quantity: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </div>
               ) : editingProductTarget.type === '3dstudio' ? (
                 <div style={{ background: 'rgba(0, 200, 255, 0.06)', border: '1.5px solid rgba(0, 200, 255, 0.25)', borderRadius: '10px', padding: '0.85rem', marginBottom: '0.9rem' }}>
                   <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--neon)', marginBottom: '0.55rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
-                    <span>💰 Separate Prices per Model Size (25% Density):</span>
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>All with 25% Strength Infill</span>
+                    <span>💰 Separate Prices per Model Size (15cm / 20cm / 24cm):</span>
+                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Metric Scale (No inch)</span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.65rem', marginBottom: '0.65rem' }}>
                     <div className="admin-input-group">
-                      <label style={{ fontSize: '0.75rem', color: '#38bdf8' }}>6 inch (150mm) ₹ *</label>
+                      <label style={{ fontSize: '0.75rem', color: '#38bdf8' }}>15cm Scale ₹ *</label>
                       <input
                         type="number"
                         required
@@ -4204,7 +4259,7 @@ export default function AdminPortal({ mode = 'main' }) {
                       />
                     </div>
                     <div className="admin-input-group">
-                      <label style={{ fontSize: '0.75rem', color: '#38bdf8' }}>8 inch (200mm) ₹ *</label>
+                      <label style={{ fontSize: '0.75rem', color: '#38bdf8' }}>20cm Scale ₹ *</label>
                       <input
                         type="number"
                         required
@@ -4214,7 +4269,7 @@ export default function AdminPortal({ mode = 'main' }) {
                       />
                     </div>
                     <div className="admin-input-group">
-                      <label style={{ fontSize: '0.75rem', color: '#38bdf8' }}>10 inch (250mm) ₹ *</label>
+                      <label style={{ fontSize: '0.75rem', color: '#38bdf8' }}>24cm Scale ₹ *</label>
                       <input
                         type="number"
                         required

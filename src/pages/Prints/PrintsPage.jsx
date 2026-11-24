@@ -29,13 +29,48 @@ import ImageSlider from '../../components/ImageSlider/ImageSlider';
 
 const CATEGORIES = [
   { id: 'all', label: 'All 3D Products', icon: Boxes },
-  { id: 'Anime Models', label: 'Anime Models', icon: Flame },
+  { id: '3D Model', label: '3D Model', icon: User },
+  { id: '3D Lithophane', label: '3D Lithophane', icon: ImageIcon },
   { id: 'Game Characters', label: 'Game Characters', icon: Gamepad2 },
-  { id: '3D Lithophanes', label: '3D Lithophanes', icon: ImageIcon },
-  { id: '3D Model Person (2D to 3D)', label: '3D Model Person (2D to 3D)', icon: User },
+  { id: 'Anime Characters', label: 'Anime Characters', icon: Flame },
   { id: 'Accessories', label: 'Accessories', icon: Wrench },
   { id: 'Others', label: 'Others', icon: Package }
 ];
+
+function matchesCategory(itemCat = '', targetCat = '') {
+  const it = (itemCat || '').toLowerCase();
+  const tgt = (targetCat || '').toLowerCase();
+  if (tgt === 'all') return true;
+  if (tgt === '3d model') {
+    return it.includes('3d model') || it.includes('person') || it.includes('2d to 3d');
+  }
+  if (tgt === '3d lithophane') {
+    return it.includes('litho');
+  }
+  if (tgt === 'game characters') {
+    return it.includes('game');
+  }
+  if (tgt === 'anime characters') {
+    return it.includes('anime');
+  }
+  if (tgt === 'accessories') {
+    return it.includes('access');
+  }
+  if (tgt === 'others') {
+    return it.includes('other');
+  }
+  return it === tgt;
+}
+
+function getCategoryPriority(cat = '') {
+  const c = (cat || '').toLowerCase();
+  if (c.includes('3d model') || c.includes('person') || c.includes('2d to 3d')) return 1;
+  if (c.includes('litho')) return 2;
+  if (c.includes('game')) return 3;
+  if (c.includes('anime')) return 4;
+  if (c.includes('access')) return 5;
+  return 6;
+}
 
 export default function PrintsPage({ onOpenQuote, onAddToCart }) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -54,13 +89,15 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
   useEffect(() => {
     const cat = searchParams.get('category') || searchParams.get('filter');
     if (cat) {
-      if (cat === 'anime') setActiveCategory('Anime Models');
-      else if (cat === 'games') setActiveCategory('Game Characters');
-      else if (cat === 'personal' || cat.toLowerCase().includes('litho')) setActiveCategory('3D Lithophanes');
-      else if (cat.toLowerCase().includes('person') || cat.toLowerCase().includes('2d')) setActiveCategory('3D Model Person (2D to 3D)');
+      if (cat.toLowerCase().includes('model') || cat.toLowerCase().includes('person') || cat.toLowerCase().includes('2d')) setActiveCategory('3D Model');
+      else if (cat.toLowerCase().includes('litho')) setActiveCategory('3D Lithophane');
+      else if (cat.toLowerCase().includes('game')) setActiveCategory('Game Characters');
+      else if (cat.toLowerCase().includes('anime')) setActiveCategory('Anime Characters');
+      else if (cat.toLowerCase().includes('access')) setActiveCategory('Accessories');
+      else if (cat.toLowerCase().includes('other')) setActiveCategory('Others');
       else setActiveCategory(cat);
     }
-    document.title = "3D Studio — Anime, Games, Lithophanes & 3D Models | NaviDron";
+    document.title = "3D Studio — 3D Models, Lithophanes, Games & Anime | NaviDron";
 
     const fetchItems = async () => {
       setLoading(true);
@@ -120,7 +157,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
     const counts = { all: items.length };
     CATEGORIES.forEach((c) => {
       if (c.id !== 'all') {
-        counts[c.id] = items.filter((i) => i.category === c.id).length;
+        counts[c.id] = items.filter((i) => matchesCategory(i.category, c.id)).length;
       }
     });
     return counts;
@@ -131,20 +168,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
     return items.filter((item) => {
       // Category filter
       if (activeCategory !== 'all') {
-        const itemCat = item.category || '';
-        if (activeCategory === 'Anime Models' && (itemCat === 'Anime' || itemCat === 'Anime Models')) {
-          // match
-        } else if (activeCategory === 'Game Characters' && itemCat === 'Game Characters') {
-          // match
-        } else if (activeCategory === '3D Lithophanes' && (itemCat === '3D Lithophanes' || itemCat.toLowerCase().includes('litho'))) {
-          // match
-        } else if (activeCategory === '3D Model Person (2D to 3D)' && (itemCat === '3D Model Person (2D to 3D)' || itemCat.toLowerCase().includes('person'))) {
-          // match
-        } else if (activeCategory === 'Accessories' && itemCat === 'Accessories') {
-          // match
-        } else if (activeCategory === 'Others' && itemCat === 'Others') {
-          // match
-        } else if (itemCat !== activeCategory) {
+        if (!matchesCategory(item.category, activeCategory)) {
           return false;
         }
       }
@@ -180,7 +204,14 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
       if (sortBy === 'price-asc') return priceA - priceB;
       if (sortBy === 'price-desc') return priceB - priceA;
       if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
-      return 0; // featured default
+
+      // Featured default sequence:
+      // 1: 3D Model, 2: 3D Lithophane (placed directly beside 3D Model in catalog grid),
+      // 3: Game Characters, 4: Anime Characters, 5: Accessories, 6: Others
+      const rankA = getCategoryPriority(a.category);
+      const rankB = getCategoryPriority(b.category);
+      if (rankA !== rankB) return rankA - rankB;
+      return (b.badge ? 1 : 0) - (a.badge ? 1 : 0);
     });
   }, [items, activeCategory, inStockOnly, priceRange, searchTerm, sortBy]);
 
