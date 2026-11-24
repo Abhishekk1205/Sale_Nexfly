@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
   ShoppingCart,
@@ -12,28 +12,55 @@ import {
   Eye,
   Clock,
   Ruler,
-  Search
+  Search,
+  SlidersHorizontal,
+  ChevronRight,
+  Boxes,
+  RotateCcw,
+  Layers,
+  Wrench,
+  Package,
+  Gamepad2,
+  Heart
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { get3DStudioItems } from '../../services/firebase';
 import ImageSlider from '../../components/ImageSlider/ImageSlider';
 
+const CATEGORIES = [
+  { id: 'all', label: 'All 3D Products', icon: Boxes },
+  { id: 'Anime Models', label: 'Anime Models', icon: Flame },
+  { id: 'Game Characters', label: 'Game Characters', icon: Gamepad2 },
+  { id: '3D Lithophanes', label: '3D Lithophanes', icon: ImageIcon },
+  { id: '3D Model Person (2D to 3D)', label: '3D Model Person (2D to 3D)', icon: User },
+  { id: 'Accessories', label: 'Accessories', icon: Wrench },
+  { id: 'Others', label: 'Others', icon: Package }
+];
+
 export default function PrintsPage({ onOpenQuote, onAddToCart }) {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const initialFilter = searchParams.get('filter') || 'all';
-  const [activeFilter, setActiveFilter] = useState(initialFilter);
+
+  // URL query params
+  const paramCategory = searchParams.get('category') || searchParams.get('filter') || 'all';
+  const [activeCategory, setActiveCategory] = useState(paramCategory);
   const [searchTerm, setSearchTerm] = useState('');
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [sortBy, setSortBy] = useState('featured'); // featured, price-asc, price-desc, name
+  const [priceRange, setPriceRange] = useState('all'); // all, under500, 500-1000, above1000
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Custom photo upload state for Personal Character
-  const [selectedPersonalSize, setSelectedPersonalSize] = useState('8 inch');
-
   useEffect(() => {
-    const f = searchParams.get('filter');
-    if (f) setActiveFilter(f);
-    document.title = "3D Studio — Anime, Game Characters & Custom Photo Statues | NaviDron";
+    const cat = searchParams.get('category') || searchParams.get('filter');
+    if (cat) {
+      if (cat === 'anime') setActiveCategory('Anime Models');
+      else if (cat === 'games') setActiveCategory('Game Characters');
+      else if (cat === 'personal' || cat.toLowerCase().includes('litho')) setActiveCategory('3D Lithophanes');
+      else if (cat.toLowerCase().includes('person') || cat.toLowerCase().includes('2d')) setActiveCategory('3D Model Person (2D to 3D)');
+      else setActiveCategory(cat);
+    }
+    document.title = "3D Studio — Anime, Games, Lithophanes & 3D Models | NaviDron";
 
     const fetchItems = async () => {
       setLoading(true);
@@ -48,6 +75,11 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
     };
     fetchItems();
   }, [searchParams]);
+
+  const handleSelectCategory = (catId) => {
+    setActiveCategory(catId);
+    setSearchParams(catId === 'all' ? {} : { category: catId });
+  };
 
   const handleAddToCartItem = (item, chosenSize = null) => {
     const isItemOutOfStock = typeof item.quantity === 'number'
@@ -83,7 +115,85 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
     }
   };
 
-  const renderProductCard = (item, tagColor = '#00c8ff', defaultTag = '3D Figure') => {
+  // Counts for each category
+  const categoryCounts = useMemo(() => {
+    const counts = { all: items.length };
+    CATEGORIES.forEach((c) => {
+      if (c.id !== 'all') {
+        counts[c.id] = items.filter((i) => i.category === c.id).length;
+      }
+    });
+    return counts;
+  }, [items]);
+
+  // Filtering and sorting
+  const filteredAndSortedItems = useMemo(() => {
+    return items.filter((item) => {
+      // Category filter
+      if (activeCategory !== 'all') {
+        const itemCat = item.category || '';
+        if (activeCategory === 'Anime Models' && (itemCat === 'Anime' || itemCat === 'Anime Models')) {
+          // match
+        } else if (activeCategory === 'Game Characters' && itemCat === 'Game Characters') {
+          // match
+        } else if (activeCategory === '3D Lithophanes' && (itemCat === '3D Lithophanes' || itemCat.toLowerCase().includes('litho'))) {
+          // match
+        } else if (activeCategory === '3D Model Person (2D to 3D)' && (itemCat === '3D Model Person (2D to 3D)' || itemCat.toLowerCase().includes('person'))) {
+          // match
+        } else if (activeCategory === 'Accessories' && itemCat === 'Accessories') {
+          // match
+        } else if (activeCategory === 'Others' && itemCat === 'Others') {
+          // match
+        } else if (itemCat !== activeCategory) {
+          return false;
+        }
+      }
+
+      // Stock filter
+      if (inStockOnly) {
+        const stock = typeof item.quantity === 'number' ? item.quantity : (parseInt(String(item.quantity || 0), 10) || 0);
+        if (stock <= 0) return false;
+      }
+
+      // Price range filter
+      const p = typeof item.price === 'number' ? item.price : (parseInt(String(item.price || 0).replace(/[^0-9]/g, ''), 10) || 0);
+      if (priceRange === 'under500' && p >= 500) return false;
+      if (priceRange === '500-1000' && (p < 500 || p > 1000)) return false;
+      if (priceRange === 'above1000' && p <= 1000) return false;
+
+      // Search term
+      if (searchTerm.trim()) {
+        const q = searchTerm.toLowerCase();
+        const matchesName = (item.name || '').toLowerCase().includes(q);
+        const matchesDesc = (item.desc || '').toLowerCase().includes(q);
+        const matchesBrand = (item.brand || '').toLowerCase().includes(q);
+        const matchesId = (item.productId || item.id || '').toLowerCase().includes(q);
+        const matchesCat = (item.category || '').toLowerCase().includes(q);
+        if (!matchesName && !matchesDesc && !matchesBrand && !matchesId && !matchesCat) return false;
+      }
+
+      return true;
+    }).sort((a, b) => {
+      const priceA = typeof a.price === 'number' ? a.price : (parseInt(String(a.price || 0).replace(/[^0-9]/g, ''), 10) || 0);
+      const priceB = typeof b.price === 'number' ? b.price : (parseInt(String(b.price || 0).replace(/[^0-9]/g, ''), 10) || 0);
+
+      if (sortBy === 'price-asc') return priceA - priceB;
+      if (sortBy === 'price-desc') return priceB - priceA;
+      if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
+      return 0; // featured default
+    });
+  }, [items, activeCategory, inStockOnly, priceRange, searchTerm, sortBy]);
+
+  const resetAllFilters = () => {
+    setActiveCategory('all');
+    setSearchTerm('');
+    setInStockOnly(false);
+    setPriceRange('all');
+    setSortBy('featured');
+    setSearchParams({});
+  };
+
+  const renderProductCard = (item) => {
     const numPrice = typeof item.price === 'number'
       ? item.price
       : parseInt(String(item.price).replace(/[^0-9]/g, ''), 10) || 0;
@@ -107,14 +217,15 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
         onClick={() => navigate(`/prints/${item.id}`)}
         style={{
           background: '#ffffff',
-          borderRadius: '16px',
+          borderRadius: '14px',
           border: '1.5px solid #e2e8f0',
-          boxShadow: '0 8px 24px rgba(10,15,46,0.06)',
+          boxShadow: '0 4px 16px rgba(10,15,46,0.05)',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
           cursor: 'pointer',
-          transition: 'transform 0.25s ease, box-shadow 0.25s ease'
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+          height: '100%'
         }}
       >
         {/* Multi-Photo Sliding Carousel Header */}
@@ -184,7 +295,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
         <div className="card-body" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
           {/* Category & Product ID */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', gap: '4px' }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#ff00aa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               {item.category || '3D Studio'}
             </span>
             <span
@@ -214,7 +325,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
               <h4
                 className="card-title"
                 style={{
-                  fontSize: '1rem',
+                  fontSize: '0.98rem',
                   fontWeight: 800,
                   color: '#0a0f2e',
                   lineHeight: 1.35,
@@ -276,7 +387,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
               to={`/prints/${item.id}`}
               onClick={(e) => e.stopPropagation()}
               style={{
-                color: '#0077b6',
+                color: '#0284c7',
                 fontWeight: 700,
                 fontSize: '0.78rem',
                 flexShrink: 0,
@@ -291,7 +402,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
 
           {/* Price & Actions Row */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '0.65rem', borderTop: '1px solid #f1f5f9' }}>
-            <div className="card-price" style={{ color: '#0a0f2e', fontSize: '1.25rem', fontWeight: 900, margin: 0 }}>
+            <div className="card-price" style={{ color: '#0a0f2e', fontSize: '1.22rem', fontWeight: 900, margin: 0 }}>
               ₹{numPrice.toLocaleString('en-IN')}
             </div>
 
@@ -302,9 +413,9 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
                 style={{
                   padding: '0.45rem 0.65rem',
                   borderRadius: '7px',
-                  border: '1.5px solid #00c8ff',
-                  backgroundColor: 'rgba(0,200,255,0.06)',
-                  color: '#0077b6',
+                  border: '1.5px solid #0284c7',
+                  backgroundColor: 'rgba(2,132,199,0.06)',
+                  color: '#0284c7',
                   fontWeight: 700,
                   fontSize: '0.76rem',
                   display: 'inline-flex',
@@ -366,158 +477,399 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
     );
   };
 
-  const matchesSearch = (item) => {
-    if (!searchTerm.trim()) return true;
-    const q = searchTerm.toLowerCase();
-    return (
-      (item.name || '').toLowerCase().includes(q) ||
-      (item.desc || '').toLowerCase().includes(q) ||
-      (item.brand || '').toLowerCase().includes(q) ||
-      (item.productId || item.id || '').toLowerCase().includes(q)
-    );
-  };
-
-  const filteredItems = items.filter(matchesSearch);
-  const animeList = filteredItems.filter((i) => i.category === 'Anime');
-  const gamesList = filteredItems.filter((i) => i.category === 'Game Characters');
-  const personalList = filteredItems.filter((i) => i.category === 'Personal Character');
-
   return (
-    <div style={{ paddingTop: '74px', backgroundColor: '#ffffff' }}>
-      {/* Hero Banner */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #1a0840 0%, var(--navy) 50%, #0a1830 100%)',
-          minHeight: '42vh',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '5rem 2rem 3.5rem',
-          position: 'relative',
-          overflow: 'hidden',
-          color: 'white'
-        }}
-      >
-        <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', position: 'relative', zIndex: 2 }}>
-          <div className="section-tag" style={{ background: 'rgba(123,47,255,.25)', color: '#bf7aff', borderColor: 'rgba(123,47,255,.4)' }}>
-            🖨️ 3D Studio & Additive Prototyping
-          </div>
-          <h1 style={{ fontFamily: 'var(--font-head)', fontSize: 'clamp(2.2rem,5vw,4rem)', fontWeight: 900, marginBottom: '1rem' }}>
-            Anime, Game Figures & <span style={{ color: '#ff00aa' }}>Personal 3D Sculptures</span>
-          </h1>
-          <p style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,.85)', maxWidth: '680px', lineHeight: '1.7' }}>
-            High-precision SLA resin 3D figures: Gear 5 Luffy, Goku, GTA 6 Vice City collectibles, Valorant agents, and custom 3D person statues sculpted from your own photo. Tap any item to inspect print sizes, print times, and dynamic pricing!
-          </p>
-        </div>
-      </div>
-
-      {/* Filter Tabs & Search */}
-      <section style={{ background: 'var(--off-white)', padding: '2rem 2rem 1rem' }}>
-        <div className="section-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div className="uav-tabs" style={{ margin: 0, flexWrap: 'wrap' }}>
-            <button className={`uav-tab ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => setActiveFilter('all')}>
-              All 3D Studio Items ({items.length})
-            </button>
-            <button className={`uav-tab ${activeFilter === 'anime' ? 'active' : ''}`} onClick={() => setActiveFilter('anime')}>
-              🌸 Anime Characters ({animeList.length})
-            </button>
-            <button className={`uav-tab ${activeFilter === 'games' ? 'active' : ''}`} onClick={() => setActiveFilter('games')}>
-              🎮 Game Characters ({gamesList.length})
-            </button>
-            <button className={`uav-tab ${activeFilter === 'personal' ? 'active' : ''}`} onClick={() => setActiveFilter('personal')}>
-              👤 Personal Character of Image ({personalList.length})
-            </button>
+    <div style={{ paddingTop: '80px', backgroundColor: '#f8fafc', minHeight: '100vh', paddingBottom: '4rem' }}>
+      {/* Top Header Bar / Breadcrumb */}
+      <div style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '1rem 2rem' }}>
+        <div style={{ maxWidth: '1440px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', color: '#64748b', marginBottom: '0.25rem' }}>
+              <Link to="/" style={{ color: '#0284c7', textDecoration: 'none', fontWeight: 600 }}>Home</Link>
+              <span>/</span>
+              <span style={{ color: '#0f172a', fontWeight: 700 }}>3D Studio</span>
+              {activeCategory !== 'all' && (
+                <>
+                  <span>/</span>
+                  <span style={{ color: '#0284c7', fontWeight: 700 }}>{activeCategory}</span>
+                </>
+              )}
+            </div>
+            <h1 style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>
+              3D Studio Products & Additive Manufacturing
+            </h1>
           </div>
 
-          <div style={{ position: 'relative', width: '320px' }}>
-            <Search size={18} style={{ position: 'absolute', top: '12px', left: '14px', color: '#888' }} />
+          {/* Quick Search in Bar */}
+          <div style={{ position: 'relative', width: '320px', maxWidth: '100%' }}>
+            <Search size={17} style={{ position: 'absolute', top: '10px', left: '12px', color: '#94a3b8' }} />
             <input
               type="text"
-              placeholder="Search by Product ID, figure name..."
+              placeholder="Search by ID, name, description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
                 width: '100%',
-                padding: '.65rem 1rem .65rem 2.5rem',
-                borderRadius: '50px',
-                border: '1.5px solid rgba(255,0,170,.3)',
-                background: 'white',
-                fontFamily: 'var(--font-body)',
-                fontSize: '.9rem'
+                padding: '0.55rem 1rem 0.55rem 2.3rem',
+                borderRadius: '8px',
+                border: '1.5px solid #cbd5e1',
+                background: '#f8fafc',
+                fontSize: '0.88rem',
+                outline: 'none',
+                fontFamily: 'inherit'
               }}
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '10px',
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem'
+                }}
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Main Grid Content */}
-      <section style={{ background: '#ffffff', padding: '3rem 2rem 5rem' }}>
-        <div className="section-inner">
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '4rem 1rem', color: '#666' }}>
-              <p>Loading 3D Studio catalog...</p>
+      {/* Main Two-Column Layout (Left Categories Sidebar + Right Product Catalog) */}
+      <div style={{ maxWidth: '1440px', margin: '1.5rem auto 0', padding: '0 1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '1.75rem', alignItems: 'start' }}>
+          
+          {/* ════════ LEFT SIDEBAR: BROWSE CATEGORIES & FILTERS ════════ */}
+          <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            
+            {/* drkstore.in style "BROWSE CATEGORIES" Header and Box */}
+            <div style={{ background: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+              <div
+                style={{
+                  backgroundColor: '#0077b6',
+                  color: '#ffffff',
+                  padding: '0.85rem 1.15rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontWeight: 800,
+                  fontSize: '0.92rem',
+                  letterSpacing: '0.5px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>☰</span>
+                  <span>BROWSE CATEGORIES</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {CATEGORIES.map((cat) => {
+                  const Icon = cat.icon;
+                  const isSelected = activeCategory === cat.id;
+                  const count = categoryCounts[cat.id] || 0;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => handleSelectCategory(cat.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.75rem 1.1rem',
+                        border: 'none',
+                        borderBottom: '1px solid #f1f5f9',
+                        backgroundColor: isSelected ? '#f0f9ff' : '#ffffff',
+                        color: isSelected ? '#0284c7' : '#334155',
+                        fontWeight: isSelected ? 800 : 600,
+                        fontSize: '0.86rem',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'background-color 0.15s ease',
+                        borderLeft: isSelected ? '4px solid #0077b6' : '4px solid transparent'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSelected) e.currentTarget.style.backgroundColor = '#f8fafc';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSelected) e.currentTarget.style.backgroundColor = '#ffffff';
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <Icon size={16} color={isSelected ? '#0284c7' : '#64748b'} />
+                        <span>{cat.label}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span
+                          style={{
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            padding: '1px 6px',
+                            borderRadius: '10px',
+                            backgroundColor: isSelected ? '#e0f2fe' : '#f1f5f9',
+                            color: isSelected ? '#0369a1' : '#64748b'
+                          }}
+                        >
+                          {count}
+                        </span>
+                        <ChevronRight size={14} color={isSelected ? '#0284c7' : '#cbd5e1'} />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          ) : (
-            <>
-              {/* Personal Character Highlight Section */}
-              {(activeFilter === 'all' || activeFilter === 'personal') && personalList.length > 0 && (
-                <div style={{ marginBottom: '4.5rem' }}>
-                  <div style={{ marginBottom: '2rem' }}>
-                    <div className="section-tag" style={{ background: 'rgba(255,0,170,.12)', color: '#ff00aa' }}>
-                      👤 Custom Person Figures & Lithophanes
-                    </div>
-                    <h3 className="section-title">Personal Character of Image (Custom From Photo)</h3>
-                    <p className="section-subtitle">
-                      Send or upload your personal photo — our 3D artists sculpt a high-detail miniature resin statue of you, couples, or memorial keepsakes. Tap to select size and upload photo.
-                    </p>
-                  </div>
 
-                  <div className="merch-grid">
-                    {personalList.map((item) => renderProductCard(item, '#ff00aa', 'Personal Sculpture'))}
-                  </div>
+            {/* Filter Section: Availability & Stock */}
+            <div style={{ background: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '1rem 1.15rem', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+              <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.5px' }}>
+                Availability
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#334155', cursor: 'pointer', marginBottom: '0.4rem' }}>
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  style={{ width: '16px', height: '16px', accentColor: '#0077b6' }}
+                />
+                <span>In Stock Only</span>
+              </label>
+            </div>
+
+            {/* Filter Section: Price Range */}
+            <div style={{ background: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '1rem 1.15rem', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+              <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.5px' }}>
+                Price Filter
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                {[
+                  { id: 'all', label: 'All Prices' },
+                  { id: 'under500', label: 'Under ₹500' },
+                  { id: '500-1000', label: '₹500 — ₹1,000' },
+                  { id: 'above1000', label: 'Above ₹1,000' }
+                ].map((pr) => (
+                  <label key={pr.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.84rem', color: '#334155', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="priceRangeRadio"
+                      checked={priceRange === pr.id}
+                      onChange={() => setPriceRange(pr.id)}
+                      style={{ width: '15px', height: '15px', accentColor: '#0077b6' }}
+                    />
+                    <span>{pr.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Filter Section: Sort By */}
+            <div style={{ background: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '1rem 1.15rem', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+              <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.5px' }}>
+                Sort By
+              </div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.55rem 0.75rem',
+                  borderRadius: '6px',
+                  border: '1.5px solid #cbd5e1',
+                  backgroundColor: '#ffffff',
+                  fontSize: '0.85rem',
+                  color: '#1e293b',
+                  fontWeight: 600,
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="featured">Featured / Default</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="name">Product Name: A to Z</option>
+              </select>
+            </div>
+
+            {/* Reset Filter Button */}
+            {(activeCategory !== 'all' || inStockOnly || priceRange !== 'all' || sortBy !== 'featured' || searchTerm) && (
+              <button
+                onClick={resetAllFilters}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  padding: '0.65rem 1rem',
+                  borderRadius: '8px',
+                  border: '1.5px solid #e2e8f0',
+                  backgroundColor: '#ffffff',
+                  color: '#dc2626',
+                  fontWeight: 700,
+                  fontSize: '0.84rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                }}
+              >
+                <RotateCcw size={14} /> Reset All Filters
+              </button>
+            )}
+
+          </aside>
+
+          {/* ════════ RIGHT MAIN: PRODUCT LISTING CATALOG ════════ */}
+          <main style={{ minWidth: 0 }}>
+            {/* Category Banner Card */}
+            <div
+              style={{
+                background: '#ffffff',
+                borderRadius: '10px',
+                border: '1px solid #e2e8f0',
+                padding: '1.1rem 1.4rem',
+                marginBottom: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '1rem',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a' }}>
+                    {activeCategory === 'all' ? 'All 3D Studio Products' : activeCategory}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      color: '#0284c7',
+                      backgroundColor: '#e0f2fe',
+                      padding: '2px 8px',
+                      borderRadius: '12px'
+                    }}
+                  >
+                    {filteredAndSortedItems.length} products
+                  </span>
                 </div>
-              )}
+                <p style={{ margin: '0.2rem 0 0', fontSize: '0.84rem', color: '#64748b' }}>
+                  {activeCategory === 'Anime Models' && 'Anime heroes, Goku, Luffy Gear 5, Naruto, and Tanjiro high-precision SLA figures.'}
+                  {activeCategory === 'Game Characters' && 'GTA 6 Jason & Lucia, Valorant agents Reyna & Jett with custom stands.'}
+                  {activeCategory === '3D Lithophanes' && 'Luminous curved photo lithophanes with USB LED nightlight base.'}
+                  {activeCategory === '3D Model Person (2D to 3D)' && 'Convert your 2D photo into a lifelike miniature 3D sculpted figurine.'}
+                  {activeCategory === 'Accessories' && 'Articulated toys, tool organizers, desk stands, and 3D printing accessories.'}
+                  {activeCategory === 'Others' && 'Mechanical iris boxes, geometric planters, and artistic desktop gadgets.'}
+                  {activeCategory === 'all' && 'Browse all FDM tough PLA & SLA resin figures, lithophanes, personal statues, and accessories.'}
+                </p>
+              </div>
 
-              {/* Anime Figures */}
-              {(activeFilter === 'all' || activeFilter === 'anime') && animeList.length > 0 && (
-                <div style={{ marginBottom: '4.5rem' }}>
-                  <div style={{ marginBottom: '2rem' }}>
-                    <div className="section-tag" style={{ background: 'rgba(0,200,255,.12)', color: 'var(--neon)' }}>
-                      🌸 Anime Heroes & Collectibles
-                    </div>
-                    <h3 className="section-title">Anime Resin 3D Sculptures</h3>
-                    <p className="section-subtitle">
-                      Monkey D. Luffy Gear 5, Goku Super Saiyan, Naruto Sage Mode, and Tanjiro Hinokami with dynamic energy effects. Tap to view 3D print time, scale, and multi-angle photos.
-                    </p>
-                  </div>
+              {/* Active Filter Badges */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                {activeCategory !== 'all' && (
+                  <span
+                    style={{
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      backgroundColor: '#f1f5f9',
+                      color: '#334155',
+                      padding: '3px 8px',
+                      borderRadius: '4px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    Category: {activeCategory}
+                    <button onClick={() => handleSelectCategory('all')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '0.8rem', padding: 0 }}>✕</button>
+                  </span>
+                )}
+                {inStockOnly && (
+                  <span
+                    style={{
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      backgroundColor: '#dcfce7',
+                      color: '#166534',
+                      padding: '3px 8px',
+                      borderRadius: '4px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    In Stock Only
+                    <button onClick={() => setInStockOnly(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#166534', fontSize: '0.8rem', padding: 0 }}>✕</button>
+                  </span>
+                )}
+                {priceRange !== 'all' && (
+                  <span
+                    style={{
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      backgroundColor: '#f1f5f9',
+                      color: '#334155',
+                      padding: '3px 8px',
+                      borderRadius: '4px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    Price: {priceRange}
+                    <button onClick={() => setPriceRange('all')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '0.8rem', padding: 0 }}>✕</button>
+                  </span>
+                )}
+              </div>
+            </div>
 
-                  <div className="merch-grid">
-                    {animeList.map((item) => renderProductCard(item, '#00c8ff', 'Anime Series'))}
-                  </div>
-                </div>
-              )}
+            {/* Product Cards Grid */}
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '5rem 1rem', background: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b' }}>
+                <p style={{ fontWeight: 600 }}>Loading 3D Studio Catalog...</p>
+              </div>
+            ) : filteredAndSortedItems.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '4rem 1.5rem', background: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <p style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>
+                  No 3D products match your filter criteria
+                </p>
+                <p style={{ fontSize: '0.86rem', color: '#64748b', marginBottom: '1.25rem' }}>
+                  Try choosing a different category or clearing active filters.
+                </p>
+                <button
+                  onClick={resetAllFilters}
+                  style={{
+                    padding: '0.6rem 1.25rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: '#0077b6',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Clear Filters & Show All
+                </button>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                  gap: '1.25rem'
+                }}
+              >
+                {filteredAndSortedItems.map((item) => renderProductCard(item))}
+              </div>
+            )}
+          </main>
 
-              {/* Game Characters */}
-              {(activeFilter === 'all' || activeFilter === 'games') && gamesList.length > 0 && (
-                <div style={{ marginBottom: '4rem' }}>
-                  <div style={{ marginBottom: '2rem' }}>
-                    <div className="section-tag" style={{ background: 'rgba(255,180,0,.15)', color: '#ffb300' }}>
-                      🎮 Gaming Legends
-                    </div>
-                    <h3 className="section-title">GTA 6 Vice City & Valorant Agents</h3>
-                    <p className="section-subtitle">
-                      Jason and Lucia from GTA 6, alongside Valorant duelist Reyna and wind assassin Jett with custom display stands.
-                    </p>
-                  </div>
-
-                  <div className="merch-grid">
-                    {gamesList.map((item) => renderProductCard(item, '#f59e0b', 'Gaming Collectible'))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
         </div>
-      </section>
+      </div>
     </div>
   );
 }

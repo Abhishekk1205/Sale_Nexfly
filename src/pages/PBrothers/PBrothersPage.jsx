@@ -177,7 +177,7 @@ export default function PBrothersPage({ onOpenQuote }) {
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                       {fig.desc}
                     </span>
-                    <Link to="/prints?filter=gta6" style={{ color: '#ff00aa', fontWeight: 700, fontSize: '0.78rem', flexShrink: 0, textDecoration: 'none' }}>
+                    <Link to="/prints?category=Game Characters" style={{ color: '#ff00aa', fontWeight: 700, fontSize: '0.78rem', flexShrink: 0, textDecoration: 'none' }}>
                       Know more &rarr;
                     </Link>
                   </div>
@@ -238,7 +238,7 @@ export default function PBrothersPage({ onOpenQuote }) {
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                       {tee.details}
                     </span>
-                    <Link to="/prints?filter=tshirts" style={{ color: '#ff00aa', fontWeight: 700, fontSize: '0.78rem', flexShrink: 0, textDecoration: 'none' }}>
+                    <Link to="/prints?category=Accessories" style={{ color: '#ff00aa', fontWeight: 700, fontSize: '0.78rem', flexShrink: 0, textDecoration: 'none' }}>
                       Know more &rarr;
                     </Link>
                   </div>

@@ -56,6 +56,7 @@ export const VALID_ADMIN_ACCOUNTS = [
 import {
   getAllOrders,
   updateOrderStatus,
+  updateOrderData,
   get3DStudioItems,
   save3DStudioItem,
   delete3DStudioItem,
@@ -169,9 +170,13 @@ export default function AdminPortal({ mode = 'main' }) {
   const [homeFilter, setHomeFilter] = useState('all');
   const [homeSearch, setHomeSearch] = useState('');
   const [itemsSubTab, setItemsSubTab] = useState('drone'); // 'drone' | 'robotics'
-  const [threeDSubTab, setThreeDSubTab] = useState('all'); // 'all' | 'Anime' | 'Game Characters' | 'Personal Character'
+  const [threeDSubTab, setThreeDSubTab] = useState('all'); // 'all' | 'Anime Models' | 'Game Characters' | '3D Lithophanes' | '3D Model Person (2D to 3D)' | 'Accessories' | 'Others'
   const [uavSubTab, setUavSubTab] = useState('prebuilt'); // 'prebuilt' | 'custom'
   const [productSearch, setProductSearch] = useState('');
+
+  // Editing maps for Order ID assignment and MakerWorld URLs
+  const [editingOrderIdMap, setEditingOrderIdMap] = useState({});
+  const [editingMakerWorldMap, setEditingMakerWorldMap] = useState({});
 
   // Modal states for adding new items
   const [showAddModal, setShowAddModal] = useState(false);
@@ -181,7 +186,7 @@ export default function AdminPortal({ mode = 'main' }) {
   const [newItemForm, setNewItemForm] = useState({
     productId: '',
     name: '',
-    category: 'Anime',
+    category: 'Anime Models',
     brand: '',
     kitType: 'Chassis & Base',
     type: 'FPV Drone',
@@ -191,6 +196,7 @@ export default function AdminPortal({ mode = 'main' }) {
     image: '',
     images: [],
     desc: '',
+    makerWorldUrl: '',
     flightTime: '',
     range: ''
   });
@@ -257,6 +263,7 @@ export default function AdminPortal({ mode = 'main' }) {
       printTime: item.printTime || '6h 30m',
       speed: item.speed || '',
       flightTime: item.flightTime || '',
+      makerWorldUrl: item.makerWorldUrl || '',
       range: item.range || ''
     });
     setEditProductModalOpen(true);
@@ -288,6 +295,7 @@ export default function AdminPortal({ mode = 'main' }) {
       name: editProductForm.name,
       category: editProductForm.category,
       brand: editProductForm.brand,
+      makerWorldUrl: editProductForm.makerWorldUrl || '',
       price: type === '3dstudio' ? p8 : numPrice,
       price6Inch: p6,
       price8Inch: p8,
@@ -331,6 +339,7 @@ export default function AdminPortal({ mode = 'main' }) {
           name: editProductForm.name,
           category: editProductForm.category || 'Featured',
           badge: editProductForm.brand || item.badge || 'HOT',
+          makerWorldUrl: editProductForm.makerWorldUrl || '',
           price: numPrice,
           oldPrice: oldP,
           quantity: numQty,
@@ -433,7 +442,7 @@ export default function AdminPortal({ mode = 'main' }) {
     setNewItemForm({
       productId: type === 'home' ? `HP-${Math.floor(100 + Math.random() * 900)}` : '',
       name: '',
-      category: type === 'home' ? 'Gaming Collectibles' : type === '3dstudio' ? 'Anime' : 'Motors',
+      category: type === 'home' ? 'Gaming Collectibles' : type === '3dstudio' ? 'Anime Models' : 'Motors',
       brand: type === 'home' ? 'SALE' : type === '3dstudio' ? 'P_Brothers × NaviDron 3D' : type === 'robotics' ? 'NaviDron Robotics' : 'NaviDron AeroLab',
       kitType: 'Chassis & Base',
       type: 'FPV Drone',
@@ -444,6 +453,7 @@ export default function AdminPortal({ mode = 'main' }) {
       image: '',
       images: [],
       desc: '',
+      makerWorldUrl: '',
       showInMarquee: true,
       flightTime: '',
       range: ''
@@ -613,6 +623,48 @@ export default function AdminPortal({ mode = 'main' }) {
       showToast(`✅ Order #${orderId} status updated to "${newStatus}".`);
     } catch (err) {
       showToast(`❌ Error updating order: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdateCustomOrderId = async (orderId, newCustomId) => {
+    if (!newCustomId || !newCustomId.trim()) return;
+    setActionLoading(true);
+    try {
+      await updateOrderData(orderId, { customOrderId: newCustomId.trim() });
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, customOrderId: newCustomId.trim() } : o))
+      );
+      showToast(`✅ Assigned Order ID updated to "${newCustomId.trim()}".`);
+      setEditingOrderIdMap((prev) => ({ ...prev, [orderId]: false }));
+    } catch (err) {
+      showToast(`❌ Error updating Order ID: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdateItemMakerWorldUrl = async (orderId, itemIndex, newUrl) => {
+    setActionLoading(true);
+    try {
+      const order = orders.find((o) => o.id === orderId);
+      if (!order) return;
+      const updatedItems = [...(order.items || [])];
+      if (updatedItems[itemIndex]) {
+        updatedItems[itemIndex] = {
+          ...updatedItems[itemIndex],
+          makerWorldUrl: newUrl.trim()
+        };
+      }
+      await updateOrderData(orderId, { items: updatedItems });
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, items: updatedItems } : o))
+      );
+      showToast(`🌐 MakerWorld .STL link saved for "${updatedItems[itemIndex]?.name}".`);
+      setEditingMakerWorldMap((prev) => ({ ...prev, [`${orderId}_${itemIndex}`]: false }));
+    } catch (err) {
+      showToast(`❌ Error updating MakerWorld link: ${err.message}`);
     } finally {
       setActionLoading(false);
     }
@@ -1542,7 +1594,86 @@ export default function AdminPortal({ mode = 'main' }) {
                         <div key={ord.id} className="admin-order-box">
                           <div className="admin-order-header">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                              <span className="admin-order-id-badge">#{ord.id}</span>
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <span className="admin-order-id-badge" title="Assigned Order ID">
+                                  #{ord.customOrderId || ord.assignedOrderId || ord.id}
+                                </span>
+                                {editingOrderIdMap[ord.id] ? (
+                                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                    <input
+                                      type="text"
+                                      defaultValue={ord.customOrderId || ord.assignedOrderId || ord.id}
+                                      id={`input-order-id-${ord.id}`}
+                                      style={{
+                                        background: '#0f172a',
+                                        border: '1px solid var(--neon)',
+                                        borderRadius: '4px',
+                                        color: '#fff',
+                                        fontSize: '0.75rem',
+                                        padding: '2px 6px',
+                                        fontFamily: 'monospace',
+                                        width: '130px'
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const inputVal = document.getElementById(`input-order-id-${ord.id}`)?.value;
+                                        handleUpdateCustomOrderId(ord.id, inputVal);
+                                      }}
+                                      disabled={actionLoading}
+                                      style={{
+                                        background: 'var(--neon)',
+                                        color: 'var(--navy)',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        padding: '2px 7px',
+                                        fontSize: '0.72rem',
+                                        fontWeight: 800,
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      Save ID
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingOrderIdMap((prev) => ({ ...prev, [ord.id]: false }))}
+                                      style={{
+                                        background: 'rgba(255,255,255,0.1)',
+                                        color: '#94a3b8',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        padding: '2px 6px',
+                                        fontSize: '0.72rem',
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingOrderIdMap((prev) => ({ ...prev, [ord.id]: true }))}
+                                    style={{
+                                      background: 'rgba(0, 200, 255, 0.1)',
+                                      border: '1px solid rgba(0, 200, 255, 0.3)',
+                                      color: 'var(--neon)',
+                                      padding: '2px 7px',
+                                      borderRadius: '4px',
+                                      fontSize: '0.7rem',
+                                      fontWeight: 700,
+                                      cursor: 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px'
+                                    }}
+                                    title="Admin: Click to edit or write custom Order ID"
+                                  >
+                                    <Edit3 size={11} /> Assign/Edit ID
+                                  </button>
+                                )}
+                              </div>
                               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.78rem', background: 'rgba(255, 255, 255, 0.05)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                                 <Calendar size={12} color="#38bdf8" />
                                 <span style={{ color: '#fff', fontWeight: 600 }}>{displayOrderDate(ord)}</span>
@@ -1762,6 +1893,109 @@ export default function AdminPortal({ mode = 'main' }) {
                                         </div>
                                       </div>
                                     )}
+
+                                    {/* MakerWorld STL Link for 3D Printing (Admin Only) */}
+                                    {(() => {
+                                      const itemMakerWorld = it.makerWorldUrl || threeDItems.find((x) => x.id === it.id || x.productId === it.productId || x.name === it.name)?.makerWorldUrl || '';
+                                      const isEditingUrl = editingMakerWorldMap[`${ord.id}_${idx}`];
+
+                                      return (
+                                        <div style={{ marginTop: '0.45rem', padding: '0.5rem 0.75rem', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '6px' }}>
+                                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', flexWrap: 'wrap' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#34d399', textTransform: 'uppercase' }}>
+                                                🔒 MakerWorld (.STL) Link:
+                                              </span>
+                                              {itemMakerWorld ? (
+                                                <a
+                                                  href={itemMakerWorld}
+                                                  target="_blank"
+                                                  rel="noreferrer"
+                                                  style={{
+                                                    fontSize: '0.75rem',
+                                                    color: '#fff',
+                                                    backgroundColor: '#059669',
+                                                    padding: '3px 8px',
+                                                    borderRadius: '4px',
+                                                    fontWeight: 700,
+                                                    textDecoration: 'none',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                                  }}
+                                                  title="Admin Link: Open MakerWorld to download .STL file for 3D printing"
+                                                >
+                                                  <ExternalLink size={12} /> 🌐 Open MakerWorld (.STL)
+                                                </a>
+                                              ) : (
+                                                <span style={{ fontSize: '0.72rem', color: '#f59e0b', fontStyle: 'italic' }}>
+                                                  No MakerWorld link attached
+                                                </span>
+                                              )}
+                                            </div>
+
+                                            <button
+                                              type="button"
+                                              onClick={() => setEditingMakerWorldMap((prev) => ({ ...prev, [`${ord.id}_${idx}`]: !isEditingUrl }))}
+                                              style={{
+                                                background: 'none',
+                                                border: '1px solid rgba(16, 185, 129, 0.4)',
+                                                color: '#34d399',
+                                                fontSize: '0.7rem',
+                                                padding: '2px 6px',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                fontWeight: 700
+                                              }}
+                                            >
+                                              {isEditingUrl ? 'Cancel' : (itemMakerWorld ? 'Edit STL Link' : '+ Add MakerWorld Link')}
+                                            </button>
+                                          </div>
+
+                                          {isEditingUrl && (
+                                            <div style={{ display: 'flex', gap: '6px', marginTop: '0.4rem', alignItems: 'center' }}>
+                                              <input
+                                                type="url"
+                                                defaultValue={itemMakerWorld}
+                                                id={`input-makerworld-${ord.id}-${idx}`}
+                                                placeholder="https://makerworld.com/en/models/..."
+                                                style={{
+                                                  flex: 1,
+                                                  background: '#0f172a',
+                                                  border: '1px solid #10b981',
+                                                  borderRadius: '4px',
+                                                  padding: '3px 8px',
+                                                  color: '#fff',
+                                                  fontSize: '0.75rem',
+                                                  outline: 'none'
+                                                }}
+                                              />
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const val = document.getElementById(`input-makerworld-${ord.id}-${idx}`)?.value || '';
+                                                  handleUpdateItemMakerWorldUrl(ord.id, idx, val);
+                                                }}
+                                                disabled={actionLoading}
+                                                style={{
+                                                  background: '#10b981',
+                                                  color: '#fff',
+                                                  border: 'none',
+                                                  borderRadius: '4px',
+                                                  padding: '3px 8px',
+                                                  fontSize: '0.72rem',
+                                                  fontWeight: 800,
+                                                  cursor: 'pointer'
+                                                }}
+                                              >
+                                                Save STL Link
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
                                 );
                               })}
@@ -2176,8 +2410,8 @@ export default function AdminPortal({ mode = 'main' }) {
                       />
                     </div>
 
-                    <div style={{ display: 'flex', background: '#1e293b', borderRadius: '8px', padding: '3px' }}>
-                      {['all', 'Anime', 'Game Characters', 'Personal Character'].map((sub) => (
+                    <div style={{ display: 'flex', background: '#1e293b', borderRadius: '8px', padding: '3px', flexWrap: 'wrap', gap: '2px' }}>
+                      {['all', 'Anime Models', 'Game Characters', '3D Lithophanes', '3D Model Person (2D to 3D)', 'Accessories', 'Others'].map((sub) => (
                         <button
                           key={sub}
                           type="button"
@@ -2211,7 +2445,15 @@ export default function AdminPortal({ mode = 'main' }) {
                 <div className="admin-items-grid">
                   {threeDItems
                     .filter((it) => {
-                      const matchTab = threeDSubTab === 'all' || it.category === threeDSubTab;
+                      const itemCat = it.category || '';
+                      const matchTab = threeDSubTab === 'all' ||
+                        (threeDSubTab === 'Anime Models' && (itemCat === 'Anime' || itemCat === 'Anime Models')) ||
+                        (threeDSubTab === 'Game Characters' && itemCat === 'Game Characters') ||
+                        (threeDSubTab === '3D Lithophanes' && (itemCat === '3D Lithophanes' || itemCat.toLowerCase().includes('litho'))) ||
+                        (threeDSubTab === '3D Model Person (2D to 3D)' && (itemCat === '3D Model Person (2D to 3D)' || (itemCat === 'Personal Character' && !itemCat.toLowerCase().includes('litho')))) ||
+                        (threeDSubTab === 'Accessories' && itemCat === 'Accessories') ||
+                        (threeDSubTab === 'Others' && itemCat === 'Others') ||
+                        itemCat === threeDSubTab;
                       if (!matchTab) return false;
                       if (!productSearch.trim()) return true;
                       const q = productSearch.toLowerCase();
@@ -2255,6 +2497,33 @@ export default function AdminPortal({ mode = 'main' }) {
 
                         <div className="admin-prod-title">{item.name}</div>
                         <div className="admin-prod-desc">{item.desc}</div>
+
+                        {/* MakerWorld STL Button for Admin */}
+                        {item.makerWorldUrl && (
+                          <a
+                            href={item.makerWorldUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px',
+                              padding: '0.4rem',
+                              backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                              border: '1px solid #10b981',
+                              color: '#34d399',
+                              borderRadius: '6px',
+                              fontSize: '0.74rem',
+                              fontWeight: 700,
+                              textDecoration: 'none',
+                              margin: '0.45rem 0'
+                            }}
+                            title="Admin Only: Download .STL file from MakerWorld"
+                          >
+                            <ExternalLink size={12} /> 🌐 MakerWorld STL (Admin Only)
+                          </a>
+                        )}
 
                         {/* Action buttons: Edit Details and Update Photos */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', margin: '0.65rem 0' }}>
@@ -2879,6 +3148,33 @@ export default function AdminPortal({ mode = 'main' }) {
                                 {item.desc || 'Featured product on homepage.'}
                               </p>
 
+                              {/* MakerWorld STL Button for Admin */}
+                              {item.makerWorldUrl && (
+                                <a
+                                  href={item.makerWorldUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '4px',
+                                    padding: '0.35rem',
+                                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                                    border: '1px solid #10b981',
+                                    color: '#34d399',
+                                    borderRadius: '6px',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 700,
+                                    textDecoration: 'none',
+                                    marginBottom: '0.55rem'
+                                  }}
+                                  title="Admin Only: Download .STL file from MakerWorld"
+                                >
+                                  <ExternalLink size={12} /> 🌐 MakerWorld STL (Admin Only)
+                                </a>
+                              )}
+
                               {/* Edit details & photos buttons */}
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem', marginBottom: '0.75rem' }}>
                                 <button
@@ -3249,12 +3545,32 @@ export default function AdminPortal({ mode = 'main' }) {
                     value={newItemForm.category}
                     onChange={(e) => setNewItemForm({ ...newItemForm, category: e.target.value })}
                   >
-                    <option value="Anime">Anime</option>
+                    <option value="Anime Models">Anime Models</option>
                     <option value="Game Characters">Game Characters</option>
-                    <option value="Personal Character">Personal Character of Image</option>
+                    <option value="3D Lithophanes">3D Lithophanes</option>
+                    <option value="3D Model Person (2D to 3D)">3D Model Person (2D to 3D)</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Others">Others</option>
                   </select>
                 </div>
               )}
+
+              {/* MakerWorld Link (Admin Only) */}
+              <div>
+                <label className="form-field-label" style={{ color: '#cbd5e1' }}>
+                  MakerWorld .STL Link (Private - Admin Only)
+                </label>
+                <input
+                  type="url"
+                  className="profile-input"
+                  placeholder="https://makerworld.com/en/models/..."
+                  value={newItemForm.makerWorldUrl || ''}
+                  onChange={(e) => setNewItemForm({ ...newItemForm, makerWorldUrl: e.target.value })}
+                />
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                  🔒 Hidden from customers. Used by admin to download .STL 3D print file directly from MakerWorld upon receiving orders.
+                </span>
+              </div>
 
               {/* Size for 3D Studio */}
               {modalType === '3dstudio' && (
@@ -3774,13 +4090,28 @@ export default function AdminPortal({ mode = 'main' }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.9rem' }}>
                 <div className="admin-input-group">
                   <label>Category / Type</label>
-                  <input
-                    type="text"
-                    className="admin-input-field"
-                    value={editProductForm.category}
-                    onChange={(e) => setEditProductForm((prev) => ({ ...prev, category: e.target.value }))}
-                    placeholder="e.g. Anime, Frame, ESC, Drone"
-                  />
+                  {editingProductTarget.type === '3dstudio' ? (
+                    <select
+                      className="admin-input-field"
+                      value={editProductForm.category}
+                      onChange={(e) => setEditProductForm((prev) => ({ ...prev, category: e.target.value }))}
+                    >
+                      <option value="Anime Models">Anime Models</option>
+                      <option value="Game Characters">Game Characters</option>
+                      <option value="3D Lithophanes">3D Lithophanes</option>
+                      <option value="3D Model Person (2D to 3D)">3D Model Person (2D to 3D)</option>
+                      <option value="Accessories">Accessories</option>
+                      <option value="Others">Others</option>
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      className="admin-input-field"
+                      value={editProductForm.category}
+                      onChange={(e) => setEditProductForm((prev) => ({ ...prev, category: e.target.value }))}
+                      placeholder="e.g. Motors, Electronics, Frames"
+                    />
+                  )}
                 </div>
                 <div className="admin-input-group">
                   <label>{editingProductTarget.type === 'home' ? 'Sale Badge Tag (e.g. SALE, HOT, NEW)' : 'Brand / Manufacturer'}</label>
@@ -3792,6 +4123,33 @@ export default function AdminPortal({ mode = 'main' }) {
                     placeholder={editingProductTarget.type === 'home' ? 'e.g. SALE, HOT, NEW, BESTSELLER' : 'e.g. NexFly Studio, T-Motor'}
                   />
                 </div>
+              </div>
+
+              {/* MakerWorld Link (Admin Only) */}
+              <div className="admin-input-group" style={{ marginBottom: '0.9rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>MakerWorld .STL Link (Private - Admin Only)</span>
+                  {editProductForm.makerWorldUrl && (
+                    <a
+                      href={editProductForm.makerWorldUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: '#38bdf8', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                    >
+                      <ExternalLink size={11} /> Open STL Link
+                    </a>
+                  )}
+                </label>
+                <input
+                  type="url"
+                  className="admin-input-field"
+                  placeholder="https://makerworld.com/en/models/..."
+                  value={editProductForm.makerWorldUrl || ''}
+                  onChange={(e) => setEditProductForm((prev) => ({ ...prev, makerWorldUrl: e.target.value }))}
+                />
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                  🔒 Hidden from customers. Used by admin to download .STL 3D print file directly from MakerWorld upon receiving orders.
+                </span>
               </div>
 
               {/* Price & Quantity */}

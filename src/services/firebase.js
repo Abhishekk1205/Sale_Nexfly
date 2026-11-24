@@ -941,6 +941,36 @@ export async function updateOrderStatus(orderId, newStatus) {
   return true;
 }
 
+export async function updateOrderData(orderId, updates) {
+  const newCustomId = updates.customOrderId || updates.assignedOrderId || updates.id || orderId;
+  const mergedUpdates = {
+    ...updates,
+    customOrderId: newCustomId,
+    updatedAt: new Date().toISOString()
+  };
+
+  await writeFirestoreDoc('Order', orderId, mergedUpdates);
+  if (newCustomId !== orderId) {
+    await writeFirestoreDoc('Order', newCustomId, { ...mergedUpdates, id: newCustomId });
+  }
+
+  const existingGlobal = await getAllOrders();
+  const updatedGlobal = existingGlobal.map((o) => (o.id === orderId ? { ...o, ...mergedUpdates } : o));
+  localStorage.setItem('navidron_global_orders', JSON.stringify(updatedGlobal));
+
+  const target = existingGlobal.find((o) => o.id === orderId);
+  const customerUid = target?.customer?.uid || target?.customerUid;
+  if (customerUid) {
+    try {
+      const userOrders = await getUserOrders(customerUid);
+      const updatedUserOrders = userOrders.map((o) => (o.id === orderId ? { ...o, ...mergedUpdates } : o));
+      await saveUserOrders(customerUid, updatedUserOrders);
+    } catch (e) {}
+  }
+
+  return updatedGlobal;
+}
+
 // ── Root Collection 2: "3DStudio" ──────────────────────────────
 export const INITIAL_3D_STUDIO = [
   {
@@ -1215,8 +1245,9 @@ export const INITIAL_3D_STUDIO = [
   },
   {
     id: "3d-litho-portrait",
+    productId: "3D-LIT-01",
     name: "Custom Photo Curved Backlit Lithophane",
-    category: "Personal Character",
+    category: "3D Lithophanes",
     brand: "NaviDron Bespoke Sculpting Labs",
     price: 499,
     price6Inch: 499,
@@ -1241,7 +1272,194 @@ export const INITIAL_3D_STUDIO = [
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
     infill: "25% Strength",
     desc: "Turn your personal memory photo into a luminous curved 3D lithophane with integrated USB warm LED backlight stand.",
-    badge: "ILLUMINATED"
+    badge: "ILLUMINATED",
+    makerWorldUrl: "https://makerworld.com/en/models/148293"
+  },
+  {
+    id: "3d-litho-heart",
+    productId: "3D-LIT-02",
+    name: "Heart-Shaped LED Glow 3D Lithophane Lamp",
+    category: "3D Lithophanes",
+    brand: "NaviDron Bespoke Sculpting Labs",
+    price: 699,
+    price6Inch: 699,
+    price8Inch: 999,
+    price10Inch: 1399,
+    quantity: 50,
+    size: "6 inch",
+    sizes: ["6 inch", "8 inch", "10 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", price: 699, printTime: "5h 15m", weight: "150g" },
+      { size: "8 inch (200mm)", price: 999, printTime: "8h 45m", weight: "270g" },
+      { size: "10 inch (250mm)", price: 1399, printTime: "13h 30m", weight: "450g" }
+    ],
+    image: "/images/3d_print_lithophane.jpg",
+    images: [
+      "/images/3d_print_lithophane.jpg",
+      "/images/lithophane_3d_print_1791059239454.jpg"
+    ],
+    printTime: "5h 15m",
+    material: "FDM Translucent PLA Optical Lithophane",
+    layerHeight: "0.2mm Ultra-Fine Detail",
+    infill: "100% Solid Optical Infill",
+    desc: "Romantic heart-shaped custom photo lithophane night light with built-in rechargeable RGB LED base.",
+    badge: "GIFT SPECIAL",
+    makerWorldUrl: "https://makerworld.com/en/models/148300"
+  },
+  {
+    id: "3d-pers-bust",
+    productId: "3D-PER-02",
+    name: "Mini-Me 3D Bust Figurine (2D to 3D Model)",
+    category: "3D Model Person (2D to 3D)",
+    brand: "NaviDron Bespoke Sculpting Labs",
+    price: 1299,
+    price6Inch: 999,
+    price8Inch: 1299,
+    price10Inch: 1799,
+    quantity: 999,
+    size: "8 inch",
+    sizes: ["6 inch", "8 inch", "10 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", price: 999, printTime: "4h 30m", weight: "125g" },
+      { size: "8 inch (200mm)", price: 1299, printTime: "7h 15m", weight: "240g" },
+      { size: "10 inch (250mm)", price: 1799, printTime: "12h 00m", weight: "420g" }
+    ],
+    image: "/images/3d_print_lithophane.jpg",
+    images: [
+      "/images/3d_print_lithophane.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "7h 15m",
+    material: "FDM High-Precision PLA + Marble Finish",
+    layerHeight: "0.2mm Ultra-Fine Detail",
+    infill: "25% Strength",
+    desc: "Convert any headshot portrait photograph into a classic neoclassical style personalized 3D desktop bust.",
+    badge: "POPULAR",
+    makerWorldUrl: "https://makerworld.com/en/models/304915"
+  },
+  {
+    id: "3d-acc-dragon",
+    productId: "3D-ACC-01",
+    name: "Articulated Crystal Dragon (Flexible Desk Toy)",
+    category: "Accessories",
+    brand: "P_Brothers × NaviDron 3D",
+    price: 499,
+    price6Inch: 349,
+    price8Inch: 499,
+    price10Inch: 799,
+    quantity: 60,
+    size: "8 inch",
+    sizes: ["6 inch", "8 inch", "10 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", price: 349, printTime: "3h 00m", weight: "90g" },
+      { size: "8 inch (200mm)", price: 499, printTime: "5h 15m", weight: "170g" },
+      { size: "10 inch (250mm)", price: 799, printTime: "9h 30m", weight: "310g" }
+    ],
+    image: "/images/3d_printed_gift_pack.jpg",
+    images: [
+      "/images/3d_printed_gift_pack.jpg",
+      "/images/anime_figure_3d.jpg"
+    ],
+    printTime: "5h 15m",
+    material: "Dual-Color Silk PLA Flexible Jointed",
+    layerHeight: "0.2mm Ultra-Fine Detail",
+    infill: "20% Gyroid Infill",
+    desc: "Print-in-place fully articulated multi-jointed crystal dragon with iridescent dual-color silk finish.",
+    badge: "VIRAL",
+    makerWorldUrl: "https://makerworld.com/en/models/44210"
+  },
+  {
+    id: "3d-acc-organizer",
+    productId: "3D-ACC-02",
+    name: "Hexagonal Desktop Tool & Spool Organizer",
+    category: "Accessories",
+    brand: "NaviDron AeroLab Maker",
+    price: 349,
+    price6Inch: 249,
+    price8Inch: 349,
+    price10Inch: 549,
+    quantity: 45,
+    size: "8 inch",
+    sizes: ["6 inch", "8 inch", "10 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", price: 249, printTime: "2h 30m", weight: "80g" },
+      { size: "8 inch (200mm)", price: 349, printTime: "4h 00m", weight: "140g" },
+      { size: "10 inch (250mm)", price: 549, printTime: "7h 00m", weight: "260g" }
+    ],
+    image: "/images/fpv_racing_drone.jpg",
+    images: [
+      "/images/fpv_racing_drone.jpg",
+      "/images/hero_drone_bg.jpg"
+    ],
+    printTime: "4h 00m",
+    material: "PETG Matte Impact-Resistant",
+    layerHeight: "0.28mm Fast Strength",
+    infill: "30% Grid Infill",
+    desc: "Modular magnetic honeycomb desk stand with dedicated slots for calipers, screwdrivers, SD cards, and nozzle tools.",
+    badge: "WORKSHOP",
+    makerWorldUrl: "https://makerworld.com/en/models/88120"
+  },
+  {
+    id: "3d-oth-iris",
+    productId: "3D-OTH-01",
+    name: "Mechanical Iris Box (Twist Puzzle Container)",
+    category: "Others",
+    brand: "P_Brothers × NaviDron 3D",
+    price: 599,
+    price6Inch: 449,
+    price8Inch: 599,
+    price10Inch: 899,
+    quantity: 30,
+    size: "8 inch",
+    sizes: ["6 inch", "8 inch", "10 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", price: 449, printTime: "3h 45m", weight: "110g" },
+      { size: "8 inch (200mm)", price: 599, printTime: "6h 15m", weight: "210g" },
+      { size: "10 inch (250mm)", price: 899, printTime: "10h 30m", weight: "380g" }
+    ],
+    image: "/images/college_project_drone.jpg",
+    images: [
+      "/images/college_project_drone.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "6h 15m",
+    material: "FDM Precision Tough PLA",
+    layerHeight: "0.2mm Ultra-Fine Detail",
+    infill: "25% Strength",
+    desc: "Aperture gear mechanism box that expands and opens smoothly when twisted. Great for desktop gifts and jewelry.",
+    badge: "GADGET",
+    makerWorldUrl: "https://makerworld.com/en/models/199201"
+  },
+  {
+    id: "3d-oth-planter",
+    productId: "3D-OTH-02",
+    name: "Geometric Low-Poly Succulent Planter",
+    category: "Others",
+    brand: "NaviDron 3D Home",
+    price: 299,
+    price6Inch: 199,
+    price8Inch: 299,
+    price10Inch: 449,
+    quantity: 40,
+    size: "8 inch",
+    sizes: ["6 inch", "8 inch", "10 inch"],
+    sizeOptions: [
+      { size: "6 inch (150mm)", price: 199, printTime: "2h 00m", weight: "70g" },
+      { size: "8 inch (200mm)", price: 299, printTime: "3h 30m", weight: "130g" },
+      { size: "10 inch (250mm)", price: 449, printTime: "6h 00m", weight: "240g" }
+    ],
+    image: "/images/hero_drone_bg.jpg",
+    images: [
+      "/images/hero_drone_bg.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "3h 30m",
+    material: "FDM Eco-PLA Biodegradable",
+    layerHeight: "0.2mm Ultra-Fine Detail",
+    infill: "20% Honeycomb",
+    desc: "Modern faceted geometric mini-planter pot with drainage mesh for indoor succulents and air plants.",
+    badge: "ECO FRIENDLY",
+    makerWorldUrl: "https://makerworld.com/en/models/102938"
   }
 ];
 
@@ -1276,10 +1494,24 @@ export async function get3DStudioItems() {
       { size: "10 inch (250mm)", price: p10, printTime: "11h 15m", weight: "420g" }
     ];
 
+    let normalizedCategory = item.category || 'Anime Models';
+    if (normalizedCategory === 'Anime') normalizedCategory = 'Anime Models';
+    else if (normalizedCategory === 'Personal Character') {
+      const nm = (item.name || '').toLowerCase();
+      const ds = (item.desc || '').toLowerCase();
+      if (nm.includes('litho') || ds.includes('litho')) {
+        normalizedCategory = '3D Lithophanes';
+      } else {
+        normalizedCategory = '3D Model Person (2D to 3D)';
+      }
+    }
+
     return {
       ...item,
       id: item.id || '',
       productId: item.productId && String(item.productId).trim() ? String(item.productId).trim() : (item.id || ''),
+      category: normalizedCategory,
+      makerWorldUrl: item.makerWorldUrl || '',
       price: p8,
       price6Inch: p6,
       price8Inch: p8,
@@ -1328,6 +1560,7 @@ export async function save3DStudioItem(item) {
     ...item,
     id,
     productId,
+    makerWorldUrl: item.makerWorldUrl || '',
     image: images[0] || item.image || '/images/anime_figure_3d.jpg',
     images,
     updatedAt: new Date().toISOString()
@@ -1572,6 +1805,7 @@ export async function saveDroneAccessory(item) {
     ...item,
     id,
     productId,
+    makerWorldUrl: item.makerWorldUrl || '',
     image: images[0] || item.image || '/images/fpv_racing_drone.jpg',
     images,
     updatedAt: new Date().toISOString()
@@ -1798,6 +2032,7 @@ export async function saveRoboticsKit(item) {
     ...item,
     id,
     productId,
+    makerWorldUrl: item.makerWorldUrl || '',
     image: images[0] || item.image || '/images/college_project_drone.jpg',
     images,
     updatedAt: new Date().toISOString()
@@ -2005,6 +2240,7 @@ export async function saveUAVPreBuilt(item) {
     ...item,
     id,
     productId,
+    makerWorldUrl: item.makerWorldUrl || '',
     image: images[0] || item.image || '/images/fpv_racing_drone.jpg',
     images,
     updatedAt: new Date().toISOString()
@@ -2303,6 +2539,7 @@ export async function getHomeProducts() {
       category: item.category || 'Featured',
       badge: item.badge || 'HOT',
       showInMarquee: item.showInMarquee !== undefined ? !!item.showInMarquee : true,
+      makerWorldUrl: item.makerWorldUrl || '',
       desc: item.desc || ''
     };
   };
@@ -2336,6 +2573,7 @@ export async function saveHomeProduct(item) {
     ...item,
     id,
     productId,
+    makerWorldUrl: item.makerWorldUrl || '',
     image: images[0] || item.image || '/images/valorant_action_figures_1791059182363.jpg',
     images,
     price: typeof item.price === 'number' ? item.price : parseInt(String(item.price || 0).replace(/[^0-9]/g, ''), 10) || 0,
