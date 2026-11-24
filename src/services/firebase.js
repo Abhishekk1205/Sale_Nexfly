@@ -1044,9 +1044,9 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "8h 15m",
-    material: "FDM Translucent PLA (Hard Plastic) Optical Lithophane",
+    material: "FDM Translucent PLA Optical Lithophane",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
-    infill: "25% Strength",
+    infill: "100% Solid Optical Infill",
     desc: "Turn your personal memory photo into a luminous curved 3D lithophane with integrated USB warm LED backlight stand.",
     badge: "ILLUMINATED",
     makerWorldUrl: "https://makerworld.com/en/models/148293"
@@ -1150,7 +1150,7 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "7h 15m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    material: "FDM Precision Tough PLA",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
     infill: "25% Strength",
     desc: "Ultra high-resolution 3D print of Jason from GTA 6. Dual pistols, Miami tactical outfit, and custom Vice City street display base.",
@@ -1185,7 +1185,7 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "7h 00m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    material: "FDM Precision Tough PLA",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
     infill: "25% Strength",
     desc: "The iconic first female lead of the GTA franchise. Detailed hair sculpt, bandana, and realistic Miami palm street aesthetic.",
@@ -1220,7 +1220,7 @@ export const INITIAL_3D_STUDIO = [
       "/images/anime_figure_3d.jpg"
     ],
     printTime: "6h 00m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    material: "FDM Precision Tough PLA",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
     infill: "25% Strength",
     desc: "Wind assassin Jett captured mid-air holding signature kunai daggers on a transparent acrylic flight stand with wind swirls.",
@@ -1255,7 +1255,7 @@ export const INITIAL_3D_STUDIO = [
       "/images/anime_figure_3d.jpg"
     ],
     printTime: "6h 00m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    material: "FDM Precision Tough PLA",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
     infill: "25% Strength",
     desc: "Duelist Reyna glowing in radiant purple finish with ethereal eye ability accent and Soul Orb hovering by her side.",
@@ -1291,7 +1291,7 @@ export const INITIAL_3D_STUDIO = [
       "/images/valorant_action_figures_1791059182363.jpg"
     ],
     printTime: "6h 30m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    material: "FDM Precision Tough PLA",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
     infill: "25% Strength",
     desc: "Whimsical Gear 5 cloud-ring sculpt with joyful laughing expression from One Piece Wano arc. FDM precision printed in tough PLA hard plastic.",
@@ -1326,7 +1326,7 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "6h 15m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    material: "FDM Precision Tough PLA",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
     infill: "25% Strength",
     desc: "Iconic Dragon Ball Z protagonist with translucent golden energy wave aura piece and battle-damaged gi texture.",
@@ -1361,7 +1361,7 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "5h 50m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    material: "FDM Precision Tough PLA",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
     infill: "25% Strength",
     desc: "Toad sage cloak, orange eye markings, and translucent wind spiral Rasenshuriken hovering on custom stone stand.",
@@ -1396,7 +1396,7 @@ export const INITIAL_3D_STUDIO = [
       "/images/3d_printed_gift_pack.jpg"
     ],
     printTime: "6h 40m",
-    material: "FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)",
+    material: "FDM Precision Tough PLA",
     layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
     infill: "25% Strength",
     desc: "Demon Slayer sun-breathing spiral flame dragon wrapped around the Nichirin black blade with dynamic haori folds.",
@@ -1579,11 +1579,11 @@ export async function get3DStudioItems() {
       size: hasSizeChart ? (item.size && (item.size.includes('15') || item.size.includes('20') || item.size.includes('24')) ? item.size : '20cm') : 'Standard',
       sizes: hasSizeChart ? ["15cm", "20cm", "24cm"] : ["Standard"],
       sizeOptions,
-      material: item.material?.includes('SLA') || item.material?.includes('Resin')
-        ? 'FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)'
-        : (item.material || 'FDM Tough PLA / TPU'),
+      material: item.material?.includes('SLA') || item.material?.includes('Resin') || item.material?.includes('TPU')
+        ? (isLitho ? 'FDM Translucent PLA Optical Lithophane' : 'FDM Precision Tough PLA')
+        : (item.material || (isLitho ? 'FDM Translucent PLA Optical Lithophane' : 'FDM Precision Tough PLA')),
       layerHeight: '0.2mm Ultra-Fine Detail (0.4mm Nozzle)',
-      infill: '25% Strength',
+      infill: isLitho ? '100% Solid Optical Infill' : '25% Strength',
       quantity: typeof item.quantity === 'number'
         ? item.quantity
         : (item.quantity !== undefined ? (parseInt(String(item.quantity), 10) || 0) : 25),

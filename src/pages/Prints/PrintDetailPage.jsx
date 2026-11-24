@@ -26,30 +26,12 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
 
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedSizeIndex, setSelectedSizeIndex] = useState(1); // default 8 inch
-  const [selectedMaterial, setSelectedMaterial] = useState('PLA'); // 'PLA' (Hard Plastic) or 'TPU' (Soft & Flexible)
+  const [selectedSizeIndex, setSelectedSizeIndex] = useState(1); // default 20cm (Most Popular)
   const [showCustomPhotoSection, setShowCustomPhotoSection] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [uploadedPhotoPreview, setUploadedPhotoPreview] = useState(null);
   const [engravingText, setEngravingText] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
-
-  const MATERIAL_OPTIONS = [
-    {
-      id: 'PLA',
-      name: 'PLA (Hard Plastic)',
-      tag: 'RIGID & DURABLE',
-      desc: 'High-precision thermoplastic hard plastic. Ideal for sharp detail statues, figures, and crisp geometries.',
-      priceOffset: 0
-    },
-    {
-      id: 'TPU',
-      name: 'TPU (Soft & Flexible)',
-      tag: 'ELASTIC & BENDABLE',
-      desc: 'Flexible rubber-like elastomer. Bends and flexes without cracking, excellent for impact-proof parts.',
-      priceOffset: 120
-    }
-  ];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -130,21 +112,27 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
   const isPhotoUploadSupported = is3DModel || isLithophane;
 
   // Size options in 15cm, 20cm, 24cm (not in inches)
+  // Density rules: 100% Solid Optical Infill for 3D Lithophane, 25% Strength for all other prints
+  const densityPercent = isLithophane ? '100%' : '25%';
+  const densityLabel = isLithophane ? '100% Solid Optical Infill' : '25% Strength Solid Core';
+  const densityDesc = isLithophane
+    ? '100% solid optical density — allows backlight to reveal photographic contrast'
+    : '25% solid core infill — optimal strength, durability & surface finish';
+
+  // Premium size options in 15cm, 20cm, 24cm (not in inches)
   const sizeOptions = hasSizeChart ? [
-    { size: "15cm", price: p6, printTime: "3h 45m", weight: "120g" },
-    { size: "20cm", price: p8, printTime: "6h 30m", weight: "240g" },
-    { size: "24cm", price: p10, printTime: "11h 15m", weight: "420g" }
+    { size: "15cm", price: p6, printTime: "3h 45m", weight: "120g", tier: "Compact Desk", isPopular: false },
+    { size: "20cm", price: p8, printTime: "6h 30m", weight: "240g", tier: "Most Popular", isPopular: true },
+    { size: "24cm", price: p10, printTime: "11h 15m", weight: "420g", tier: "Grand Display", isPopular: false }
   ] : [
-    { size: "Standard", price: basePrice, printTime: "Standard", weight: "Standard" }
+    { size: "Standard", price: basePrice, printTime: "Standard", weight: "Standard", tier: "Standard", isPopular: false }
   ];
 
   const currentOption = hasSizeChart
     ? (sizeOptions[selectedSizeIndex] || sizeOptions[1] || sizeOptions[0])
     : sizeOptions[0];
 
-  const currentMaterial = MATERIAL_OPTIONS.find((m) => m.id === selectedMaterial) || MATERIAL_OPTIONS[0];
-
-  const unitPrice = currentOption.price + (currentMaterial.priceOffset || 0);
+  const unitPrice = currentOption.price;
   const totalPrice = unitPrice * quantity;
 
   const stockCount = typeof item.quantity === 'number'
@@ -169,20 +157,23 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
     if (isOutOfStock) return;
     try {
       confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
-    } catch (_) {}
+    } catch (_) { }
+
+    const printMaterial = isLithophane
+      ? 'Translucent Optical PLA'
+      : (item.material || 'FDM Precision Tough PLA');
 
     if (onAddToCart) {
       onAddToCart({
-        id: `${item.id}-${currentOption.size.replace(/[^a-zA-Z0-9]/g, '')}-25strength-${selectedMaterial}`,
+        id: `${item.id}-${currentOption.size.replace(/[^a-zA-Z0-9]/g, '')}`,
         productId: item.productId || item.id,
         name: item.name,
         category: item.category || '3D Studio',
         brand: item.brand || 'P_Brothers × NaviDron 3D',
         size: currentOption.size,
-        strength: '25% Strength',
-        infill: '25%',
-        material: currentMaterial.name,
-        materialType: selectedMaterial,
+        strength: densityLabel,
+        infill: densityPercent,
+        material: printMaterial,
         price: unitPrice,
         quantity: quantity,
         image: images[0],
@@ -266,7 +257,7 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
       {/* Main Product Showcase Section */}
       <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '2.5rem 1.5rem 4.5rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '3rem', alignItems: 'start' }}>
-          
+
           {/* LEFT: Multi-Photo Slider Gallery */}
           <div>
             <div style={{ position: 'sticky', top: '100px' }}>
@@ -298,9 +289,9 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
                   <div style={{ fontSize: '0.68rem', color: '#64748b' }}>0.2mm layer &bull; 0.4mm nozzle</div>
                 </div>
                 <div>
-                  <Truck size={20} color="#10b981" style={{ margin: '0 auto 0.35rem' }} />
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0a0f2e' }}>PLA & TPU Materials</div>
-                  <div style={{ fontSize: '0.68rem', color: '#64748b' }}>Hard plastic & flexible rubber</div>
+                  <ShieldCheck size={20} color="#10b981" style={{ margin: '0 auto 0.35rem' }} />
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0a0f2e' }}>Industrial Tough PLA</div>
+                  <div style={{ fontSize: '0.68rem', color: '#64748b' }}>Precision rigid thermoplastic</div>
                 </div>
               </div>
             </div>
@@ -426,6 +417,75 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
                   boxShadow: '0 4px 20px rgba(0,0,0,0.03)'
                 }}
               >
+                <style>{`
+                  @keyframes sizeGlowPulse {
+                    0%, 100% {
+                      box-shadow: 0 0 0 2px #0284c7, 0 8px 24px rgba(2, 132, 199, 0.18);
+                    }
+                    50% {
+                      box-shadow: 0 0 0 3.5px #00b4d8, 0 12px 30px rgba(0, 180, 216, 0.32);
+                    }
+                  }
+                  .premium-size-card {
+                    position: relative;
+                    padding: 1.2rem 0.85rem 1rem;
+                    border-radius: 14px;
+                    background: #ffffff;
+                    border: 2px solid #e2e8f0;
+                    cursor: pointer;
+                    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+                    text-align: center;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justifyContent: center;
+                    user-select: none;
+                  }
+                  .premium-size-card:hover {
+                    transform: translateY(-4px) scale(1.02);
+                    border-color: #38bdf8;
+                    box-shadow: 0 8px 20px rgba(2, 132, 199, 0.14);
+                  }
+                  .premium-size-card.active {
+                    border-color: #0284c7;
+                    background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
+                    animation: sizeGlowPulse 2.8s ease-in-out infinite;
+                    transform: translateY(-3px) scale(1.025);
+                  }
+                  .premium-badge-popular {
+                    position: absolute;
+                    top: -11px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+                    color: #ffffff;
+                    font-size: 0.65rem;
+                    font-weight: 800;
+                    padding: 2.5px 10px;
+                    border-radius: 999px;
+                    letter-spacing: 0.5px;
+                    text-transform: uppercase;
+                    white-space: nowrap;
+                    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+                  }
+                  .premium-badge-tier {
+                    position: absolute;
+                    top: -10px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #f1f5f9;
+                    color: #475569;
+                    border: 1px solid #cbd5e1;
+                    font-size: 0.62rem;
+                    font-weight: 700;
+                    padding: 2px 8px;
+                    border-radius: 999px;
+                    letter-spacing: 0.4px;
+                    text-transform: uppercase;
+                    white-space: nowrap;
+                  }
+                `}</style>
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
                   <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0a0f2e', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <Ruler size={16} color="#0077b6" /> 1. Select Print Size:
@@ -435,43 +495,48 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
                   </span>
                 </div>
 
-                {/* Size Buttons Grid: 15cm, 20cm, 24cm */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                {/* Premium Animated Size Selection Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.85rem', marginBottom: '1.25rem', marginTop: '0.85rem' }}>
                   {sizeOptions.map((opt, idx) => {
                     const isSelected = idx === selectedSizeIndex;
                     return (
-                      <button
+                      <div
                         key={idx}
-                        type="button"
+                        className={`premium-size-card ${isSelected ? 'active' : ''}`}
                         onClick={() => setSelectedSizeIndex(idx)}
-                        style={{
-                          padding: '0.9rem 0.6rem',
-                          borderRadius: '10px',
-                          border: isSelected ? '2.5px solid #0077b6' : '1.5px solid #cbd5e1',
-                          backgroundColor: isSelected ? '#f0f9ff' : '#ffffff',
-                          color: isSelected ? '#0077b6' : '#334155',
-                          fontWeight: 900,
-                          textAlign: 'center',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          boxShadow: isSelected ? '0 0 12px rgba(0,119,182,0.2)' : 'none'
-                        }}
                       >
-                        <div style={{ fontSize: '1.05rem', fontWeight: 900 }}>{opt.size}</div>
-                        <div style={{ fontSize: '0.76rem', color: isSelected ? '#0077b6' : '#64748b', marginTop: '3px' }}>
+                        {opt.isPopular ? (
+                          <span className="premium-badge-popular">★ MOST POPULAR</span>
+                        ) : (
+                          <span className="premium-badge-tier">{opt.tier}</span>
+                        )}
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px' }}>
+                          <span style={{ fontSize: '1.2rem', fontWeight: 900, color: isSelected ? '#0284c7' : '#0f172a', letterSpacing: '-0.3px' }}>
+                            {opt.size}
+                          </span>
+                          {isSelected && (
+                            <CheckCircle2 size={16} color="#0284c7" />
+                          )}
+                        </div>
+
+                        <div style={{ fontSize: '1.05rem', fontWeight: 900, color: isSelected ? '#0369a1' : '#334155' }}>
                           ₹{opt.price.toLocaleString('en-IN')}
                         </div>
-                      </button>
+
+                        <div style={{ fontSize: '0.72rem', color: isSelected ? '#0284c7' : '#94a3b8', marginTop: '4px', fontWeight: 600 }}>
+                          ~{opt.weight} • {opt.printTime}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
 
-                {/* Casual 25% Strength Indicator */}
+                {/* Density Indicator: 100% Solid Optical Infill for 3D Lithophane, 25% Strength for all others */}
                 <div
                   style={{
                     borderTop: '1px solid #f1f5f9',
                     paddingTop: '0.9rem',
-                    marginBottom: '1.25rem',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -480,71 +545,26 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Shield size={16} color="#0284c7" />
+                    <Shield size={16} color={isLithophane ? '#d97706' : '#0284c7'} />
                     <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0a0f2e' }}>
-                      Density:
+                      Core Density:
                     </span>
                     <span
                       style={{
                         fontSize: '0.8rem',
                         fontWeight: 800,
-                        backgroundColor: 'rgba(2, 132, 199, 0.1)',
-                        color: '#0284c7',
+                        backgroundColor: isLithophane ? 'rgba(217, 119, 6, 0.12)' : 'rgba(2, 132, 199, 0.1)',
+                        color: isLithophane ? '#b45309' : '#0284c7',
                         padding: '2px 9px',
                         borderRadius: '6px'
                       }}
                     >
-                      25% Strength
+                      {densityLabel}
                     </span>
                   </div>
                   <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                    Casual solid core infill — optimal durability & finish
+                    {densityDesc}
                   </span>
-                </div>
-
-                {/* 2. MATERIAL SELECTION: PLA (Hard Plastic) vs TPU (Soft Flexible) */}
-                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1.1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
-                    <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0a0f2e', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <Layers size={16} color="#10b981" /> 2. 3D Filament Material:
-                    </label>
-                    <span style={{ fontSize: '0.76rem', color: '#10b981', fontWeight: 700 }}>
-                      PLA (Hard) vs TPU (Soft)
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
-                    {MATERIAL_OPTIONS.map((mat) => {
-                      const isSelected = selectedMaterial === mat.id;
-                      return (
-                        <div
-                          key={mat.id}
-                          onClick={() => setSelectedMaterial(mat.id)}
-                          style={{
-                            padding: '0.85rem 1rem',
-                            borderRadius: '10px',
-                            border: isSelected ? '2px solid #10b981' : '1.5px solid #cbd5e1',
-                            backgroundColor: isSelected ? 'rgba(16, 185, 129, 0.08)' : '#ffffff',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            boxShadow: isSelected ? '0 0 12px rgba(16,185,129,0.2)' : 'none'
-                          }}
-                        >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                            <span style={{ fontSize: '0.9rem', fontWeight: 800, color: isSelected ? '#047857' : '#0a0f2e' }}>
-                              {mat.name}
-                            </span>
-                            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: isSelected ? '#047857' : '#64748b' }}>
-                              {mat.priceOffset === 0 ? 'Included' : `+₹${mat.priceOffset}`}
-                            </span>
-                          </div>
-                          <p style={{ fontSize: '0.74rem', color: '#64748b', margin: 0, lineHeight: 1.4 }}>
-                            {mat.desc}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
                 </div>
               </div>
             ) : (
@@ -646,7 +666,7 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g., Happy 25th Birthday Priyanshu!"
+                    //placeholder="e.g., Happy 25th Birthday Priyanshu!"
                     value={engravingText}
                     onChange={(e) => setEngravingText(e.target.value)}
                     style={{
@@ -688,11 +708,11 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '0.65rem 1rem', borderBottom: '1px solid #f1f5f9' }}>
                 <span style={{ color: '#64748b' }}>Selected Material:</span>
-                <span style={{ fontWeight: 600, color: '#0a0f2e' }}>{currentMaterial.name}</span>
+                <span style={{ fontWeight: 600, color: '#0a0f2e' }}>{isLithophane ? 'Translucent Optical PLA' : (item.material || 'FDM Precision Tough PLA')}</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '0.65rem 1rem', borderBottom: '1px solid #f1f5f9' }}>
                 <span style={{ color: '#64748b' }}>Core Infill / Strength:</span>
-                <span style={{ fontWeight: 700, color: '#0077b6' }}>25% Strength Solid Core</span>
+                <span style={{ fontWeight: 700, color: isLithophane ? '#d97706' : '#0077b6' }}>{densityLabel}</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '0.65rem 1rem' }}>
                 <span style={{ color: '#64748b' }}>Post-Processing:</span>

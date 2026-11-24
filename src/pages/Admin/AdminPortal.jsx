@@ -257,9 +257,9 @@ export default function AdminPortal({ mode = 'main' }) {
       price10Inch: p10,
       quantity: typeof item.quantity === 'number' ? item.quantity : 20,
       desc: item.desc || '',
-      size: item.size || '8 inch',
-      material: item.material || 'FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)',
-      infill: '25% Strength',
+      size: item.size || '20cm',
+      material: item.material || ((item.category?.toLowerCase().includes('litho') || item.name?.toLowerCase().includes('litho')) ? 'FDM Translucent PLA Optical Lithophane' : 'FDM Precision Tough PLA'),
+      infill: (item.category?.toLowerCase().includes('litho') || item.name?.toLowerCase().includes('litho')) ? '100% Solid Optical Infill' : '25% Strength',
       printTime: item.printTime || '6h 30m',
       speed: item.speed || '',
       flightTime: item.flightTime || '',
@@ -4347,17 +4347,17 @@ export default function AdminPortal({ mode = 'main' }) {
               {editingProductTarget.type === '3dstudio' && (
                 <div style={{ background: 'rgba(255,0,170,0.06)', border: '1px solid rgba(255,0,170,0.2)', padding: '0.85rem', borderRadius: '8px', marginBottom: '0.9rem' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ff00aa', marginBottom: '0.65rem' }}>
-                    🖨️ FDM 3D Printing & Filament Specs (All 25% Density)
+                    🖨️ FDM 3D Printing & Filament Specs
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.65rem', marginBottom: '0.65rem' }}>
                     <div className="admin-input-group">
-                      <label style={{ fontSize: '0.75rem' }}>Core Infill / Density</label>
+                      <label style={{ fontSize: '0.75rem' }}>Core Infill / Density (100% Lithophane, 25% All Others)</label>
                       <input
                         type="text"
                         disabled
                         className="admin-input-field"
                         style={{ opacity: 0.8 }}
-                        value="25% Strength"
+                        value={(editProductForm.category?.toLowerCase().includes('litho') || editProductForm.name?.toLowerCase().includes('litho')) ? '100% Solid Optical Infill' : '25% Strength'}
                       />
                     </div>
                   </div>
@@ -4368,7 +4368,7 @@ export default function AdminPortal({ mode = 'main' }) {
                       className="admin-input-field"
                       value={editProductForm.material}
                       onChange={(e) => setEditProductForm((prev) => ({ ...prev, material: e.target.value }))}
-                      placeholder="e.g. FDM Tough PLA (Hard Plastic) / TPU (Soft & Flexible)"
+                      placeholder="e.g. FDM Precision Tough PLA"
                     />
                   </div>
                 </div>
