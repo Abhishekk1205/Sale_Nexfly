@@ -1262,7 +1262,76 @@ export const INITIAL_3D_STUDIO = [
     badge: "POPULAR",
     makerWorldUrl: "https://makerworld.com/en/models/210343"
   },
-  // 6. Anime Characters
+  // 6. Movie Characters (Just above Anime Characters)
+  {
+    id: "3d-mov-ironman",
+    productId: "3D-MOV-01",
+    name: "Iron Man Mark 85 — Nano Gauntlet Pose",
+    category: "Movie Characters",
+    brand: "Marvel Fan Art × NaviDron",
+    price: 999,
+    price15cm: 749,
+    price20cm: 999,
+    price24cm: 1449,
+    price6Inch: 749,
+    price8Inch: 999,
+    price10Inch: 1449,
+    quantity: 25,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    sizeOptions: [
+      { size: "15cm", price: 749, printTime: "4h 15m", weight: "135g" },
+      { size: "20cm", price: 999, printTime: "7h 30m", weight: "265g" },
+      { size: "24cm", price: 1449, printTime: "12h 45m", weight: "460g" }
+    ],
+    image: "/images/action_figure_valorant.jpg",
+    images: [
+      "/images/action_figure_valorant.jpg",
+      "/images/anime_figure_3d.jpg"
+    ],
+    printTime: "7h 30m",
+    material: "FDM Precision Tough PLA",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "25% Strength",
+    desc: "Iconic cinematic Avengers Endgame armor sculpt with metallic nano-suit panel lines and illuminated chest arc reactor detailing.",
+    badge: "CINEMA ICON",
+    makerWorldUrl: "https://makerworld.com/en/models/210348"
+  },
+  {
+    id: "3d-mov-batman",
+    productId: "3D-MOV-02",
+    name: "The Dark Knight — Gotham Gargoyle Diorama",
+    category: "Movie Characters",
+    brand: "DC Fan Art × NaviDron",
+    price: 1049,
+    price15cm: 799,
+    price20cm: 1049,
+    price24cm: 1499,
+    price6Inch: 799,
+    price8Inch: 1049,
+    price10Inch: 1499,
+    quantity: 20,
+    size: "20cm",
+    sizes: ["15cm", "20cm", "24cm"],
+    sizeOptions: [
+      { size: "15cm", price: 799, printTime: "4h 30m", weight: "140g" },
+      { size: "20cm", price: 1049, printTime: "7h 45m", weight: "275g" },
+      { size: "24cm", price: 1499, printTime: "13h 15m", weight: "480g" }
+    ],
+    image: "/images/college_project_drone.jpg",
+    images: [
+      "/images/college_project_drone.jpg",
+      "/images/3d_printed_gift_pack.jpg"
+    ],
+    printTime: "7h 45m",
+    material: "FDM Precision Tough PLA",
+    layerHeight: "0.2mm Ultra-Fine Detail (0.4mm Nozzle)",
+    infill: "25% Strength",
+    desc: "Caped Crusader perched over a high-contrast Gothic cathedral gargoyle with sweeping textured cape folds.",
+    badge: "BLOCKBUSTER",
+    makerWorldUrl: "https://makerworld.com/en/models/210349"
+  },
+  // 7. Anime Characters
   {
     id: "3d-luffy-gear5",
     productId: "3D-ANI-01",
@@ -1541,6 +1610,8 @@ export async function get3DStudioItems() {
       normalizedCategory = '3D Model';
     } else if (cLow.includes('game') || nm.includes('gta') || nm.includes('val') || nm.includes('jett') || nm.includes('reyna')) {
       normalizedCategory = 'Game Characters';
+    } else if (cLow.includes('movie') || cLow.includes('cinema') || nm.includes('iron man') || nm.includes('batman') || nm.includes('spiderman') || nm.includes('spider-man') || nm.includes('avenger') || ds.includes('movie') || (item.id || '').includes('mov')) {
+      normalizedCategory = 'Movie Characters';
     } else if (cLow.includes('anime') || nm.includes('luffy') || nm.includes('goku') || nm.includes('naruto') || nm.includes('tanjiro')) {
       normalizedCategory = 'Anime Characters';
     } else if (cLow.includes('access') || nm.includes('dragon') || nm.includes('organizer')) {
@@ -1549,13 +1620,14 @@ export async function get3DStudioItems() {
       normalizedCategory = 'Others';
     }
 
-    // Size chart ONLY for: 3D Model, 3D Lithophane, Game Characters, Anime Characters
+    // Size chart ONLY for: 3D Model, 3D Lithophane, Game Characters, Movie Characters, Anime Characters
     // For Accessories and Others: NO size chart, Only Fixed Price
     const is3DModel = normalizedCategory === '3D Model';
     const isLitho = normalizedCategory === '3D Lithophane';
     const isGame = normalizedCategory === 'Game Characters';
+    const isMovie = normalizedCategory === 'Movie Characters';
     const isAnime = normalizedCategory === 'Anime Characters';
-    const hasSizeChart = is3DModel || isLitho || isGame || isAnime;
+    const hasSizeChart = is3DModel || isLitho || isGame || isMovie || isAnime;
 
     const sizeOptions = hasSizeChart ? [
       { size: "15cm", price: p6, printTime: "3h 45m", weight: "120g" },

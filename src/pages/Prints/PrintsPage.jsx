@@ -21,7 +21,8 @@ import {
   Wrench,
   Package,
   Gamepad2,
-  Heart
+  Heart,
+  Film
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { get3DStudioItems } from '../../services/firebase';
@@ -32,6 +33,7 @@ const CATEGORIES = [
   { id: '3D Model', label: '3D Model', icon: User },
   { id: '3D Lithophane', label: '3D Lithophane', icon: ImageIcon },
   { id: 'Game Characters', label: 'Game Characters', icon: Gamepad2 },
+  { id: 'Movie Characters', label: 'Movie Characters', icon: Film },
   { id: 'Anime Characters', label: 'Anime Characters', icon: Flame },
   { id: 'Accessories', label: 'Accessories', icon: Wrench },
   { id: 'Others', label: 'Others', icon: Package }
@@ -50,6 +52,9 @@ function matchesCategory(itemCat = '', targetCat = '') {
   if (tgt === 'game characters') {
     return it.includes('game');
   }
+  if (tgt === 'movie characters') {
+    return it.includes('movie') || it.includes('cinema');
+  }
   if (tgt === 'anime characters') {
     return it.includes('anime');
   }
@@ -67,9 +72,10 @@ function getCategoryPriority(cat = '') {
   if (c.includes('3d model') || c.includes('person') || c.includes('2d to 3d')) return 1;
   if (c.includes('litho')) return 2;
   if (c.includes('game')) return 3;
-  if (c.includes('anime')) return 4;
-  if (c.includes('access')) return 5;
-  return 6;
+  if (c.includes('movie') || c.includes('cinema')) return 4;
+  if (c.includes('anime')) return 5;
+  if (c.includes('access')) return 6;
+  return 7;
 }
 
 export default function PrintsPage({ onOpenQuote, onAddToCart }) {
@@ -92,6 +98,7 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
       if (cat.toLowerCase().includes('model') || cat.toLowerCase().includes('person') || cat.toLowerCase().includes('2d')) setActiveCategory('3D Model');
       else if (cat.toLowerCase().includes('litho')) setActiveCategory('3D Lithophane');
       else if (cat.toLowerCase().includes('game')) setActiveCategory('Game Characters');
+      else if (cat.toLowerCase().includes('movie') || cat.toLowerCase().includes('cinema')) setActiveCategory('Movie Characters');
       else if (cat.toLowerCase().includes('anime')) setActiveCategory('Anime Characters');
       else if (cat.toLowerCase().includes('access')) setActiveCategory('Accessories');
       else if (cat.toLowerCase().includes('other')) setActiveCategory('Others');
@@ -788,8 +795,9 @@ export default function PrintsPage({ onOpenQuote, onAddToCart }) {
                   </span>
                 </div>
                 <p style={{ margin: '0.2rem 0 0', fontSize: '0.84rem', color: '#64748b' }}>
-                  {activeCategory === 'Anime Models' && 'Anime heroes, Goku, Luffy Gear 5, Naruto, and Tanjiro high-precision SLA figures.'}
                   {activeCategory === 'Game Characters' && 'GTA 6 Jason & Lucia, Valorant agents Reyna & Jett with custom stands.'}
+                  {activeCategory === 'Movie Characters' && 'Iconic superhero, Hollywood & sci-fi cinema collectibles: Iron Man, Batman, Star Wars & Marvel figures.'}
+                  {activeCategory === 'Anime Characters' && 'Anime heroes, Goku, Luffy Gear 5, Naruto, and Tanjiro high-precision SLA figures.'}
                   {activeCategory === '3D Lithophanes' && 'Luminous curved photo lithophanes with USB LED nightlight base.'}
                   {activeCategory === '3D Model Person (2D to 3D)' && 'Convert your 2D photo into a lifelike miniature 3D sculpted figurine.'}
                   {activeCategory === 'Accessories' && 'Articulated toys, tool organizers, desk stands, and 3D printing accessories.'}

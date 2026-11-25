@@ -99,14 +99,15 @@ export default function PrintDetailPage({ onAddToCart, onOpenQuote }) {
   const nameStr = (item.name || '').toLowerCase();
   const idStr = (item.id || '').toLowerCase();
 
-  // Size chart ONLY for: 3D model, 3D Lithopane, Game Characters, Anime Characters
+  // Size chart ONLY for: 3D model, 3D Lithophane, Game Characters, Movie Characters, Anime Characters
   // In Others & Accessories, size chart is NOT present (Only Fix price)
   const is3DModel = categoryStr.includes('3d model') || categoryStr.includes('person') || categoryStr.includes('2d to 3d') || nameStr.includes('sculpt') || nameStr.includes('bust') || idStr.includes('pers');
   const isLithophane = categoryStr.includes('litho') || nameStr.includes('litho') || idStr.includes('litho');
   const isGameChar = categoryStr.includes('game') || idStr.includes('gta') || idStr.includes('val');
+  const isMovieChar = categoryStr.includes('movie') || categoryStr.includes('cinema') || idStr.includes('mov');
   const isAnimeChar = categoryStr.includes('anime') || nameStr.includes('luffy') || nameStr.includes('goku') || nameStr.includes('naruto') || nameStr.includes('tanjiro');
 
-  const hasSizeChart = is3DModel || isLithophane || isGameChar || isAnimeChar;
+  const hasSizeChart = is3DModel || isLithophane || isGameChar || isMovieChar || isAnimeChar;
 
   // Photo upload ONLY present in 3D model and 3D lithopane
   const isPhotoUploadSupported = is3DModel || isLithophane;

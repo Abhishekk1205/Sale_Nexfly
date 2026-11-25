@@ -78,8 +78,18 @@ import {
   getUAVCustomOrders,
   updateUAVCustomOrderStatus,
   getAllUsers,
-  isFirebaseOnline
+  isFirebaseOnline,
+  sanitizeKey
 } from '../../services/firebase';
+
+const safeSanitizeKey = (key = '') => {
+  if (typeof sanitizeKey === 'function') {
+    try {
+      return sanitizeKey(key);
+    } catch (_) {}
+  }
+  return String(key || 'item').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+};
 
 export default function AdminPortal({ mode = 'main' }) {
   const authKey = mode === 'products'
@@ -864,7 +874,7 @@ export default function AdminPortal({ mode = 'main' }) {
         const p8 = priceVal || 899;
         const p6 = Math.max(299, p8 - 250);
         const p10 = p8 + 450;
-        const docId = customProductId ? sanitizeKey(customProductId).toLowerCase() : `3d-${Date.now()}`;
+        const docId = customProductId ? safeSanitizeKey(customProductId).toLowerCase() : `3d-${Date.now()}`;
         const pId = customProductId || docId;
         const cat = cleanedPayload.category || 'Anime Characters';
         const hasSizeChart = cat !== 'Accessories' && cat !== 'Others';
@@ -892,7 +902,7 @@ export default function AdminPortal({ mode = 'main' }) {
         setThreeDItems((prev) => [created, ...prev]);
         showToast(`🎉 Added "${created.name}" (ID: ${pId}) to 3DStudio catalog with ${finalImages.length} photos!`);
       } else if (modalType === 'drone') {
-        const docId = customProductId ? sanitizeKey(customProductId).toLowerCase() : `part-${Date.now()}`;
+        const docId = customProductId ? safeSanitizeKey(customProductId).toLowerCase() : `part-${Date.now()}`;
         const pId = customProductId || docId;
         const created = await saveDroneAccessory({
           ...cleanedPayload,
@@ -902,7 +912,7 @@ export default function AdminPortal({ mode = 'main' }) {
         setDroneParts((prev) => [created, ...prev]);
         showToast(`🎉 Added "${created.name}" (ID: ${pId}) to Drone Accessories catalog with ${finalImages.length} photos!`);
       } else if (modalType === 'robotics') {
-        const docId = customProductId ? sanitizeKey(customProductId).toLowerCase() : `kit-${Date.now()}`;
+        const docId = customProductId ? safeSanitizeKey(customProductId).toLowerCase() : `kit-${Date.now()}`;
         const pId = customProductId || docId;
         const created = await saveRoboticsKit({
           ...cleanedPayload,
@@ -912,7 +922,7 @@ export default function AdminPortal({ mode = 'main' }) {
         setRoboticsKits((prev) => [created, ...prev]);
         showToast(`🎉 Added "${created.name}" (ID: ${pId}) to Robotics Kits catalog with ${finalImages.length} photos!`);
       } else if (modalType === 'uav') {
-        const docId = customProductId ? sanitizeKey(customProductId).toLowerCase() : `uav-${Date.now()}`;
+        const docId = customProductId ? safeSanitizeKey(customProductId).toLowerCase() : `uav-${Date.now()}`;
         const pId = customProductId || docId;
         const created = await saveUAVPreBuilt({
           ...cleanedPayload,
@@ -922,7 +932,7 @@ export default function AdminPortal({ mode = 'main' }) {
         setUavPreBuilt((prev) => [created, ...prev]);
         showToast(`🎉 Added "${created.name}" (ID: ${pId}) to Pre-Built UAV catalog with ${finalImages.length} photos!`);
       } else if (modalType === 'home') {
-        const docId = customProductId ? sanitizeKey(customProductId).toLowerCase() : `hp-${Date.now()}`;
+        const docId = customProductId ? safeSanitizeKey(customProductId).toLowerCase() : `hp-${Date.now()}`;
         const pId = customProductId || docId.toUpperCase();
         const oldPriceVal = typeof newItemForm.oldPrice === 'number' ? newItemForm.oldPrice : parseInt(newItemForm.oldPrice, 10) || 0;
         const created = await saveHomeProduct({
@@ -2448,7 +2458,7 @@ export default function AdminPortal({ mode = 'main' }) {
                     </div>
 
                     <div style={{ display: 'flex', background: '#1e293b', borderRadius: '8px', padding: '3px', flexWrap: 'wrap', gap: '2px' }}>
-                      {['all', '3D Model', '3D Lithophane', 'Game Characters', 'Anime Characters', 'Accessories', 'Others'].map((sub) => (
+                      {['all', '3D Model', '3D Lithophane', 'Game Characters', 'Movie Characters', 'Anime Characters', 'Accessories', 'Others'].map((sub) => (
                         <button
                           key={sub}
                           type="button"
@@ -2488,6 +2498,7 @@ export default function AdminPortal({ mode = 'main' }) {
                         (threeDSubTab === '3D Model' && (catLow.includes('3d model') || catLow.includes('person') || catLow.includes('2d to 3d'))) ||
                         (threeDSubTab === '3D Lithophane' && catLow.includes('litho')) ||
                         (threeDSubTab === 'Game Characters' && catLow.includes('game')) ||
+                        (threeDSubTab === 'Movie Characters' && (catLow.includes('movie') || catLow.includes('cinema') || catLow.includes('film'))) ||
                         (threeDSubTab === 'Anime Characters' && (catLow.includes('anime') || catLow.includes('manga'))) ||
                         (threeDSubTab === 'Accessories' && catLow.includes('access')) ||
                         (threeDSubTab === 'Others' && catLow.includes('other')) ||
@@ -3586,6 +3597,7 @@ export default function AdminPortal({ mode = 'main' }) {
                     <option value="3D Model">3D Model</option>
                     <option value="3D Lithophane">3D Lithophane</option>
                     <option value="Game Characters">Game Characters</option>
+                    <option value="Movie Characters">Movie Characters</option>
                     <option value="Anime Characters">Anime Characters</option>
                     <option value="Accessories">Accessories</option>
                     <option value="Others">Others</option>
@@ -4146,6 +4158,7 @@ export default function AdminPortal({ mode = 'main' }) {
                       <option value="3D Model">3D Model</option>
                       <option value="3D Lithophane">3D Lithophane</option>
                       <option value="Game Characters">Game Characters</option>
+                      <option value="Movie Characters">Movie Characters</option>
                       <option value="Anime Characters">Anime Characters</option>
                       <option value="Accessories">Accessories</option>
                       <option value="Others">Others</option>
