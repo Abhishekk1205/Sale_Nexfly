@@ -27,7 +27,6 @@ import {
 export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
   const [config, setConfig] = useState(INITIAL_PBROTHERS_CONFIG);
   const [products, setProducts] = useState(INITIAL_PBROTHERS_PRODUCTS);
-  const [selectedVideo, setSelectedVideo] = useState(INITIAL_PBROTHERS_CONFIG.featuredVideoId);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,9 +41,6 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
         ]);
         if (cfg) {
           setConfig(cfg);
-          if (cfg.featuredVideoId) {
-            setSelectedVideo(cfg.featuredVideoId);
-          }
         }
         if (Array.isArray(prods) && prods.length > 0) {
           setProducts(prods);
@@ -100,24 +96,13 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
   // Shorts (up to 3) configured by the admin
   const validShorts = (config.shorts || []).filter((s) => s && (s.videoId || s.url));
 
-  const activeVideoId = selectedVideo || config.featuredVideoId || 'QdBZY2fkU-0';
+  const activeVideoId = config.featuredVideoId || 'QdBZY2fkU-0';
 
   return (
     <div style={{ paddingTop: '74px', backgroundColor: '#ffffff', color: '#0a0f2e' }}>
       {/* Collab Hero Banner */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #180033 0%, #0a0f2e 50%, #200028 100%)',
-          minHeight: '52vh',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '5.5rem 2rem 4rem',
-          position: 'relative',
-          overflow: 'hidden',
-          color: 'white'
-        }}
-      >
-        <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', position: 'relative', zIndex: 2 }}>
+      <div className="pbrothers-hero">
+        <div className="pbrothers-hero-inner">
           <div
             className="section-tag"
             style={{
@@ -129,32 +114,23 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
             <Flame size={15} /> Official Creator Partnership
           </div>
 
-          <h1
-            style={{
-              fontFamily: 'var(--font-head)',
-              fontSize: 'clamp(2.2rem,5vw,4.2rem)',
-              fontWeight: 900,
-              marginBottom: '1rem',
-              lineHeight: 1.15
-            }}
-          >
+          <h1 className="pbrothers-hero-title">
             P_Brothers × <span style={{ color: 'var(--neon)' }}>NaviDron</span><br />
             <span style={{ background: 'linear-gradient(135deg, #ff00aa, #bf7aff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               GTA 6 Vice City
             </span> Drops
           </h1>
 
-          <p style={{ fontSize: '1.15rem', color: 'rgba(255,255,255,.85)', maxWidth: '700px', lineHeight: '1.8', marginBottom: '2.5rem' }}>
+          <p className="pbrothers-hero-bio">
             {pBrothersData.bio}
           </p>
 
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="pbrothers-hero-actions">
             <a
               href={pBrothersData.channelUrl}
               target="_blank"
               rel="noreferrer"
               className="btn btn-yt"
-              style={{ fontSize: '1rem', padding: '.9rem 2.2rem' }}
             >
               <YoutubeIcon size={20} color="white" />
               Subscribe to P_Brothers ({pBrothersData.subscribers})
@@ -168,7 +144,7 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
       </div>
 
       {/* Featured Video Player & Trailer / Live Stream Breakdown */}
-      <section style={{ background: '#0a0f2e', color: 'white', padding: '4.5rem 2rem' }}>
+      <section className="pbrothers-video-section">
         <div className="section-inner">
           <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
             {config.isLive ? (
@@ -205,7 +181,7 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
           </div>
 
           {/* Main Video Frame */}
-          <div style={{ maxWidth: '1000px', margin: '0 auto', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 30px 100px rgba(0,0,0,.8), 0 0 50px rgba(255,0,170,.3)', border: '1.5px solid rgba(255,0,170,.35)' }}>
+          <div className="pbrothers-video-frame">
             <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, backgroundColor: '#000' }}>
               <iframe
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
@@ -216,41 +192,13 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
               />
             </div>
           </div>
-
-          {/* Video Selector Thumbnails */}
-          <div className="grid-3 video-thumbnails-grid" style={{ maxWidth: '1000px', margin: '2rem auto 0' }}>
-            {pBrothersData.featuredVideos.map((vid, idx) => (
-              <div
-                key={idx}
-                onClick={() => setSelectedVideo(vid.id)}
-                style={{
-                  background: activeVideoId === vid.id ? 'rgba(255,0,170,.2)' : 'rgba(255,255,255,.05)',
-                  border: `1.5px solid ${activeVideoId === vid.id ? '#ff00aa' : 'rgba(255,255,255,.1)'}`,
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  cursor: 'pointer',
-                  transition: 'var(--transition)'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', color: '#ff00aa', fontSize: '.8rem', fontWeight: 700 }}>
-                  <Play size={14} fill="#ff00aa" /> {vid.duration} • {vid.views}
-                </div>
-                <h4 style={{ fontSize: '.9rem', color: 'white', marginTop: '.4rem', lineHeight: '1.4' }}>
-                  {vid.title}
-                </h4>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* GTA 6 3D Action Figures Collection */}
-      <section style={{ background: '#fff', padding: '5rem 2rem' }}>
+      <section className="pbrothers-products-section">
         <div className="section-inner">
           <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-            <div className="section-tag" style={{ color: '#ff00aa', borderColor: 'rgba(255,0,170,.3)' }}>
-              🎮 3D Printed Collectibles
-            </div>
             <h2 className="section-title">
               Official GTA 6 <span>Action Figures</span>
             </h2>
@@ -280,27 +228,27 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
                       </span>
                     )}
                   </div>
-                  <div className="card-body" style={{ padding: '1.1rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                      <h4 className="card-title" style={{ fontSize: '0.98rem', fontWeight: 800, color: '#0a0f2e', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                  <div className="card-body pbrothers-card-body">
+                    <div className="pbrothers-card-header">
+                      <h4 className="card-title pbrothers-card-title">
                         {fig.name}
                       </h4>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#ff00aa', backgroundColor: 'rgba(255,0,170,0.1)', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      <span className="pbrothers-card-scale">
                         Scale: {availableSize}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: 1.4, marginBottom: '0.75rem', display: 'flex', alignItems: 'baseline', gap: '0.35rem', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                    <div className="pbrothers-card-desc-row">
+                      <span className="pbrothers-card-desc">
                         {fig.desc}
                       </span>
-                      <Link to="/prints?category=Game Characters" style={{ color: '#ff00aa', fontWeight: 700, fontSize: '0.78rem', flexShrink: 0, textDecoration: 'none' }}>
+                      <Link to="/prints?category=Game Characters" className="pbrothers-card-more">
                         Know more &rarr;
                       </Link>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '0.65rem', borderTop: '1px solid #f1f5f9' }}>
-                      <div className="card-price" style={{ color: 'var(--navy)', fontSize: '1.25rem', fontWeight: 900, margin: 0 }}>
+                    <div className="pbrothers-card-footer">
+                      <div className="card-price pbrothers-card-price">
                         {formattedPrice}{' '}
                         {fig.oldPrice ? (
                           <small style={{ textDecoration: 'line-through', color: '#999', fontSize: '0.8rem' }}>₹{fig.oldPrice}</small>
@@ -308,8 +256,7 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
                       </div>
                       <button
                         onClick={() => handleMerchBuy(fig)}
-                        className="btn btn-glow"
-                        style={{ padding: '.5rem .95rem', fontSize: '.8rem', animation: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                        className="btn btn-glow pbrothers-card-btn"
                       >
                         <ShoppingCart size={14} /> Add to Cart
                       </button>
@@ -323,7 +270,7 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
       </section>
 
       {/* Official T-Shirts & Streetwear Merch */}
-      <section style={{ background: 'var(--off-white)', padding: '5rem 2rem' }}>
+      <section className="pbrothers-streetwear-section">
         <div className="section-inner">
           <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
             <div className="section-tag">👕 Streetwear Apparel</div>
@@ -356,27 +303,27 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
                       </span>
                     )}
                   </div>
-                  <div className="card-body" style={{ padding: '1.1rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                      <h4 className="card-title" style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0a0f2e', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                  <div className="card-body pbrothers-card-body">
+                    <div className="pbrothers-card-header">
+                      <h4 className="card-title pbrothers-card-title">
                         {tee.name}
                       </h4>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#ff00aa', backgroundColor: 'rgba(255,0,170,0.1)', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      <span className="pbrothers-card-scale">
                         Sizes: {availableSizes}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: 1.4, marginBottom: '0.75rem', display: 'flex', alignItems: 'baseline', gap: '0.35rem', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                    <div className="pbrothers-card-desc-row">
+                      <span className="pbrothers-card-desc">
                         {tee.desc || tee.details}
                       </span>
-                      <Link to="/prints?category=Accessories" style={{ color: '#ff00aa', fontWeight: 700, fontSize: '0.78rem', flexShrink: 0, textDecoration: 'none' }}>
+                      <Link to="/prints?category=Accessories" className="pbrothers-card-more">
                         Know more &rarr;
                       </Link>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '0.65rem', borderTop: '1px solid #f1f5f9' }}>
-                      <div className="card-price" style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: 'var(--navy)' }}>
+                    <div className="pbrothers-card-footer">
+                      <div className="card-price pbrothers-card-price">
                         {formattedPrice}{' '}
                         {tee.oldPrice ? (
                           <small style={{ textDecoration: 'line-through', color: '#999', fontSize: '0.8rem' }}>₹{tee.oldPrice}</small>
@@ -384,8 +331,7 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
                       </div>
                       <button
                         onClick={() => handleMerchBuy(tee)}
-                        className="btn btn-primary"
-                        style={{ padding: '.5rem .95rem', fontSize: '.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                        className="btn btn-primary pbrothers-card-btn"
                       >
                         <ShoppingCart size={14} /> Buy Now
                       </button>
@@ -397,7 +343,7 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
           </div>
 
           {/* Collab Highlights */}
-          <div style={{ background: 'linear-gradient(135deg, var(--navy), var(--navy-mid))', borderRadius: '24px', padding: '3rem', color: 'white', marginTop: '4rem' }}>
+          <div className="pbrothers-collab-box">
             <h3 style={{ fontFamily: 'var(--font-head)', fontSize: '1.6rem', textAlign: 'center', marginBottom: '2rem' }}>
               Why Fans Love The P_Brothers × NaviDron Partnership
             </h3>
@@ -418,14 +364,7 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
 
       {/* YOUTUBE SHORTS SHOWCASE (UP TO 3 SHORTS AT THE VERY END OF THE PAGE) */}
       {validShorts.length > 0 && (
-        <section
-          style={{
-            background: 'linear-gradient(180deg, #0a0f2e 0%, #160026 100%)',
-            padding: '5rem 2rem 6rem',
-            color: '#ffffff',
-            borderTop: '1.5px solid rgba(255,0,170,0.25)'
-          }}
-        >
+        <section className="pbrothers-shorts-section">
           <div className="section-inner" style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
               <div
@@ -455,14 +394,7 @@ export default function PBrothersPage({ onAddToCart, onOpenQuote }) {
             </div>
 
             {/* 3 Shorts Vertical Cards Grid */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '2rem',
-                justifyContent: 'center'
-              }}
-            >
+            <div className="pbrothers-shorts-grid">
               {validShorts.slice(0, 3).map((short, idx) => {
                 const videoId = parseYouTubeVideoId(short.url || short.videoId);
                 return (

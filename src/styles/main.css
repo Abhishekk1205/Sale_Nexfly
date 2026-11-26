@@ -2991,3 +2991,280 @@ footer { background: var(--navy); color: rgba(255,255,255,.8); padding: 5rem 2re
   color: #fff;
   transform: translateY(-1px);
 }
+
+/* ==========================================================================
+   P_BROTHERS PAGE — RESPONSIVE MOBILE (ANDROID) & DESKTOP STYLES
+   ========================================================================== */
+.pbrothers-hero {
+  background: linear-gradient(135deg, #180033 0%, #0a0f2e 50%, #200028 100%);
+  min-height: 52vh;
+  display: flex;
+  align-items: center;
+  padding: 5.5rem 2rem 4rem;
+  position: relative;
+  overflow: hidden;
+  color: white;
+}
+
+.pbrothers-hero-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+.pbrothers-hero-title {
+  font-family: var(--font-head);
+  font-size: clamp(2rem, 5vw, 4.2rem);
+  font-weight: 900;
+  margin-bottom: 1rem;
+  line-height: 1.15;
+}
+
+.pbrothers-hero-bio {
+  font-size: 1.15rem;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 700px;
+  line-height: 1.8;
+  margin-bottom: 2.5rem;
+}
+
+.pbrothers-hero-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pbrothers-video-section {
+  background: #0a0f2e;
+  color: white;
+  padding: 4.5rem 2rem;
+}
+
+.pbrothers-video-frame {
+  max-width: 1000px;
+  margin: 0 auto;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.8), 0 0 50px rgba(255, 0, 170, 0.3);
+  border: 1.5px solid rgba(255, 0, 170, 0.35);
+}
+
+.pbrothers-products-section {
+  background: #ffffff;
+  padding: 5rem 2rem;
+}
+
+.pbrothers-streetwear-section {
+  background: var(--off-white);
+  padding: 5rem 2rem;
+}
+
+.pbrothers-card-body {
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.pbrothers-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.pbrothers-card-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0a0f2e;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.pbrothers-card-scale {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #ff00aa;
+  background-color: rgba(255, 0, 170, 0.1);
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pbrothers-card-desc-row {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pbrothers-card-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.pbrothers-card-more {
+  color: #ff00aa;
+  font-weight: 700;
+  font-size: 0.78rem;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.pbrothers-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 0.65rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.pbrothers-card-price {
+  color: var(--navy);
+  font-size: 1.25rem;
+  font-weight: 900;
+  margin: 0;
+}
+
+.pbrothers-card-btn {
+  padding: 0.5rem 0.95rem;
+  font-size: 0.8rem;
+  animation: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.pbrothers-collab-box {
+  background: linear-gradient(135deg, var(--navy), var(--navy-mid));
+  border-radius: 24px;
+  padding: 3rem;
+  color: white;
+  margin-top: 4rem;
+}
+
+.pbrothers-shorts-section {
+  background: linear-gradient(180deg, #0a0f2e 0%, #160026 100%);
+  padding: 5rem 2rem 6rem;
+  color: #ffffff;
+  border-top: 1.5px solid rgba(255, 0, 170, 0.25);
+}
+
+.pbrothers-shorts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  justify-content: center;
+}
+
+/* --- Android / Mobile Friendly Rules (<= 768px) --- */
+@media (max-width: 768px) {
+  .pbrothers-hero {
+    min-height: auto !important;
+    padding: 3.25rem 1.25rem 2.5rem !important;
+  }
+  .pbrothers-hero-title {
+    font-size: clamp(1.85rem, 6.5vw, 2.6rem) !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0.85rem !important;
+  }
+  .pbrothers-hero-bio {
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+    margin-bottom: 1.75rem !important;
+  }
+  .pbrothers-hero-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 0.75rem !important;
+  }
+  .pbrothers-hero-actions .btn,
+  .pbrothers-hero-actions .btn-yt {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.85rem 1.25rem !important;
+    font-size: 0.92rem !important;
+    text-align: center !important;
+  }
+  .pbrothers-video-section {
+    padding: 2.75rem 1rem !important;
+  }
+  .pbrothers-video-frame {
+    border-radius: 16px !important;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 0, 170, 0.2) !important;
+  }
+  .pbrothers-products-section,
+  .pbrothers-streetwear-section {
+    padding: 3rem 1rem !important;
+  }
+  .pbrothers-collab-box {
+    padding: 1.75rem 1.15rem !important;
+    border-radius: 16px !important;
+    margin-top: 2.5rem !important;
+  }
+  .pbrothers-collab-box h3 {
+    font-size: 1.3rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  .pbrothers-shorts-section {
+    padding: 3rem 1rem 4rem !important;
+  }
+  .pbrothers-shorts-grid {
+    grid-template-columns: 1fr !important;
+    max-width: 330px !important;
+    margin: 0 auto !important;
+    gap: 1.5rem !important;
+  }
+}
+
+/* Card layout specifically tuned for Android 2-column view (<= 640px) */
+@media (max-width: 640px) {
+  .pbrothers-card-body {
+    padding: 0.65rem 0.55rem !important;
+  }
+  .pbrothers-card-title {
+    font-size: 0.82rem !important;
+  }
+  .pbrothers-card-scale {
+    font-size: 0.62rem !important;
+    padding: 1px 5px !important;
+  }
+  .pbrothers-card-desc-row {
+    font-size: 0.72rem !important;
+    margin-bottom: 0.45rem !important;
+  }
+  .pbrothers-card-footer {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.45rem !important;
+    padding-top: 0.5rem !important;
+  }
+  .pbrothers-card-price {
+    font-size: 1.05rem !important;
+    text-align: left !important;
+  }
+  .pbrothers-card-btn {
+    width: 100% !important;
+    padding: 0.45rem 0.4rem !important;
+    font-size: 0.75rem !important;
+    justify-content: center !important;
+  }
+}
